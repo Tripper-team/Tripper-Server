@@ -1,154 +1,73 @@
-const jwtMiddleware = require("../../../config/jwtMiddleware");
-const userProvider = require("../../app/User/userProvider");
-const userService = require("../../app/User/userService");
+const userProvider = require("../User/userProvider");
+const userService = require("../User/userService");
 const baseResponse = require("../../../config/baseResponseStatus");
 const {response, errResponse} = require("../../../config/response");
-
-const regexEmail = require("regex-email");
-
-/**
- * API No. 0
- * API Name : 테스트 API
- * [GET] /app/test
- */
-// exports.getTest = async function (req, res) {
-//     return res.send(response(baseResponse.SUCCESS))
-// }
+const passport = require("passport");
+const KakaoStrategy = require("passport-kakao").Strategy
+const axios = require("axios");
+const secret_config = require("../../../config/secret");
+const jwt = require("jsonwebtoken");
 
 /**
  * API No. 1
- * API Name : 유저 생성 (회원가입) API
- * [POST] /app/users
+ * API Name : 카카오 로그인 API
+ * [POST] /app/users/kakao-login
  */
-exports.postUsers = async function (req, res) {
+passport.use('kakao-login', new KakaoStrategy({
+    clientID: 'd4d0816cf247061ebe4ddb6631422a08',
+    callbackURL: 'http://localhost:3000/auth/kakao/callback',
+}, async (accessToken, refreshToken, profile, done) => {
+    console.log("Access token: " + accessToken);
+    console.log(profile);
+}));
 
+exports.kakaoLogin = async function (req, res) {
     /**
-     * Body: email, password, nickname
+     * Body: accessToken
      */
-    const {email, password, nickname} = req.body;
+    const { accessToken } = req.body;
 
-    // 빈 값 체크
-    if (!email)
-        return res.send(response(baseResponse.SIGNUP_EMAIL_EMPTY));
+    if (!accessToken)   // 카카오 accessToken 입력 체크
+        return res.send(errResponse(baseResponse.ACCESS_TOKEN_EMPTY));   // 2050: accessToken을 입력해주세요.
 
-    // 길이 체크
-    if (email.length > 30)
-        return res.send(response(baseResponse.SIGNUP_EMAIL_LENGTH));
-
-    // 형식 체크 (by 정규표현식)
-    if (!regexEmail.test(email))
-        return res.send(response(baseResponse.SIGNUP_EMAIL_ERROR_TYPE));
-
-    // createUser 함수 실행을 통한 결과 값을 signUpResponse에 저장
-    const signUpResponse = await userService.createUser(
-        email,
-        password,
-        nickname
-    );
-
-    // signUpResponse 값을 json으로 전달
-    return res.send(signUpResponse);
-};
-
-/**
- * API No. 2
- * API Name : 유저 조회 API (+ 이메일로 검색 조회)
- * [GET] /app/users
- */
-exports.getUsers = async function (req, res) {
-
-    /**
-     * Query String: email
-     */
-    const email = req.query.email;
-
-    if (!email) {
-        // 유저 전체 조회
-        const userListResult = await userProvider.retrieveUserList();
-        // SUCCESS : { "isSuccess": true, "code": 1000, "message":"성공" }, 메세지와 함께 userListResult 호출
-        return res.send(response(baseResponse.SUCCESS, userListResult));
-    } else {
-        // 아메일을 통한 유저 검색 조회
-        const userListByEmail = await userProvider.retrieveUserList(email);
-        return res.send(response(baseResponse.SUCCESS, userListByEmail));
+    let user_kakao_profile;
+    try {
+        user_kakao_profile = await axios({
+            method: 'GET',
+            url: 'https://kapi.kakao.com/v2/user/me',
+            headers: {
+                Authorization: `Bearer ${accessToken}`
+            }
+        })
+    } catch(err) {
+        return res.send(errResponse(baseResponse.ACCESS_TOKEN_INVALID));   // 2051: 유효하지 않은 accessToken 입니다.
     }
-};
 
-/**
- * API No. 3
- * API Name : 특정 유저 조회 API
- * [GET] /app/users/{userId}
- */
-exports.getUserById = async function (req, res) {
+    const email = user_kakao_profile.data.kakao_account.email;   // 사용자 이메일 (카카오)
 
-    /**
-     * Path Variable: userId
-     */
-    const userId = req.params.userId;
-    // errResponse 전달
-    if (!userId) return res.send(errResponse(baseResponse.USER_USERID_EMPTY));
+    // 사용자 이메일이 존재하는지 안하는지 체크할 것
+    // 존재한다면 -> 바로 JWT 발급 및 로그인 처리
+    // 존재하지 않는다면 -> 회원가입 API 진행 (닉네임 입력 페이지로)
+    const emailCheckResult = await userProvider.emailCheck(email);
+    if (emailCheckResult[0].isEmailExist === 1) {   // 존재한다면
+        // 유저 인덱스 가져오기
+        const userIdxResult = await userProvider.getUserInfo(email);
+        const userIdx = userIdxResult[0].idx;
 
-    // userId를 통한 유저 검색 함수 호출 및 결과 저장
-    const userByUserId = await userProvider.retrieveUser(userId);
-    return res.send(response(baseResponse.SUCCESS, userByUserId));
-};
+        // jwt 토큰 생성
+        let token = await jwt.sign(
+            {  // 토큰의 내용 (payload)
+                userIdx: userIdx
+            },
+            secret_config.jwtsecret,   // 비밀키
+            {
+                expiresIn: "365d",
+                subject: "userInfo",
+            }   // 유효기간 365일
+        );
 
-
-// TODO: After 로그인 인증 방법 (JWT)
-/**
- * API No. 4
- * API Name : 로그인 API
- * [POST] /app/login
- * body : email, passsword
- */
-exports.login = async function (req, res) {
-
-    const {email, password} = req.body;
-
-    const signInResponse = await userService.postSignIn(email, password);
-
-    return res.send(signInResponse);
-};
-
-
-/**
- * API No. 5
- * API Name : 회원 정보 수정 API + JWT + Validation
- * [PATCH] /app/users/:userId
- * path variable : userId
- * body : nickname
- */
-exports.patchUsers = async function (req, res) {
-
-    // jwt - userId, path variable :userId
-
-    const userIdFromJWT = req.verifiedToken.userId
-
-    const userId = req.params.userId;
-    const nickname = req.body.nickname;
-
-    // JWT는 이 후 주차에 다룰 내용
-    if (userIdFromJWT != userId) {
-        res.send(errResponse(baseResponse.USER_ID_NOT_MATCH));
-    } else {
-        if (!nickname) return res.send(errResponse(baseResponse.USER_NICKNAME_EMPTY));
-
-        const editUserInfo = await userService.editUser(userId, nickname)
-        return res.send(editUserInfo);
+        return res.send(response(baseResponse.SUCCESS, { 'userIdx': userIdx, 'jwt': token, 'message': "카카오톡 소셜로그인에 성공했습니다."}));
     }
-};
-
-
-
-
-
-
-// JWT 이 후 주차에 다룰 내용
-/** JWT 토큰 검증 API
- * [GET] /app/auto-login
- */
-exports.check = async function (req, res) {
-    const userIdResult = req.verifiedToken.userId;
-    console.log(userIdResult);
-    return res.send(response(baseResponse.TOKEN_VERIFICATION_SUCCESS));
+    else
+        return res.send(response(baseResponse.SUCCESS, { message: "회원가입을 진행해주시기 바랍니다." }));
 };
