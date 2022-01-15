@@ -21,13 +21,12 @@ module.exports = {
     PROFILE_IMG_EMPTY : { "isSuccess": true, "code": 2004, "message":"이메일을 입력해주세요." },
     KAKAO_ID_EMPTY : { "isSuccess": true, "code": 2005, "message":"이메일을 입력해주세요." },
 
-
-
     ACCESS_TOKEN_EMPTY : { "isSuccess": false, "code": 2050, "message": "accessToken을 입력해주세요." },
     ACCESS_TOKEN_INVALID : { "isSuccess": false, "code": 2051, "message": "유효하지 않은 accessToken 입니다." },
 
     // Response error
     REDUNDANT_NICKNAME : { "isSuccess": false, "code": 3001, "message":"중복된 닉네임입니다." },
+    USER_ALREADY_SIGNUP : { "isSuccess": false, "code": 3002, "message":"이미 회원가입한 유저입니다." },
 
     //Connection, Transaction 등의 서버 오류
     DB_ERROR : { "isSuccess": false, "code": 4000, "message": "데이터 베이스 에러"},

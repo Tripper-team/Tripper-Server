@@ -58,7 +58,7 @@ exports.kakaoLogin = async function (req, res) {
     const s3_profileUrl = await s3.upload(profileImgUrl)
     // console.log(s3_profileUrl.Location);
 
-    // 사용자 카카오 고유번호가 존재하는지 안하는지 체크할 것
+    // 사용자 카카오 고유번호가 DB에 존재하는지 안하는지 체크할 것
     // 존재한다면 -> 바로 JWT 발급 및 로그인 처리 + 사용자 status 수정
     // 존재하지 않는다면 -> 회원가입 API 진행 (닉네임 입력 페이지로)
     const kakaoIdCheckResult = await userProvider.retrieveUserKakaoId(kakaoId);
@@ -130,10 +130,13 @@ exports.signUp = async function (req, res) {
     if (!nickName)
         return res.send(errResponse(baseResponse.NICKNAME_EMPTY));
 
-    await userService.createUser(email, profileImgUrl, kakaoId, ageGroup, gender, nickName);   // 회원가입 진행
+    let signUpTokenResult = await userService.createUser(email, profileImgUrl, kakaoId, ageGroup, gender, nickName);   // 회원가입 진행
     const signUpResult = await userProvider.getUserInfoByKakaoId(kakaoId);   // 회원가입 한 User 정보 출력
 
-    return res.send(response(baseResponse.SIGN_UP_SUCCESS, signUpResult));
+    if (signUpTokenResult.code === 3002)
+        return res.send(signUpTokenResult);
+    else
+        return res.send(response(baseResponse.SIGN_UP_SUCCESS, { 'token': signUpTokenResult.result, 'userInfo': signUpResult }));
 };
 
 /**
