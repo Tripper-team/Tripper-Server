@@ -4,6 +4,9 @@ module.exports = {
 
     // Success
     SUCCESS : { "isSuccess": true, "code": 1000, "message":"성공" },
+    KAKAO_LOGIN_SUCCESS : { "isSuccess": true, "code": 1001, "message":"카카오톡 소셜로그인에 성공했습니다." },
+    KAKAO_SIGN_UP : { "isSuccess": true, "code": 1002, "message":"환영합니다! 사용하시기 전 회원가입을 진행해주시기 바랍니다." },
+    SIGN_UP_SUCCESS : { "isSuccess": true, "code": 1003, "message":"회원가입에 성공했습니다." },
 
     // Common
     TOKEN_EMPTY : { "isSuccess": false, "code": 2000, "message":"JWT 토큰을 입력해주세요." },

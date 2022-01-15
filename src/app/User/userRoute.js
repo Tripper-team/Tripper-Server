@@ -13,5 +13,11 @@ module.exports = function(app){
     }), (req, res) => { res.redirect('/'); });   // 성공한다면 콜백 실행
 
     // 카카오 로그인 연결끊기 API (테스트를 위함)
-    app.post('/app/users/kakao-logout', user.kakaoLogout);
+    // app.post('/app/users/kakao-logout', user.kakaoLogout);
+
+    // 2. 회원가입 API
+    // app.post('/app/users/sign-up', user.signUp);
+
+    // 3. 닉네임 중복확인
+    // app.get('/app/users/nickname-')
 };
