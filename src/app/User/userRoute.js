@@ -11,4 +11,7 @@ module.exports = function(app){
     app.get('/auth/kakao/callback', passport.authenticate('kakao-login', {
         failureRedirect : '/',   // kakaoStrategy에서 실패한다면 실행
     }), (req, res) => { res.redirect('/'); });   // 성공한다면 콜백 실행
+
+    // 카카오 로그인 연결끊기 API (테스트를 위함)
+    app.post('/app/users/kakao-logout', user.kakaoLogout);
 };
