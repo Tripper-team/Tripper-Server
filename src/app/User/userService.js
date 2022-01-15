@@ -7,11 +7,18 @@ const baseResponse = require("../../../config/baseResponseStatus");
 const {response} = require("../../../config/response");
 const {errResponse} = require("../../../config/response");
 const jwt = require("jsonwebtoken");
-const crypto = require("crypto");
 
 exports.createUser = async function (email, profileImgUrl, kakaoId, ageGroup, gender, nickName) {
     try {
+        const age_arr = ageGroup.split('~');
+        let age;
 
+        if (age_arr[0] === '0') age = '10대 미만';
+        else age = `${String(age_arr[0])}대`;
+
+        const connection = await pool.getConnection(async (conn) => conn);
+        await userDao.insertUser(connection, [email, profileImgUrl, kakaoId, age, gender, nickName]);
+        connection.release();
     } catch (err) {
         logger.error(`App - createUser Service error\n: ${err.message}`);
         return errResponse(baseResponse.DB_ERROR);

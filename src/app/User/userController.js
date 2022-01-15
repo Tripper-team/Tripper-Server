@@ -130,12 +130,8 @@ exports.signUp = async function (req, res) {
     if (!nickName)
         return res.send(errResponse(baseResponse.NICKNAME_EMPTY));
 
-    const signUpResponse = await userService.createUser(
-        email, profileImgUrl, kakaoId, ageGroup, gender, nickName
-    );
-
-
-    // const signUpResult = await userProvider.
+    await userService.createUser(email, profileImgUrl, kakaoId, ageGroup, gender, nickName);   // 회원가입 진행
+    const signUpResult = await userProvider.getUserInfoByKakaoId(kakaoId);   // 회원가입 한 User 정보 출력
 
     return res.send(response(baseResponse.SIGN_UP_SUCCESS, signUpResult));
 };
