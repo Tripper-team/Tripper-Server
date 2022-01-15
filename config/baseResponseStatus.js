@@ -17,6 +17,11 @@ module.exports = {
     //Request error
     NICKNAME_EMPTY : { "isSuccess": true, "code": 2001, "message":"닉네임을 입력해주세요." },
     NICKNAME_ERROR_TYPE : { "isSuccess": true, "code": 2002, "message":"닉네임 형식이 잘못되었습니다. (한영 포함 10자 이내)" },
+    EMAIL_EMPTY : { "isSuccess": true, "code": 2003, "message":"이메일을 입력해주세요." },
+    PROFILE_IMG_EMPTY : { "isSuccess": true, "code": 2004, "message":"이메일을 입력해주세요." },
+    KAKAO_ID_EMPTY : { "isSuccess": true, "code": 2005, "message":"이메일을 입력해주세요." },
+
+
 
     ACCESS_TOKEN_EMPTY : { "isSuccess": false, "code": 2050, "message": "accessToken을 입력해주세요." },
     ACCESS_TOKEN_INVALID : { "isSuccess": false, "code": 2051, "message": "유효하지 않은 accessToken 입니다." },

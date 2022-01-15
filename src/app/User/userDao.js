@@ -1,18 +1,18 @@
-async function selectIsEmailExist(connection, email) {
-  const selectEmailExistQuery = `
-    SELECT EXISTS(SELECT email FROM User WHERE email = ?) as isEmailExist;
+async function selectIsKakaoIdExist(connection, kakaoId) {
+  const selectKakaoIdExistQuery = `
+    SELECT EXISTS(SELECT kakaoId FROM User WHERE kakaoId = ?) as isKakaoIdExist;
   `;
-  const [emailExistRow] = await connection.query(selectEmailExistQuery, email);
-  return emailExistRow;
+  const [kakaoIdExistRow] = await connection.query(selectKakaoIdExistQuery, kakaoId);
+  return kakaoIdExistRow;
 }
 
-async function selectUserInfo(connection, email) {
+async function selectUserInfoByKakaoId(connection, kakaoId) {
   const selectUserInfoQuery = `
     SELECT *
     FROM User
-    WHERE User.email = ?;
+    WHERE User.kakaoId = ?;
   `;
-  const [userInfoRow] = await connection.query(selectUserInfoQuery, email);
+  const [userInfoRow] = await connection.query(selectUserInfoQuery, kakaoId);
   return userInfoRow;
 }
 
@@ -25,7 +25,7 @@ async function selectIsNickExist(connection, nickName) {
 }
 
 module.exports = {
-  selectIsEmailExist,
-  selectUserInfo,
+  selectIsKakaoIdExist,
+  selectUserInfoByKakaoId,
   selectIsNickExist
 };

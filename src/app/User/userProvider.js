@@ -3,17 +3,17 @@ const { logger } = require("../../../config/winston");
 const userDao = require("./userDao");
 
 // 이메일 체크
-exports.retrieveUserEmail = async function (email) {
+exports.retrieveUserKakaoId = async function (kakaoId) {
   const connection = await pool.getConnection(async (conn) => conn);
-  const emailCheckResult = await userDao.selectIsEmailExist(connection, email);
+  const kakaoIdCheckResult = await userDao.selectIsKakaoIdExist(connection, kakaoId);
   connection.release();
-  return emailCheckResult;
+  return kakaoIdCheckResult;
 };
 
 // 사용자 정보 얻기
-exports.getUserInfo = async function (email) {
+exports.getUserInfoByKakaoId = async function (kakaoId) {
   const connection = await pool.getConnection(async (conn) => conn);
-  const userInfoResult = await userDao.selectUserInfo(connection, email);
+  const userInfoResult = await userDao.selectUserInfoByKakaoId(connection, kakaoId);
   connection.release();
   return userInfoResult;
 };

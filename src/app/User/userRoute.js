@@ -16,7 +16,7 @@ module.exports = function(app){
     // app.post('/app/users/kakao-logout', user.kakaoLogout);
 
     // 2. 회원가입 API
-    // app.post('/app/users/sign-up', user.signUp);
+    app.post('/app/users/sign-up', user.signUp);
 
     // 3. 닉네임 확인 API
     app.get('/app/users/nickname-check', user.checkNickname);
