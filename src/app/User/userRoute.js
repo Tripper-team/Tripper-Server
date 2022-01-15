@@ -18,6 +18,6 @@ module.exports = function(app){
     // 2. 회원가입 API
     // app.post('/app/users/sign-up', user.signUp);
 
-    // 3. 닉네임 중복확인
-    // app.get('/app/users/nickname-')
+    // 3. 닉네임 확인 API
+    app.get('/app/users/nickname-check', user.checkNickname);
 };

@@ -8,6 +8,9 @@ const axios = require("axios");
 const secret_config = require("../../../config/secret");
 const jwt = require("jsonwebtoken");
 const s3 = require('../../../config/aws_s3');
+require('dotenv').config();
+
+const regex_nickname = /^[ㄱ-ㅎ|가-힣|a-z|A-Z|0-9|]+$/;
 
 /**
  * API No. 1
@@ -15,7 +18,7 @@ const s3 = require('../../../config/aws_s3');
  * [POST] /app/users/kakao-login
  */
 passport.use('kakao-login', new KakaoStrategy({
-    clientID: 'd4d0816cf247061ebe4ddb6631422a08',
+    clientID: process.env.KAKAO_CLIENT_ID,
     callbackURL: 'http://localhost:3000/auth/kakao/callback',
 }, async (accessToken, refreshToken, profile, done) => {
     console.log("Access token: " + accessToken);
@@ -58,7 +61,7 @@ exports.kakaoLogin = async function (req, res) {
     // 사용자 이메일이 존재하는지 안하는지 체크할 것
     // 존재한다면 -> 바로 JWT 발급 및 로그인 처리 + 사용자 status 수정
     // 존재하지 않는다면 -> 회원가입 API 진행 (닉네임 입력 페이지로)
-    const emailCheckResult = await userProvider.emailCheck(email);
+    const emailCheckResult = await userProvider.retrieveUserEmail(email);
     if (emailCheckResult[0].isEmailExist === 1) {   // 존재한다면
         // 유저 인덱스 가져오기
         const userIdxResult = await userProvider.getUserInfo(email);
@@ -125,4 +128,24 @@ exports.signUp = async function (req, res) {
     // const signUpResult = await userProvider.
 
     return res.send(response(baseResponse.SIGN_UP_SUCCESS, signUpResult));
+};
+
+/**
+ * API No. 3
+ * API Name : 닉네임 확인 API
+ * [GET] /app/users/nickname-check
+ */
+exports.checkNickname = async function (req, res) {
+    /**
+     * Body: nickName
+     */
+    const nickName = req.body.nickName;
+
+    if (!nickName)
+        return res.send(errResponse(baseResponse.NICKNAME_EMPTY));
+    if (!regex_nickname.test(nickName))
+        return res.send(errResponse(baseResponse.NICKNAME_ERROR_TYPE));
+
+    const checkNicknameResponse = await userService.checkNickRedundant(nickName);
+    return res.send(checkNicknameResponse);
 };

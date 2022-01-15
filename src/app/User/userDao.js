@@ -16,7 +16,16 @@ async function selectUserInfo(connection, email) {
   return userInfoRow;
 }
 
+async function selectIsNickExist(connection, nickName) {
+  const selectNickExistQuery = `
+    SELECT EXISTS(SELECT nickName FROM User WHERE nickName = ?) as isNickResult;
+  `;
+  const [nickExistRow] = await connection.query(selectNickExistQuery, nickName);
+  return nickExistRow;
+}
+
 module.exports = {
   selectIsEmailExist,
-  selectUserInfo
+  selectUserInfo,
+  selectIsNickExist
 };
