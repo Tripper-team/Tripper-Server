@@ -65,7 +65,7 @@ exports.kakaoLogin = async function (req, res) {
     if (kakaoIdCheckResult[0].isKakaoIdExist === 1) {   // 존재한다면
         // 유저 인덱스 가져오기
         const userIdxResult = await userProvider.getUserInfoByKakaoId(kakaoId);
-        const userIdx = userIdxResult[0].idx;
+        const userIdx = userIdxResult[0].userIdx;
 
         // jwt 토큰 생성
         let token = await jwt.sign(
