@@ -20,4 +20,13 @@ module.exports = function(app){
 
     // 3. 닉네임 확인 API
     app.get('/app/users/nickname-check', user.checkNickname);
+
+    // 4. 마이페이지 조회 API
+    // app.get('/app/users/profile', jwtMiddleware)
+
+    // 5. 프로필 수정 API
+    app.patch('/app/users/profile-edit', jwtMiddleware, user.editUserProfile);
+
+    // 8. 자동 로그인 API
+    app.get('/app/users/auto-login', jwtMiddleware, user.autoLogin);
 };

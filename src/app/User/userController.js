@@ -158,3 +158,31 @@ exports.checkNickname = async function (req, res) {
     const checkNicknameResponse = await userService.checkNickRedundant(nickName);
     return res.send(checkNicknameResponse);
 };
+
+/**
+ * API No. 5
+ * API Name : 프로필 수정 API
+ * [PATCH] /app/users/profile-edit
+ */
+exports.editUserProfile = async function (req, res) {
+    /**
+     * Headers: x-access-token
+     * Body: profileImgUrl, nickName
+     */
+    const userIdx = req.verifiedToken.userIdx;
+    const { profileImgUrl, nickName } = req.body;
+};
+
+/**
+ * API No. 8
+ * API Name : 자동 로그인 API
+ * [GET] /app/users/auto-login
+ */
+exports.autoLogin = async function (req, res) {
+    /**
+     * Headers: x-access-token
+     */
+    const userIdx = req.verifiedToken.userIdx;
+    console.log("[자동로그인] userIdx: " + userIdx);
+    return res.send(response(baseResponse.AUTO_LOGIN_SUCCESS));
+};

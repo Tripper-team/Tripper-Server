@@ -8,11 +8,11 @@ module.exports = {
     KAKAO_SIGN_UP : { "isSuccess": true, "code": 1003, "message":"환영합니다! 사용하시기 전 회원가입을 진행해주시기 바랍니다." },
     SIGN_UP_SUCCESS : { "isSuccess": true, "code": 1004, "message":"회원가입에 성공했습니다." },
     NICKNAME_CHECK_SUCCESS : { "isSuccess": true, "code": 1005, "message":"사용 가능한 닉네임입니다." },
+    AUTO_LOGIN_SUCCESS : { "isSuccess": true, "code": 1006, "message":"자동 로그인을 성공했습니다 (JWT 토큰 검증 성공)" }, // ?
 
     // Common
     TOKEN_EMPTY : { "isSuccess": false, "code": 2000, "message":"JWT 토큰을 입력해주세요." },
     TOKEN_VERIFICATION_FAILURE : { "isSuccess": false, "code": 3000, "message":"JWT 토큰 검증 실패" },
-    TOKEN_VERIFICATION_SUCCESS : { "isSuccess": true, "code": 1001, "message":"JWT 토큰 검증 성공" }, // ?
 
     //Request error
     NICKNAME_EMPTY : { "isSuccess": true, "code": 2001, "message":"닉네임을 입력해주세요." },
