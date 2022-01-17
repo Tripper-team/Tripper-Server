@@ -30,8 +30,8 @@ module.exports = function(app){
     // 6. 팔로우 API
     app.post('/app/users/following', jwtMiddleware, user.follow);
 
-    // 7. 팔로잉/팔로워 조회 API
-    app.get('/app/users/:userIdx/follow-list', user.getFollowList);
+    // 7. 팔로잉/팔로워 조회 API (회원용)
+    app.get('/app/users/:userIdx/follow-list', jwtMiddleware, user.getFollowList);
 
     // 8. 자동 로그인 API
     app.get('/app/users/auto-login', jwtMiddleware, user.autoLogin);
