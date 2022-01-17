@@ -1,95 +1,109 @@
-
-// 새롭게 추가한 함수를 아래 부분에서 export 해줘야 외부의 Provider, Service 등에서 사용가능합니다.
-
-// 모든 유저 조회
-async function selectUser(connection) {
-  const selectUserListQuery = `
-                SELECT email, nickname 
-                FROM UserInfo;
-                `;
-  const [userRows] = await connection.query(selectUserListQuery);
-  return userRows;
+async function selectIsKakaoIdExist(connection, kakaoId) {
+  const selectKakaoIdExistQuery = `
+    SELECT EXISTS(SELECT kakaoId FROM User WHERE kakaoId = ?) AS isKakaoIdExist;
+  `;
+  const [kakaoIdExistRow] = await connection.query(selectKakaoIdExistQuery, kakaoId);
+  return kakaoIdExistRow;
 }
 
-// 이메일로 회원 조회
-async function selectUserEmail(connection, email) {
-  const selectUserEmailQuery = `
-                SELECT email, nickname 
-                FROM UserInfo 
-                WHERE email = ?;
-                `;
-  const [emailRows] = await connection.query(selectUserEmailQuery, email);
-  return emailRows;
+async function selectUserInfoByKakaoId(connection, kakaoId) {
+  const selectUserInfoQuery = `
+    SELECT idx AS userIdx, email, nickName, profileImgUrl, kakaoId, ageGroup, gender
+    FROM User
+    WHERE User.kakaoId = ?;
+  `;
+  const [userInfoRow] = await connection.query(selectUserInfoQuery, kakaoId);
+  return userInfoRow;
 }
 
-// userId 회원 조회
-async function selectUserId(connection, userId) {
-  const selectUserIdQuery = `
-                 SELECT id, email, nickname 
-                 FROM UserInfo 
-                 WHERE id = ?;
-                 `;
-  const [userRow] = await connection.query(selectUserIdQuery, userId);
-  return userRow;
+async function selectIsNickExist(connection, nickName) {
+  const selectNickExistQuery = `
+    SELECT EXISTS(SELECT nickName FROM User WHERE nickName = ?) as isNickResult;
+  `;
+  const [nickExistRow] = await connection.query(selectNickExistQuery, nickName);
+  return nickExistRow;
 }
 
-// 유저 생성
-async function insertUserInfo(connection, insertUserInfoParams) {
-  const insertUserInfoQuery = `
-        INSERT INTO UserInfo(email, password, nickname)
-        VALUES (?, ?, ?);
+async function insertUser(connection, [email, profileImgUrl, kakaoId, age, gender, nickName]) {
+  const insertUserQuery = `
+    INSERT INTO User(email, profileImgUrl, kakaoId, ageGroup, gender, nickName)
+    VALUES (?, ?, ?, ?, ?, ?);
+  `;
+  const insertUserRow = await connection.query(insertUserQuery, [email, profileImgUrl, kakaoId, age, gender, nickName]);
+  return insertUserRow;
+}
+
+async function selectIsUserExistByIdx(connection, userIdx) {
+  const selectUserExistQuery = `
+    SELECT EXISTS(SELECT idx FROM User WHERE idx = ?) AS isUserExist;
+  `;
+  const [userExistRow] = await connection.query(selectUserExistQuery, userIdx);
+  return userExistRow;
+}
+
+async function selectFollowStatus(connection, [fromIdx, toIdx]) {
+  const selectFollowStatusQuery = `
+    SELECT status
+    FROM Follow
+    WHERE fromIdx = ? AND toIdx = ?;
+  `;
+  const [followStatusRow] = await connection.query(selectFollowStatusQuery, [fromIdx, toIdx]);
+  return followStatusRow;
+}
+
+async function insertNewFollow(connection, [fromIdx, toIdx]) {
+  const insertNewFollowQuery = `
+    INSERT INTO Follow(fromIdx, toIdx)
+    VALUES (?, ?);
+  `;
+  const newFollowRow = await connection.query(insertNewFollowQuery, [fromIdx, toIdx]);
+  return newFollowRow;
+}
+
+async function updateFollow(connection, [status, fromIdx, toIdx]) {
+  const updateFollowStatusQuery = `
+    UPDATE Follow
+    SET status = ?
+    WHERE fromIdx = ? AND toIdx = ?;
+  `;
+  const updateFollowStatusRow = await connection.query(updateFollowStatusQuery, [status, fromIdx, toIdx]);
+  return updateFollowStatusRow;
+}
+
+async function selectUserFollowList(connection, [userIdx, option]) {
+  let selectUserFollowListQuery = "";
+
+  if (option === 'following') {   // 팔로잉 조회
+    selectUserFollowListQuery = `
+      SELECT F.toIdx, nickName, profileImgUrl, status AS followStatus
+      FROM Follow AS F
+             INNER JOIN User AS U
+                        ON F.toIdx = U.idx
+      WHERE F.fromIdx = ? AND F.status = 'Y';
     `;
-  const insertUserInfoRow = await connection.query(
-    insertUserInfoQuery,
-    insertUserInfoParams
-  );
+  }
+  else {   // 팔로워 조회
+    selectUserFollowListQuery = `
+      SELECT F.fromIdx, nickName, profileImgUrl, status AS followStatus
+      FROM Follow AS F
+             INNER JOIN User AS U
+                        ON F.fromIdx = U.idx
+      WHERE F.toIdx = ? AND F.status = 'Y';
+    `;
+  }
 
-  return insertUserInfoRow;
+  const [selectUserFollowRow] = await connection.query(selectUserFollowListQuery, userIdx);
+  return selectUserFollowRow;
 }
-
-// 패스워드 체크
-async function selectUserPassword(connection, selectUserPasswordParams) {
-  const selectUserPasswordQuery = `
-        SELECT email, nickname, password
-        FROM UserInfo 
-        WHERE email = ? AND password = ?;`;
-  const selectUserPasswordRow = await connection.query(
-      selectUserPasswordQuery,
-      selectUserPasswordParams
-  );
-
-  return selectUserPasswordRow;
-}
-
-// 유저 계정 상태 체크 (jwt 생성 위해 id 값도 가져온다.)
-async function selectUserAccount(connection, email) {
-  const selectUserAccountQuery = `
-        SELECT status, id
-        FROM UserInfo 
-        WHERE email = ?;`;
-  const selectUserAccountRow = await connection.query(
-      selectUserAccountQuery,
-      email
-  );
-  return selectUserAccountRow[0];
-}
-
-async function updateUserInfo(connection, id, nickname) {
-  const updateUserQuery = `
-  UPDATE UserInfo 
-  SET nickname = ?
-  WHERE id = ?;`;
-  const updateUserRow = await connection.query(updateUserQuery, [nickname, id]);
-  return updateUserRow[0];
-}
-
 
 module.exports = {
-  selectUser,
-  selectUserEmail,
-  selectUserId,
-  insertUserInfo,
-  selectUserPassword,
-  selectUserAccount,
-  updateUserInfo,
+  selectIsKakaoIdExist,
+  selectUserInfoByKakaoId,
+  selectIsNickExist,
+  insertUser,
+  selectIsUserExistByIdx,
+  selectFollowStatus,
+  insertNewFollow,
+  updateFollow,
+  selectUserFollowList
 };
