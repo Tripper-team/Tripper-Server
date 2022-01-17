@@ -21,7 +21,6 @@ else {
         port: process.env.RDS_PORT,
         password: process.env.RDS_PASSWORD,
         database: process.env.RDS_DEV_DB
-    });
 }
 
 module.exports = {
