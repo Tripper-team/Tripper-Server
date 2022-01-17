@@ -74,6 +74,9 @@ exports.createFollow = async function (fromIdx, toIdx) {
             return errResponse(baseResponse.NOT_EXIST_USER);
 
         // 탈퇴된 계정인지 아닌지 확인 (일단 보류)
+        const checkWithdrawResult = await userDao.selectIsUserWithdraw(connection, toIdx);
+        if (checkWithdrawResult[0].isWithdraw === 'Y')
+            return errResponse(baseResponse.USER_WITHDRAW);
 
         // 팔로우 상태에 따라 나누기
         const followStatusResult = await userDao.selectFollowStatus(connection, [fromIdx, toIdx]);

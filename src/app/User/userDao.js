@@ -96,6 +96,16 @@ async function selectUserFollowList(connection, [userIdx, option]) {
   return selectUserFollowRow;
 }
 
+async function selectIsUserWithdraw(connection, toIdx) {
+  const selectUserWithdrawQuery = `
+    SELECT isWithdraw
+    FROM User
+    WHERE User.idx = ?;
+  `;
+  const [selectUserWithdrawRow] = await connection.query(selectUserWithdrawQuery, toIdx);
+  return selectUserWithdrawRow;
+}
+
 module.exports = {
   selectIsKakaoIdExist,
   selectUserInfoByKakaoId,
@@ -105,5 +115,6 @@ module.exports = {
   selectFollowStatus,
   insertNewFollow,
   updateFollow,
-  selectUserFollowList
+  selectUserFollowList,
+  selectIsUserWithdraw
 };
