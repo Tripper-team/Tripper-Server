@@ -1,35 +1,38 @@
 module.exports = function(app){
     const user = require('./userController');
     const jwtMiddleware = require('../../../config/jwtMiddleware');
+    const passport = require('passport');
 
-    // 0. 테스트 API
-    app.get('/app/test', user.getTest)
+    // 1. 카카오 로그인 API
+    // /kakao로 요청이 오면, 카카오 로그인 페이지로 이동한다. 이후 카카오 서버로 로그인을 하게 되면 다음 라우터로 이동
+    app.post('/app/users/kakao-login', user.kakaoLogin);
+    app.get('/kakao', passport.authenticate('kakao-login'));
+    // 위에서 카카오 서버로 로그인이 되면 카카오 Redirect URL을 통해 이쪽 라우터로 오게 된다.
+    app.get('/auth/kakao/callback', passport.authenticate('kakao-login', {
+        failureRedirect : '/',   // kakaoStrategy에서 실패한다면 실행
+    }), (req, res) => { res.redirect('/'); });   // 성공한다면 콜백 실행
 
-    // 1. 유저 생성 (회원가입) API
-    app.post('/app/users', user.postUsers);
+    // 카카오 로그인 연결끊기 API (테스트를 위함)
+    // app.post('/app/users/kakao-logout', user.kakaoLogout);
 
-    // 2. 유저 조회 API (+ 검색)
-    app.get('/app/users',user.getUsers); 
+    // 2. 회원가입 API
+    app.post('/app/users/sign-up', user.signUp);
 
-    // 3. 특정 유저 조회 API
-    app.get('/app/users/:userId', user.getUserById);
+    // 3. 닉네임 확인 API
+    app.get('/app/users/nickname-check', user.checkNickname);
 
+    // 4. 마이페이지 조회 API
+    // app.get('/app/users/profile', jwtMiddleware)
 
-    // 아래 부분은 7주차에서 다룸.
-    // TODO: After 로그인 인증 방법 (JWT)
-    // 로그인 하기 API (JWT 생성)
-    app.post('/app/login', user.login);
+    // 5. 프로필 수정 API
+    // app.patch('/app/users/profile-edit', jwtMiddleware, user.editUserProfile);
 
-    // 회원 정보 수정 API (JWT 검증 및 Validation - 메소드 체이닝 방식으로 jwtMiddleware 사용)
-    app.patch('/app/users/:userId', jwtMiddleware, user.patchUsers)
+    // 6. 팔로우 API
+    app.post('/app/users/following', jwtMiddleware, user.follow);
 
+    // 7. 팔로잉/팔로워 조회 API
+    app.get('/app/users/:userIdx/follow-list', user.getFollowList);
 
-
+    // 8. 자동 로그인 API
+    app.get('/app/users/auto-login', jwtMiddleware, user.autoLogin);
 };
-
-
-// TODO: 자동로그인 API (JWT 검증 및 Payload 내뱉기)
-// JWT 검증 API
-// app.get('/app/auto-login', jwtMiddleware, user.check);
-
-// TODO: 탈퇴하기 API

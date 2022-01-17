@@ -1,116 +1,116 @@
 const {logger} = require("../../../config/winston");
 const {pool} = require("../../../config/database");
 const secret_config = require("../../../config/secret");
-
-// user 뿐만 아니라 다른 도메인의 Provider와 Dao도 아래처럼 require하여 사용할 수 있습니다.
 const userProvider = require("./userProvider");
 const userDao = require("./userDao");
-
 const baseResponse = require("../../../config/baseResponseStatus");
 const {response} = require("../../../config/response");
 const {errResponse} = require("../../../config/response");
-
 const jwt = require("jsonwebtoken");
-const crypto = require("crypto");
 
-// Service: Create, Update, Delete 비즈니스 로직 처리
-
-exports.createUser = async function (email, password, nickname) {
+exports.createUser = async function (email, profileImgUrl, kakaoId, ageGroup, gender, nickName) {
     try {
-        // 이메일 중복 확인
-        // UserProvider에서 해당 이메일과 같은 User 목록을 받아서 emailRows에 저장한 후, 배열의 길이를 검사한다.
-        // -> 길이가 0 이상이면 이미 해당 이메일을 갖고 있는 User가 조회된다는 의미
-        const emailRows = await userProvider.emailCheck(email);
-        if (emailRows.length > 0)
-            return errResponse(baseResponse.SIGNUP_REDUNDANT_EMAIL);
+        // 회원가입을 이미 한 유저인지 아닌지 확인할 것
+        const kakaoIdCheckResult = await userProvider.retrieveUserKakaoId(kakaoId);
+        // console.log(kakaoIdCheckResult);
+        if (kakaoIdCheckResult[0].isKakaoIdExist === 1)
+            return errResponse(baseResponse.USER_ALREADY_SIGNUP);
 
-        // 비밀번호 암호화
-        const hashedPassword = await crypto
-            .createHash("sha512")
-            .update(password)
-            .digest("hex");
+        const age_arr = ageGroup.split('~');
+        let age;
 
-        // 쿼리문에 사용할 변수 값을 배열 형태로 전달
-        const insertUserInfoParams = [email, hashedPassword, nickname];
+        if (age_arr[0] === '0') age = '10대 미만';
+        else age = `${String(age_arr[0])}대`;
 
         const connection = await pool.getConnection(async (conn) => conn);
 
-        const userIdResult = await userDao.insertUserInfo(connection, insertUserInfoParams);
-        console.log(`추가된 회원 : ${userIdResult[0].insertId}`)
-        connection.release();
-        return response(baseResponse.SUCCESS);
+        await userDao.insertUser(connection, [email, profileImgUrl, kakaoId, age, gender, nickName]);
+        const userIdxResult = await userProvider.getUserInfoByKakaoId(kakaoId);
+        const userIdx = userIdxResult[0].userIdx;
 
+        // jwt 토큰 생성
+        let token = await jwt.sign(
+            {  // 토큰의 내용 (payload)
+                userIdx: userIdx
+            },
+            secret_config.jwtsecret,   // 비밀키
+            {
+                expiresIn: "365d",
+                subject: "userInfo",
+            }   // 유효기간 365일
+        );
+
+        connection.release();
+
+        return response(baseResponse.SIGN_UP_SUCCESS, { 'userIdx': userIdx, 'jwt': token });
     } catch (err) {
         logger.error(`App - createUser Service error\n: ${err.message}`);
         return errResponse(baseResponse.DB_ERROR);
     }
 };
 
-
-// TODO: After 로그인 인증 방법 (JWT)
-exports.postSignIn = async function (email, password) {
+// 닉네임 중복확인
+exports.checkNickRedundant = async function (nickName) {
     try {
-        // 이메일 여부 확인
-        const emailRows = await userProvider.emailCheck(email);
-        if (emailRows.length < 1) return errResponse(baseResponse.SIGNIN_EMAIL_WRONG);
-
-        const selectEmail = emailRows[0].email
-
-        // 비밀번호 확인 (입력한 비밀번호를 암호화한 것과 DB에 저장된 비밀번호가 일치하는 지 확인함)
-        const hashedPassword = await crypto
-            .createHash("sha512")
-            .update(password)
-            .digest("hex");
-
-        const selectUserPasswordParams = [selectEmail, hashedPassword];
-        const passwordRows = await userProvider.passwordCheck(selectUserPasswordParams);
-
-        if (passwordRows[0].password !== hashedPassword) {
-            return errResponse(baseResponse.SIGNIN_PASSWORD_WRONG);
-        }
-
-        // 계정 상태 확인
-        const userInfoRows = await userProvider.accountCheck(email);
-
-        if (userInfoRows[0].status === "INACTIVE") {
-            return errResponse(baseResponse.SIGNIN_INACTIVE_ACCOUNT);
-        } else if (userInfoRows[0].status === "DELETED") {
-            return errResponse(baseResponse.SIGNIN_WITHDRAWAL_ACCOUNT);
-        }
-
-        console.log(userInfoRows[0].id) // DB의 userId
-
-        //토큰 생성 Service
-        let token = await jwt.sign(
-            {
-                userId: userInfoRows[0].id,
-            }, // 토큰의 내용(payload)
-            secret_config.jwtsecret, // 비밀키
-            {
-                expiresIn: "365d",
-                subject: "userInfo",
-            } // 유효 기간 365일
-        );
-
-        return response(baseResponse.SUCCESS, {'userId': userInfoRows[0].id, 'jwt': token});
-
-    } catch (err) {
-        logger.error(`App - postSignIn Service error\n: ${err.message} \n${JSON.stringify(err)}`);
+        const nickCheckResult = await userProvider.retrieveUserNickname(nickName);
+        if (nickCheckResult[0].isNickResult === 1)   // 닉네임이 존재한다면
+            return errResponse(baseResponse.REDUNDANT_NICKNAME);
+        else
+            return response(baseResponse.NICKNAME_CHECK_SUCCESS);
+    } catch(err) {
+        logger.error(`App - checkNickRedundant Service error\n: ${err.message}`);
         return errResponse(baseResponse.DB_ERROR);
     }
 };
 
-exports.editUser = async function (id, nickname) {
+// 팔로우
+exports.createFollow = async function (fromIdx, toIdx) {
     try {
-        console.log(id)
         const connection = await pool.getConnection(async (conn) => conn);
-        const editUserResult = await userDao.updateUserInfo(connection, id, nickname)
-        connection.release();
 
-        return response(baseResponse.SUCCESS);
+        // toIdx가 실제로 존재하는 user인지 확인하기
+        const userCheckResult = await userDao.selectIsUserExistByIdx(connection, toIdx);
+        if (userCheckResult[0].isUserExist === 0)    // 해당하는 유저가 없다면
+            return errResponse(baseResponse.NOT_EXIST_USER);
 
-    } catch (err) {
-        logger.error(`App - editUser Service error\n: ${err.message}`);
+        // 탈퇴된 계정인지 아닌지 확인 (일단 보류)
+
+        // 팔로우 상태에 따라 나누기
+        const followStatusResult = await userDao.selectFollowStatus(connection, [fromIdx, toIdx]);
+        if (followStatusResult.length === 0 || followStatusResult[0].status === 'N') {   // (1) 서로 팔로우가 아예 안되어있거나 한번 요청했다가 끊은 경우
+            if (followStatusResult.length === 0)    // 처음 팔로우
+                await userDao.insertNewFollow(connection, [fromIdx, toIdx]);
+            else   // 한번 팔로우를 해봤음
+                await userDao.updateFollow(connection, ['Y', fromIdx, toIdx])
+
+            connection.release();
+            return response(baseResponse.FOLLOW_SUCCESS);
+        }
+        else {   // (2) 팔로우가 서로 되어있는 상황
+            await userDao.updateFollow(connection, ['N', fromIdx, toIdx]);
+
+            connection.release();
+            return response(baseResponse.UNFOLLOW_SUCCESS);
+        }
+    } catch(err) {
+        logger.error(`App - createFollow Service error\n: ${err.message}`);
         return errResponse(baseResponse.DB_ERROR);
     }
-}
+};
+
+// 사용자 존재하는지 체크
+exports.checkUserExist = async (userIdx) => {
+    try {
+        const connection = await pool.getConnection(async (conn) => conn);
+
+        // userIdx가 실제로 존재하는 user인지 확인하기
+        const userCheckResult = await userDao.selectIsUserExistByIdx(connection, userIdx);
+        if (userCheckResult[0].isUserExist === 0) {   // 해당하는 유저가 없다면
+            connection.release();
+            return errResponse(baseResponse.NOT_EXIST_USER);
+        } else return response(baseResponse.USER_CHECK_SUCCESS);
+    } catch(err) {
+        logger.error(`App - checkUserExist Service error\n: ${err.message}`);
+        return errResponse(baseResponse.DB_ERROR);
+    }
+};
