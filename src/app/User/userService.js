@@ -71,7 +71,7 @@ exports.createFollow = async function (fromIdx, toIdx) {
         // toIdx가 실제로 존재하는 user인지 확인하기
         const userCheckResult = await userDao.selectIsUserExistByIdx(connection, toIdx);
         if (userCheckResult[0].isUserExist === 0)    // 해당하는 유저가 없다면
-            return response(baseResponse.NOT_EXIST_USER);
+            return errResponse(baseResponse.NOT_EXIST_USER);
 
         // 탈퇴된 계정인지 아닌지 확인 (일단 보류)
 
@@ -94,6 +94,23 @@ exports.createFollow = async function (fromIdx, toIdx) {
         }
     } catch(err) {
         logger.error(`App - createFollow Service error\n: ${err.message}`);
+        return errResponse(baseResponse.DB_ERROR);
+    }
+};
+
+// 사용자 존재하는지 체크
+exports.checkUserExist = async (userIdx) => {
+    try {
+        const connection = await pool.getConnection(async (conn) => conn);
+
+        // userIdx가 실제로 존재하는 user인지 확인하기
+        const userCheckResult = await userDao.selectIsUserExistByIdx(connection, userIdx);
+        if (userCheckResult[0].isUserExist === 0) {   // 해당하는 유저가 없다면
+            connection.release();
+            return errResponse(baseResponse.NOT_EXIST_USER);
+        } else return response(baseResponse.USER_CHECK_SUCCESS);
+    } catch(err) {
+        logger.error(`App - checkUserExist Service error\n: ${err.message}`);
         return errResponse(baseResponse.DB_ERROR);
     }
 };

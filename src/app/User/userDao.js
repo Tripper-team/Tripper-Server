@@ -70,6 +70,32 @@ async function updateFollow(connection, [status, fromIdx, toIdx]) {
   return updateFollowStatusRow;
 }
 
+async function selectUserFollowList(connection, [userIdx, option]) {
+  let selectUserFollowListQuery = "";
+
+  if (option === 'following') {   // 팔로잉 조회
+    selectUserFollowListQuery = `
+      SELECT F.toIdx, nickName, profileImgUrl, status AS followStatus
+      FROM Follow AS F
+             INNER JOIN User AS U
+                        ON F.toIdx = U.idx
+      WHERE F.fromIdx = ? AND F.status = 'Y';
+    `;
+  }
+  else {   // 팔로워 조회
+    selectUserFollowListQuery = `
+      SELECT F.fromIdx, nickName, profileImgUrl, status AS followStatus
+      FROM Follow AS F
+             INNER JOIN User AS U
+                        ON F.fromIdx = U.idx
+      WHERE F.toIdx = ? AND F.status = 'Y';
+    `;
+  }
+
+  const [selectUserFollowRow] = await connection.query(selectUserFollowListQuery, userIdx);
+  return selectUserFollowRow;
+}
+
 module.exports = {
   selectIsKakaoIdExist,
   selectUserInfoByKakaoId,
@@ -78,5 +104,6 @@ module.exports = {
   selectIsUserExistByIdx,
   selectFollowStatus,
   insertNewFollow,
-  updateFollow
+  updateFollow,
+  selectUserFollowList
 };

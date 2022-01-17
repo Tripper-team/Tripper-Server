@@ -25,3 +25,11 @@ exports.retrieveUserNickname = async function (nickName) {
   connection.release();
   return nickCheckResult;
 };
+
+// 팔로워, 팔로잉 리스트 조회
+exports.retrieveFollowList = async function (userIdx, option) {
+  const connection = await pool.getConnection(async (conn) => conn);
+  const followListResult = await userDao.selectUserFollowList(connection, [userIdx, option]);
+  connection.release();
+  return followListResult;
+};

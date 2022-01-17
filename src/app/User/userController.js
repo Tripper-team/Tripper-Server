@@ -12,6 +12,10 @@ require('dotenv').config();
 
 const regex_nickname = /^[ㄱ-ㅎ|가-힣|a-z|A-Z|0-9|]+$/;
 
+const checkObjectEmpty = (obj) => {
+    return Object.keys(obj).length === 0;
+}
+
 /**
  * API No. 1
  * API Name : 카카오 로그인 API
@@ -193,6 +197,44 @@ exports.follow = async function (req, res) {
 
     const followResponse = await userService.createFollow(fromIdx, toIdx);
     return res.send(followResponse);
+};
+
+/**
+ * API No. 7
+ * API Name : 팔로잉/팔로워 조회 API
+ * [GET] /app/users/:userIdx/follow-list?option=
+ */
+exports.getFollowList = async function (req, res) {
+    /**
+     * Query: option (following, follower)
+     * Path-variable: userIdx
+     */
+    const option = req.query.option;   // 조회 구분 (팔로잉 or 팔로워)
+    const userIdx = req.params.userIdx;   // 조회할 사람의 인덱스
+
+    if (!option)
+        return res.send(errResponse(baseResponse.FOLLOW_SEARCH_OPTION_EMPTY));
+    if (option !== 'following' && option !== 'follower')
+        return res.send(errResponse(baseResponse.FOLLOW_SEARCH_OPTION_ERROR));
+    if (!userIdx)
+        return res.send(errResponse(baseResponse.USER_IDX_EMPTY));
+
+    const userExistResult = await userService.checkUserExist(userIdx);   // 실제 user인지 체크
+    // console.log(userExistResult.code);
+    if (userExistResult.code === 3003)
+        return res.send(userExistResult);
+    else {
+        const followListResult = await userProvider.retrieveFollowList(userIdx, option);
+
+        if (checkObjectEmpty(followListResult))
+            return res.send(errResponse(baseResponse.FOLLOW_SEARCH_NOT_RESULT));
+        else {
+            if (option === 'following')
+                return res.send(response(baseResponse.FOLLOWING_LIST_SUCCESS, followListResult));
+            else
+                return res.send(response(baseResponse.FOLLOWER_LIST_SUCCESS, followListResult));
+        }
+    }
 };
 
 /**
