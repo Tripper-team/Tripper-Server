@@ -8,6 +8,7 @@ const axios = require("axios");
 const secret_config = require("../../../config/secret");
 const jwt = require("jsonwebtoken");
 const s3 = require('../../../config/aws_s3');
+const userDao = require("./userDao");
 require('dotenv').config();
 
 const regex_nickname = /^[ㄱ-ㅎ|가-힣|a-z|A-Z|0-9|]+$/;
@@ -206,9 +207,11 @@ exports.follow = async function (req, res) {
  */
 exports.getFollowList = async function (req, res) {
     /**
+     * Headers: JWT Token
      * Query: option (following, follower)
      * Path-variable: userIdx
      */
+    const myIdx = req.verifiedToken.userIdx;   // 나의 인덱스
     const option = req.query.option;   // 조회 구분 (팔로잉 or 팔로워)
     const userIdx = req.params.userIdx;   // 조회할 사람의 인덱스
 
@@ -216,23 +219,55 @@ exports.getFollowList = async function (req, res) {
         return res.send(errResponse(baseResponse.FOLLOW_SEARCH_OPTION_EMPTY));
     if (option !== 'following' && option !== 'follower')
         return res.send(errResponse(baseResponse.FOLLOW_SEARCH_OPTION_ERROR));
-    if (!userIdx)
-        return res.send(errResponse(baseResponse.USER_IDX_EMPTY));
 
-    const userExistResult = await userService.checkUserExist(userIdx);   // 실제 user인지 체크
-    // console.log(userExistResult.code);
-    if (userExistResult.code === 3003)
-        return res.send(userExistResult);
-    else {
-        const followListResult = await userProvider.retrieveFollowList(userIdx, option);
+    // userIdx와 myIdx가 같다면 본인의 팔로잉, 팔로워 조회
+    if (parseInt(userIdx) === parseInt(myIdx)) {
+        if (option === 'following') {   // 본인의 팔로잉 조회
+            const userStatusCheckRow = await userProvider.checkUserStatus(myIdx);
+            if (userStatusCheckRow[0].isWithdraw === 'Y')
+                return res.send(errResponse(baseResponse.USER_WITHDRAW));
 
-        if (checkObjectEmpty(followListResult))
-            return res.send(errResponse(baseResponse.FOLLOW_SEARCH_NOT_RESULT));
-        else {
-            if (option === 'following')
-                return res.send(response(baseResponse.FOLLOWING_LIST_SUCCESS, followListResult));
+            const getMyFollowingResult = await userProvider.retrieveFollowList(userIdx, 'Y', option);
+            if (getMyFollowingResult.length === 0)
+                return res.send(errResponse(baseResponse.FOLLOWING_SEARCH_NOT_RESULT));
             else
-                return res.send(response(baseResponse.FOLLOWER_LIST_SUCCESS, followListResult));
+                return res.send(response(baseResponse.FOLLOWING_LIST_SUCCESS, getMyFollowingResult));
+        } else {   // 본인의 팔로워 조회
+            const userStatusCheckRow = await userProvider.checkUserStatus(myIdx);
+            if (userStatusCheckRow[0].isWithdraw === 'Y')
+                return res.send(errResponse(baseResponse.USER_WITHDRAW));
+
+            const getMyFollowerResult = await userProvider.retrieveFollowList(userIdx, 'Y', option);
+            if (getMyFollowerResult.length === 0)
+                return res.send(errResponse(baseResponse.FOLLOWER_SEARCH_NOT_RESULT));
+            else
+                return res.send(response(baseResponse.FOLLOWER_LIST_SUCCESS, getMyFollowerResult));
+        }
+    }
+    else {   // 다르면 상대방의 팔로잉, 팔로워 조회
+        if (option === 'following') {   // 상대방의 팔로잉 조회
+            const myStatusCheckRow = await userProvider.checkUserStatus(myIdx);
+            const userStatusCheckRow = await userProvider.checkUserStatus(userIdx);
+            if (userStatusCheckRow[0].isWithdraw === 'Y' || myStatusCheckRow[0].isWithdraw === 'Y')
+                return res.send(errResponse(baseResponse.USER_WITHDRAW));
+
+            const getOtherFollowingResult = await userProvider.retrieveFollowList([userIdx, myIdx], 'N', option);
+            if (getOtherFollowingResult.length === 0)
+                return res.send(errResponse(baseResponse.FOLLOWING_SEARCH_NOT_RESULT));
+            else
+                return res.send(response(baseResponse.FOLLOWING_LIST_SUCCESS, getOtherFollowingResult));
+
+        } else {   // 상대방의 팔로워 조회
+            const myStatusCheckRow = await userProvider.checkUserStatus(myIdx);
+            const userStatusCheckRow = await userProvider.checkUserStatus(userIdx);
+            if (userStatusCheckRow[0].isWithdraw === 'Y' || myStatusCheckRow[0].isWithdraw === 'Y')
+                return res.send(errResponse(baseResponse.USER_WITHDRAW));
+
+            const getOtherFollowerResult = await userProvider.retrieveFollowList([userIdx, myIdx], 'N', option);
+            if (getOtherFollowerResult.length === 0)
+                return res.send(errResponse(baseResponse.FOLLOWER_SEARCH_NOT_RESULT));
+            else
+                return res.send(response(baseResponse.FOLLOWER_LIST_SUCCESS, getOtherFollowerResult));
         }
     }
 };

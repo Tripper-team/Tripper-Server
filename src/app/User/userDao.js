@@ -70,32 +70,6 @@ async function updateFollow(connection, [status, fromIdx, toIdx]) {
   return updateFollowStatusRow;
 }
 
-async function selectUserFollowList(connection, [userIdx, option]) {
-  let selectUserFollowListQuery = "";
-
-  if (option === 'following') {   // 팔로잉 조회
-    selectUserFollowListQuery = `
-      SELECT F.toIdx, nickName, profileImgUrl, status AS followStatus
-      FROM Follow AS F
-             INNER JOIN User AS U
-                        ON F.toIdx = U.idx
-      WHERE F.fromIdx = ? AND F.status = 'Y';
-    `;
-  }
-  else {   // 팔로워 조회
-    selectUserFollowListQuery = `
-      SELECT F.fromIdx, nickName, profileImgUrl, status AS followStatus
-      FROM Follow AS F
-             INNER JOIN User AS U
-                        ON F.fromIdx = U.idx
-      WHERE F.toIdx = ? AND F.status = 'Y';
-    `;
-  }
-
-  const [selectUserFollowRow] = await connection.query(selectUserFollowListQuery, userIdx);
-  return selectUserFollowRow;
-}
-
 async function selectIsUserWithdraw(connection, toIdx) {
   const selectUserWithdrawQuery = `
     SELECT isWithdraw
@@ -106,6 +80,95 @@ async function selectIsUserWithdraw(connection, toIdx) {
   return selectUserWithdrawRow;
 }
 
+async function selectMyFollow(connection, [userIdx, option]) {
+  let selectMyFollowQuery = "";
+  let params;
+
+  if (option === 'following') {
+    selectMyFollowQuery = `
+      SELECT toIdx, nickName, profileImgUrl,
+       CASE
+           WHEN Follow.status = 'Y' THEN '팔로잉 활성화중'
+           WHEN Follow.status = 'N' THEN '팔로잉 비활성화중'
+       END AS followStatus
+      From Follow
+        INNER JOIN User
+        ON Follow.toIdx = User.idx
+      WHERE Follow.fromIdx = ? AND User.isWithdraw = 'N';
+    `;
+    params = userIdx;
+  } else {
+    selectMyFollowQuery = `
+      SELECT fromIdx, nickName, profileImgUrl,
+            CASE
+                WHEN (A.status IS NULL) OR (A.status = 'N') THEN '팔로잉 비활성화중'
+                WHEN A.status = 'Y' THEN '팔로잉 활성화중'
+            END AS followStatus
+      FROM Follow
+            INNER JOIN User ON Follow.fromIdx = User.idx
+            LEFT JOIN (
+                SELECT toIdx, status
+                FROM Follow
+                WHERE Follow.fromIdx = ?
+            ) AS A ON fromIdx = A.toIdx
+      WHERE Follow.toIdx = ? AND User.isWithdraw = 'N';
+    `;
+    params = [userIdx, userIdx];
+  }
+
+  const [selectMyFollowRow] = await connection.query(selectMyFollowQuery, params);
+  return selectMyFollowRow;
+}
+
+async function selectOtherFollow(connection, [myIdx, userIdx, option]) {
+  let selectOtherFollowQuery = "";
+  let params;
+
+  if (option === 'following') {
+    selectOtherFollowQuery = `
+      SELECT Follow.toIdx, nickName, profileImgUrl,
+             CASE
+               WHEN Follow.toIdx = ? THEN '자기 자신'
+               WHEN (A.status IS NULL) OR (A.status = 'N') THEN '팔로잉 비활성화중'
+               WHEN A.status = 'Y' THEN '팔로잉 활성화중'
+               END AS followStatus
+      FROM Follow
+             INNER JOIN User ON Follow.toIdx = User.idx
+             LEFT JOIN (
+        SELECT toIdx, status
+        FROM Follow
+        WHERE Follow.fromIdx = ?
+      ) AS A ON A.toIdx = Follow.toIdx
+      WHERE Follow.fromIdx = ? AND User.isWithdraw = 'N';
+    `;
+    params = [myIdx, myIdx, userIdx];
+  } else {
+    selectOtherFollowQuery = `
+      SELECT fromIdx, nickName, profileImgUrl,
+             CASE
+               WHEN Follow.fromIdx = ? THEN '자기 자신'
+               WHEN (A.status IS NULL) OR (A.status = 'N') THEN '팔로잉 비활성화중'
+               WHEN A.status = 'Y' THEN '팔로잉 활성화중'
+               END AS followStatus
+      FROM Follow
+             INNER JOIN User ON Follow.fromIdx = User.idx
+             LEFT JOIN (
+        SELECT toIdx, status
+        FROM Follow
+        WHERE Follow.fromIdx = ?
+      ) AS A ON A.toIdx = Follow.fromIdx
+      WHERE Follow.toIdx = ? AND User.isWithdraw = 'N';
+    `;
+
+    params = [myIdx, myIdx, userIdx];
+  }
+
+  const [selectOtherFollowRow] = await connection.query(selectOtherFollowQuery, params);
+  return selectOtherFollowRow;
+}
+
+
+
 module.exports = {
   selectIsKakaoIdExist,
   selectUserInfoByKakaoId,
@@ -115,6 +178,7 @@ module.exports = {
   selectFollowStatus,
   insertNewFollow,
   updateFollow,
-  selectUserFollowList,
-  selectIsUserWithdraw
+  selectIsUserWithdraw,
+  selectMyFollow,
+  selectOtherFollow
 };

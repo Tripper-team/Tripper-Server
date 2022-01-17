@@ -26,10 +26,26 @@ exports.retrieveUserNickname = async function (nickName) {
   return nickCheckResult;
 };
 
-// 팔로워, 팔로잉 리스트 조회
-exports.retrieveFollowList = async function (userIdx, option) {
+// 사용자 status 체크
+exports.checkUserStatus = async function (userIdx) {
   const connection = await pool.getConnection(async (conn) => conn);
-  const followListResult = await userDao.selectUserFollowList(connection, [userIdx, option]);
+  const checkResult = await userDao.selectIsUserWithdraw(connection, userIdx);
   connection.release();
-  return followListResult;
+  return checkResult;
+};
+
+// 팔로워, 팔로잉 리스트 조회
+exports.retrieveFollowList = async function (userIdx, isMe, search_option) {
+  const connection = await pool.getConnection(async (conn) => conn);
+
+  if (isMe === 'Y') {   // 본인일 경우
+    const myFollowResult = await userDao.selectMyFollow(connection, [userIdx, search_option]);
+    connection.release();
+    return myFollowResult;
+  }
+  else {   // 상대방일 경우
+    const otherFollowResult = await userDao.selectOtherFollow(connection, [userIdx[1], userIdx[0], search_option]);
+    connection.release();
+    return otherFollowResult;
+  }
 };
