@@ -1,5 +1,6 @@
 const mysql = require('mysql2/promise');
 const {logger} = require('./winston');
+require('dotenv').config();
 
 let pool;
 
