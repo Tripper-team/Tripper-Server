@@ -9,6 +9,8 @@ module.exports = {
     SIGN_UP_SUCCESS : { "isSuccess": true, "code": 1004, "message":"회원가입에 성공했습니다." },
     NICKNAME_CHECK_SUCCESS : { "isSuccess": true, "code": 1005, "message":"사용 가능한 닉네임입니다." },
     AUTO_LOGIN_SUCCESS : { "isSuccess": true, "code": 1006, "message":"자동 로그인을 성공했습니다 (JWT 토큰 검증 성공)" }, // ?
+    FOLLOW_SUCCESS : { "isSuccess": true, "code": 1007, "message":"팔로우를 성공했습니다." },
+    UNFOLLOW_SUCCESS : { "isSuccess": true, "code": 1008, "message":"언팔로우를 성공했습니다." },
 
     // Common
     TOKEN_EMPTY : { "isSuccess": false, "code": 2000, "message":"JWT 토큰을 입력해주세요." },
@@ -20,6 +22,10 @@ module.exports = {
     EMAIL_EMPTY : { "isSuccess": true, "code": 2003, "message":"이메일을 입력해주세요." },
     PROFILE_IMG_EMPTY : { "isSuccess": true, "code": 2004, "message":"프로필 사진의 경로를 입력해주세요." },
     KAKAO_ID_EMPTY : { "isSuccess": true, "code": 2005, "message":"카카오 고유번호를 입력해주세요." },
+    FOLLOW_TOIDX_EMPTY : { "isSuccess": true, "code": 2006, "message":"팔로우를 요청할 사람의 인덱스를 입력해주세요." },
+    FOLLOW_IDX_NOT_MATCH : { "isSuccess": true, "code": 2007, "message":"본인과 다른 사람의 인덱스를 입력해주세요." },
+    NOT_EXIST_USER : { "isSuccess": true, "code": 2008, "message":"존재하지 않는 유저입니다." },
+
 
     ACCESS_TOKEN_EMPTY : { "isSuccess": false, "code": 2050, "message": "accessToken을 입력해주세요." },
     ACCESS_TOKEN_INVALID : { "isSuccess": false, "code": 2051, "message": "유효하지 않은 accessToken 입니다." },

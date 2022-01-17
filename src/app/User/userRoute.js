@@ -25,7 +25,12 @@ module.exports = function(app){
     // app.get('/app/users/profile', jwtMiddleware)
 
     // 5. 프로필 수정 API
-    app.patch('/app/users/profile-edit', jwtMiddleware, user.editUserProfile);
+    // app.patch('/app/users/profile-edit', jwtMiddleware, user.editUserProfile);
+
+    // 6. 팔로우 API
+    app.post('/app/users/following', jwtMiddleware, user.follow);
+
+    // 7. 팔로잉/팔로우 조회 API
 
     // 8. 자동 로그인 API
     app.get('/app/users/auto-login', jwtMiddleware, user.autoLogin);

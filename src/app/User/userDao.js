@@ -1,6 +1,6 @@
 async function selectIsKakaoIdExist(connection, kakaoId) {
   const selectKakaoIdExistQuery = `
-    SELECT EXISTS(SELECT kakaoId FROM User WHERE kakaoId = ?) as isKakaoIdExist;
+    SELECT EXISTS(SELECT kakaoId FROM User WHERE kakaoId = ?) AS isKakaoIdExist;
   `;
   const [kakaoIdExistRow] = await connection.query(selectKakaoIdExistQuery, kakaoId);
   return kakaoIdExistRow;
@@ -33,9 +33,50 @@ async function insertUser(connection, [email, profileImgUrl, kakaoId, age, gende
   return insertUserRow;
 }
 
+async function selectIsUserExistByIdx(connection, userIdx) {
+  const selectUserExistQuery = `
+    SELECT EXISTS(SELECT idx FROM User WHERE idx = ?) AS isUserExist;
+  `;
+  const [userExistRow] = await connection.query(selectUserExistQuery, userIdx);
+  return userExistRow;
+}
+
+async function selectFollowStatus(connection, [fromIdx, toIdx]) {
+  const selectFollowStatusQuery = `
+    SELECT status
+    FROM Follow
+    WHERE fromIdx = ? AND toIdx = ?;
+  `;
+  const [followStatusRow] = await connection.query(selectFollowStatusQuery, [fromIdx, toIdx]);
+  return followStatusRow;
+}
+
+async function insertNewFollow(connection, [fromIdx, toIdx]) {
+  const insertNewFollowQuery = `
+    INSERT INTO Follow(fromIdx, toIdx)
+    VALUES (?, ?);
+  `;
+  const newFollowRow = await connection.query(insertNewFollowQuery, [fromIdx, toIdx]);
+  return newFollowRow;
+}
+
+async function updateFollow(connection, [status, fromIdx, toIdx]) {
+  const updateFollowStatusQuery = `
+    UPDATE Follow
+    SET status = ?
+    WHERE fromIdx = ? AND toIdx = ?;
+  `;
+  const updateFollowStatusRow = await connection.query(updateFollowStatusQuery, [status, fromIdx, toIdx]);
+  return updateFollowStatusRow;
+}
+
 module.exports = {
   selectIsKakaoIdExist,
   selectUserInfoByKakaoId,
   selectIsNickExist,
-  insertUser
+  insertUser,
+  selectIsUserExistByIdx,
+  selectFollowStatus,
+  insertNewFollow,
+  updateFollow
 };

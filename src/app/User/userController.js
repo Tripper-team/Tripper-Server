@@ -166,11 +166,33 @@ exports.checkNickname = async function (req, res) {
  */
 exports.editUserProfile = async function (req, res) {
     /**
-     * Headers: x-access-token
+     * Headers: JWT Token
      * Body: profileImgUrl, nickName
      */
     const userIdx = req.verifiedToken.userIdx;
     const { profileImgUrl, nickName } = req.body;
+};
+
+/**
+ * API No. 6
+ * API Name : 팔로우 API
+ * [POST] /app/users/follow
+ */
+exports.follow = async function (req, res) {
+    /**
+     * Header: JWT Token
+     * Body: toIdx
+     */
+    const fromIdx = req.verifiedToken.userIdx;
+    const toIdx = req.body.toIdx;   // 팔로우 요청받는 사람의 인덱스
+
+    if (!toIdx)   // 팔로우 요청 받는 사람의 idx가 없음
+        return res.send(errResponse(baseResponse.FOLLOW_TOIDX_EMPTY));
+    if (fromIdx === toIdx)   // 팔로우 요청과 팔로우 요청 받는 사람의 idx가 같으면 안됨!
+        return res.send(errResponse(baseResponse.FOLLOW_IDX_NOT_MATCH));
+
+    const followResponse = await userService.createFollow(fromIdx, toIdx);
+    return res.send(followResponse);
 };
 
 /**
