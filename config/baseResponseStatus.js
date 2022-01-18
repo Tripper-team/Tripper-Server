@@ -15,6 +15,7 @@ module.exports = {
     FOLLOWER_LIST_SUCCESS : { "isSuccess": true, "code": 1010, "message":"팔로워 조회를 성공했습니다." },
     USER_CHECK_SUCCESS : { "isSuccess": true, "code": 1011, "message":"사용자를 확인했습니다." },
     PROFILE_INQUIRE_SUCCESS : { "isSuccess": true, "code": 1012, "message":"프로필 조회에 성공했습니다." },
+    AREA_INQUIRE_KEYWORD_SUCCESS : { "isSuccess": true, "code": 1013, "message":"키워드로 장소 검색에 성공했습니다." },
 
     // Common
     TOKEN_EMPTY : { "isSuccess": false, "code": 2000, "message":"JWT 토큰을 입력해주세요." },
@@ -31,6 +32,12 @@ module.exports = {
     FOLLOW_SEARCH_OPTION_EMPTY : { "isSuccess": false, "code": 2008, "message":"팔로우 조회 옵션을 입력해주세요." },
     FOLLOW_SEARCH_OPTION_ERROR : { "isSuccess": false, "code": 2009, "message":"팔로우 조회 옵션을 다시 입력해주세요. (following/follower)" },
     USER_IDX_EMPTY : { "isSuccess": false, "code": 2010, "message":"사용자 인덱스를 입력해주세요." },
+    KAKAO_REST_KEY_EMPTY : { "isSuccess": false, "code": 2011, "message":"카카오 REST-API-KEY를 입력해주세요." },
+    AREA_EMPTY : { "isSuccess": false, "code": 2012, "message":"검색할 키워드(지역)을 입력해주세요." },
+    POINT_X_EMPTY : { "isSuccess": false, "code": 2013, "message":"본인의 X좌표를 입력해주세요." },
+    POINT_Y_EMPTY : { "isSuccess": false, "code": 2014, "message":"본인의 Y좌표를 입력해주세요." },
+    PAGE_EMPTY : { "isSuccess": false, "code": 2015, "message":"조회하실 페이지 번호를 입력해주세요." },
+    PAGE_NUMBER_ERROR : { "isSuccess": false, "code": 2016, "message":"페이지 번호는 1이상 45이하로 입력해주세요." },
 
     ACCESS_TOKEN_EMPTY : { "isSuccess": false, "code": 2050, "message": "accessToken을 입력해주세요." },
     ACCESS_TOKEN_INVALID : { "isSuccess": false, "code": 2051, "message": "유효하지 않은 accessToken 입니다." },
@@ -42,6 +49,8 @@ module.exports = {
     USER_WITHDRAW : { "isSuccess": false, "code": 3004, "message":"탈퇴한 유저입니다." },
     FOLLOWING_SEARCH_NOT_RESULT : { "isSuccess": false, "code": 3005, "message":"팔로잉 조회 결과가 없습니다." },
     FOLLOWER_SEARCH_NOT_RESULT : { "isSuccess": false, "code": 3006, "message":"팔로워 조회 결과가 없습니다." },
+    AREA_SEARCH_FAILED : { "isSuccess": false, "code": 3007, "message":"장소 검색에 에러가 발생했습니다." },
+    AREA_SEARCH_RESULT_EMPTY : { "isSuccess": false, "code": 3007, "message":"장소 검색 결과가 없습니다." },
 
     //Connection, Transaction 등의 서버 오류
     DB_ERROR : { "isSuccess": false, "code": 4000, "message": "데이터 베이스 에러"},
