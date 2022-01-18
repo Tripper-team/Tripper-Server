@@ -10,7 +10,7 @@ require('dotenv').config();
 /**
  * API No. 12
  * API Name : 장소 검색 API
- * [GET] /app/feed/area-search?word=
+ * [GET] /app/feed/area-search?area=
  */
 exports.searchArea = async (req, res) => {
     /**
@@ -18,9 +18,12 @@ exports.searchArea = async (req, res) => {
      */
     const rest_key = req.body.rest_key;
     const area = req.query.area;
+    const x = req.query.x;
+    const y = req.query.y;
+    const radius = req.query.radius;
 
     let result;
-    let url = `https://dapi.kakao.com/v2/local/search/keyword.json?query=${area}`;
+    let url = `https://dapi.kakao.com/v2/local/search/keyword.json?query=${area}&y=${y}&x=${x}&radius=${radius}&sort=distance`;
     try {
         result = await axios({
             method: 'GET',

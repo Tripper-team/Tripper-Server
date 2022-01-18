@@ -22,14 +22,13 @@ const checkObjectEmpty = (obj) => {
  * API Name : 카카오 로그인 API
  * [POST] /app/users/kakao-login
  */
-passport.use('kakao-login', new KakaoStrategy({
-    clientID: process.env.KAKAO_CLIENT_ID,
-    callbackURL: 'http://localhost:3000/auth/kakao/callback',
-}, async (accessToken, refreshToken, profile, done) => {
-    console.log("Access token: " + accessToken);
-    console.log(profile);
-}));
-
+// passport.use('kakao-login', new KakaoStrategy({
+//     clientID: process.env.KAKAO_CLIENT_ID,
+//     callbackURL: 'http://localhost:3000/auth/kakao/callback',
+// }, async (accessToken, refreshToken, profile, done) => {
+//     console.log("Access token: " + accessToken);
+//     console.log(profile);
+// }));
 exports.kakaoLogin = async function (req, res) {
     /**
      * Body: accessToken
@@ -47,20 +46,26 @@ exports.kakaoLogin = async function (req, res) {
             headers: {
                 Authorization: `Bearer ${accessToken}`
             }
-        })
+        });
     } catch(err) {
         return res.send(errResponse(baseResponse.ACCESS_TOKEN_INVALID));   // 2051: 유효하지 않은 accessToken 입니다.
     }
 
     // console.log(user_kakao_profile);
     const email = user_kakao_profile.data.kakao_account.email;   // 사용자 이메일 (카카오)
-    const profileImgUrl = user_kakao_profile.data.properties.profile_image;   // 사용자 프로필 이미지
+    const profileImgUrl = user_kakao_profile.data.kakao_account.profile.profile_image_url;   // 사용자 프로필 이미지
     const kakaoId = String(user_kakao_profile.data.id);   // 카카오 고유ID
     const ageGroup = user_kakao_profile.data.kakao_account.age_range;   // 연령대
     const gender = user_kakao_profile.data.kakao_account.gender;   // 성별
 
+    console.log("사용자 카카오 이메일: " + email);
+    console.log("사용자 프로필 사진: " + profileImgUrl);
+    console.log("사용자 카카오 고유ID: " + kakaoId);
+    console.log("사용자 연령대: " + ageGroup);
+    console.log("사용자 성별: " + gender);   // 성별
+
     // Amazon S3
-    const s3_profileUrl = await s3.upload(profileImgUrl)
+    const s3_profileUrl = await s3.upload(profileImgUrl);
     // console.log(s3_profileUrl.Location);
 
     // 사용자 카카오 고유번호가 DB에 존재하는지 안하는지 체크할 것
@@ -95,25 +100,6 @@ exports.kakaoLogin = async function (req, res) {
             'gender': gender
         }));
 };
-
-// 카카오 로그인 연결끊기 (테스트)
-// exports.kakaoLogout = async function (req, res) {
-//     const { accessToken } = req.body;
-//
-//     try {
-//         await axios({
-//             method: 'POST',
-//             url: 'https://kapi.kakao.com/v1/user/unlink',
-//             headers: {
-//                 Authorization: `Bearer ${accessToken}`
-//             }
-//         })
-//     } catch(err) {
-//         return res.send(errResponse(baseResponse.ACCESS_TOKEN_INVALID));   // 2051: 유효하지 않은 accessToken 입니다.
-//     }
-//
-//     return res.send(response(baseResponse.SUCCESS));
-// };
 
 /**
  * API No. 2
@@ -162,6 +148,25 @@ exports.checkNickname = async function (req, res) {
 
     const checkNicknameResponse = await userService.checkNickRedundant(nickName);
     return res.send(checkNicknameResponse);
+};
+
+/**
+ * API No. 4
+ * API Name : 프로필 설정화면 조회 API
+ * [GET] /app/users/profile-setting
+ */
+exports.getProfile = async function (req, res) {
+    /**
+     * Headers: JWT Token
+     */
+    const userIdx = req.verifiedToken.userIdx;
+
+    const userStatusCheckRow = await userProvider.checkUserStatus(userIdx);
+    if (userStatusCheckRow[0].isWithdraw === 'Y')
+        return res.send(errResponse(baseResponse.USER_WITHDRAW));
+
+    const userProfileResult = await userProvider.retrieveUserProfile(userIdx);
+    return res.send(response(baseResponse.PROFILE_INQUIRE_SUCCESS, userProfileResult));
 };
 
 /**
