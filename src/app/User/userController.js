@@ -55,14 +55,19 @@ exports.kakaoLogin = async function (req, res) {
     const email = user_kakao_profile.data.kakao_account.email;   // 사용자 이메일 (카카오)
     const profileImgUrl = user_kakao_profile.data.kakao_account.profile.profile_image_url;   // 사용자 프로필 이미지
     const kakaoId = String(user_kakao_profile.data.id);   // 카카오 고유ID
-    const ageGroup = user_kakao_profile.data.kakao_account.age_range;   // 연령대
-    const gender = user_kakao_profile.data.kakao_account.gender;   // 성별
+    let ageGroup = user_kakao_profile.data.kakao_account.age_range;   // 연령대
+    let gender = user_kakao_profile.data.kakao_account.gender;   // 성별
+
+    if (ageGroup === undefined)
+        ageGroup = null;
+    if (gender === undefined)
+        gender = null;
 
     console.log("사용자 카카오 이메일: " + email);
     console.log("사용자 프로필 사진: " + profileImgUrl);
     console.log("사용자 카카오 고유ID: " + kakaoId);
     console.log("사용자 연령대: " + ageGroup);
-    console.log("사용자 성별: " + gender);   // 성별
+    console.log("사용자 성별: " + gender);
 
     // Amazon S3
     const s3_profileUrl = await s3.upload(profileImgUrl);
