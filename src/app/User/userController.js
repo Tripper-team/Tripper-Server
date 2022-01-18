@@ -8,6 +8,7 @@ const axios = require("axios");
 const secret_config = require("../../../config/secret");
 const jwt = require("jsonwebtoken");
 const s3 = require('../../../config/aws_s3');
+const userDao = require("./userDao");
 require('dotenv').config();
 
 const regex_nickname = /^[ㄱ-ㅎ|가-힣|a-z|A-Z|0-9|]+$/;
@@ -28,7 +29,6 @@ const checkObjectEmpty = (obj) => {
 //     console.log("Access token: " + accessToken);
 //     console.log(profile);
 // }));
-
 exports.kakaoLogin = async function (req, res) {
     /**
      * Body: accessToken
@@ -47,77 +47,63 @@ exports.kakaoLogin = async function (req, res) {
                 Authorization: `Bearer ${accessToken}`
             }
         });
-
-        const email = user_kakao_profile.data.kakao_account.email;   // 사용자 이메일 (카카오)
-        const profileImgUrl = user_kakao_profile.data.kakao_account.profile.profile_image_url;   // 사용자 프로필 이미지
-        const kakaoId = String(user_kakao_profile.data.id);   // 카카오 고유ID
-        const ageGroup = user_kakao_profile.data.kakao_account.age_range;   // 연령대
-        const gender = user_kakao_profile.data.kakao_account.gender;   // 성별
-
-        console.log("사용자 카카오 이메일: " + email);
-        console.log("사용자 프로필 사진: " + profileImgUrl);
-        console.log("사용자 카카오 고유ID: " + kakaoId);
-        console.log("사용자 연령대: " + ageGroup);
-        console.log("사용자 성별: " + gender);
-
-        // Amazon S3
-        const s3_profileUrl = await s3.upload(profileImgUrl);
-        // console.log(s3_profileUrl.Location);
-
-        // 사용자 카카오 고유번호가 DB에 존재하는지 안하는지 체크할 것
-        // 존재한다면 -> 바로 JWT 발급 및 로그인 처리 + 사용자 status 수정
-        // 존재하지 않는다면 -> 회원가입 API 진행 (닉네임 입력 페이지로)
-        const kakaoIdCheckResult = await userProvider.retrieveUserKakaoId(kakaoId);
-        if (kakaoIdCheckResult[0].isKakaoIdExist === 1) {   // 존재한다면
-            // 유저 인덱스 가져오기
-            const userIdxResult = await userProvider.getUserInfoByKakaoId(kakaoId);
-            const userIdx = userIdxResult[0].userIdx;
-
-            // jwt 토큰 생성
-            let token = await jwt.sign(
-                {  // 토큰의 내용 (payload)
-                    userIdx: userIdx
-                },
-                secret_config.jwtsecret,   // 비밀키
-                {
-                    expiresIn: "365d",
-                    subject: "userInfo",
-                }   // 유효기간 365일
-            );
-
-            return res.send(response(baseResponse.KAKAO_LOGIN_SUCCESS, { 'userIdx': userIdx, 'jwt': token }));
-        }
-        else
-            return res.send(response(baseResponse.KAKAO_SIGN_UP, {
-                'email': email,
-                'profileImgUrl': s3_profileUrl.Location,
-                'kakaoId': kakaoId,
-                'ageGroup': ageGroup,
-                'gender': gender
-            }));
     } catch(err) {
-        return res.send(errResponse(baseResponse.KAKAO_LOGIN_FAILED));
+        return res.send(errResponse(baseResponse.ACCESS_TOKEN_INVALID));   // 2051: 유효하지 않은 accessToken 입니다.
     }
-};
 
-// 카카오 로그인 연결끊기 (테스트)
-// exports.kakaoLogout = async function (req, res) {
-//     const { accessToken } = req.body;
-//
-//     try {
-//         await axios({
-//             method: 'POST',
-//             url: 'https://kapi.kakao.com/v1/user/unlink',
-//             headers: {
-//                 Authorization: `Bearer ${accessToken}`
-//             }
-//         })
-//     } catch(err) {
-//         return res.send(errResponse(baseResponse.ACCESS_TOKEN_INVALID));   // 2051: 유효하지 않은 accessToken 입니다.
-//     }
-//
-//     return res.send(response(baseResponse.SUCCESS));
-// };
+    const email = user_kakao_profile.data.kakao_account.email;   // 사용자 이메일 (카카오)
+    const profileImgUrl = user_kakao_profile.data.kakao_account.profile.profile_image_url;   // 사용자 프로필 이미지
+    const kakaoId = String(user_kakao_profile.data.id);   // 카카오 고유ID
+    let ageGroup = user_kakao_profile.data.kakao_account.age_range;   // 연령대
+    let gender = user_kakao_profile.data.kakao_account.gender;   // 성별
+
+    if (ageGroup === undefined)
+        ageGroup = null;
+    if (gender === undefined)
+        gender = null;
+
+    console.log("사용자 카카오 이메일: " + email);
+    console.log("사용자 프로필 사진: " + profileImgUrl);
+    console.log("사용자 카카오 고유ID: " + kakaoId);
+    console.log("사용자 연령대: " + ageGroup);
+    console.log("사용자 성별: " + gender);
+
+    // Amazon S3
+    const s3_profileUrl = await s3.upload(profileImgUrl);
+    // console.log(s3_profileUrl.Location);
+
+    // 사용자 카카오 고유번호가 DB에 존재하는지 안하는지 체크할 것
+    // 존재한다면 -> 바로 JWT 발급 및 로그인 처리 + 사용자 status 수정
+    // 존재하지 않는다면 -> 회원가입 API 진행 (닉네임 입력 페이지로)
+    const kakaoIdCheckResult = await userProvider.retrieveUserKakaoId(kakaoId);
+    if (kakaoIdCheckResult[0].isKakaoIdExist === 1) {   // 존재한다면
+        // 유저 인덱스 가져오기
+        const userIdxResult = await userProvider.getUserInfoByKakaoId(kakaoId);
+        const userIdx = userIdxResult[0].userIdx;
+
+        // jwt 토큰 생성
+        let token = await jwt.sign(
+            {  // 토큰의 내용 (payload)
+                userIdx: userIdx
+            },
+            secret_config.jwtsecret,   // 비밀키
+            {
+                expiresIn: "365d",
+                subject: "userInfo",
+            }   // 유효기간 365일
+        );
+
+        return res.send(response(baseResponse.KAKAO_LOGIN_SUCCESS, { 'userIdx': userIdx, 'jwt': token }));
+    }
+    else
+        return res.send(response(baseResponse.KAKAO_SIGN_UP, {
+          'email': email,
+           'profileImgUrl': s3_profileUrl.Location,
+           'kakaoId': kakaoId,
+           'ageGroup': ageGroup,
+           'gender': gender
+        }));
+};
 
 /**
  * API No. 2
@@ -169,6 +155,25 @@ exports.checkNickname = async function (req, res) {
 };
 
 /**
+ * API No. 4
+ * API Name : 프로필 설정화면 조회 API
+ * [GET] /app/users/profile-setting
+ */
+exports.getProfile = async function (req, res) {
+    /**
+     * Headers: JWT Token
+     */
+    const userIdx = req.verifiedToken.userIdx;
+
+    const userStatusCheckRow = await userProvider.checkUserStatus(userIdx);
+    if (userStatusCheckRow[0].isWithdraw === 'Y')
+        return res.send(errResponse(baseResponse.USER_WITHDRAW));
+
+    const userProfileResult = await userProvider.retrieveUserProfile(userIdx);
+    return res.send(response(baseResponse.PROFILE_INQUIRE_SUCCESS, userProfileResult));
+};
+
+/**
  * API No. 5
  * API Name : 프로필 수정 API
  * [PATCH] /app/users/profile-edit
@@ -211,9 +216,11 @@ exports.follow = async function (req, res) {
  */
 exports.getFollowList = async function (req, res) {
     /**
+     * Headers: JWT Token
      * Query: option (following, follower)
      * Path-variable: userIdx
      */
+    const myIdx = req.verifiedToken.userIdx;   // 나의 인덱스
     const option = req.query.option;   // 조회 구분 (팔로잉 or 팔로워)
     const userIdx = req.params.userIdx;   // 조회할 사람의 인덱스
 
@@ -221,23 +228,55 @@ exports.getFollowList = async function (req, res) {
         return res.send(errResponse(baseResponse.FOLLOW_SEARCH_OPTION_EMPTY));
     if (option !== 'following' && option !== 'follower')
         return res.send(errResponse(baseResponse.FOLLOW_SEARCH_OPTION_ERROR));
-    if (!userIdx)
-        return res.send(errResponse(baseResponse.USER_IDX_EMPTY));
 
-    const userExistResult = await userService.checkUserExist(userIdx);   // 실제 user인지 체크
-    // console.log(userExistResult.code);
-    if (userExistResult.code === 3003)
-        return res.send(userExistResult);
-    else {
-        const followListResult = await userProvider.retrieveFollowList(userIdx, option);
+    // userIdx와 myIdx가 같다면 본인의 팔로잉, 팔로워 조회
+    if (parseInt(userIdx) === parseInt(myIdx)) {
+        if (option === 'following') {   // 본인의 팔로잉 조회
+            const userStatusCheckRow = await userProvider.checkUserStatus(myIdx);
+            if (userStatusCheckRow[0].isWithdraw === 'Y')
+                return res.send(errResponse(baseResponse.USER_WITHDRAW));
 
-        if (checkObjectEmpty(followListResult))
-            return res.send(errResponse(baseResponse.FOLLOW_SEARCH_NOT_RESULT));
-        else {
-            if (option === 'following')
-                return res.send(response(baseResponse.FOLLOWING_LIST_SUCCESS, followListResult));
+            const getMyFollowingResult = await userProvider.retrieveFollowList(userIdx, 'Y', option);
+            if (getMyFollowingResult.length === 0)
+                return res.send(errResponse(baseResponse.FOLLOWING_SEARCH_NOT_RESULT));
             else
-                return res.send(response(baseResponse.FOLLOWER_LIST_SUCCESS, followListResult));
+                return res.send(response(baseResponse.FOLLOWING_LIST_SUCCESS, getMyFollowingResult));
+        } else {   // 본인의 팔로워 조회
+            const userStatusCheckRow = await userProvider.checkUserStatus(myIdx);
+            if (userStatusCheckRow[0].isWithdraw === 'Y')
+                return res.send(errResponse(baseResponse.USER_WITHDRAW));
+
+            const getMyFollowerResult = await userProvider.retrieveFollowList(userIdx, 'Y', option);
+            if (getMyFollowerResult.length === 0)
+                return res.send(errResponse(baseResponse.FOLLOWER_SEARCH_NOT_RESULT));
+            else
+                return res.send(response(baseResponse.FOLLOWER_LIST_SUCCESS, getMyFollowerResult));
+        }
+    }
+    else {   // 다르면 상대방의 팔로잉, 팔로워 조회
+        if (option === 'following') {   // 상대방의 팔로잉 조회
+            const myStatusCheckRow = await userProvider.checkUserStatus(myIdx);
+            const userStatusCheckRow = await userProvider.checkUserStatus(userIdx);
+            if (userStatusCheckRow[0].isWithdraw === 'Y' || myStatusCheckRow[0].isWithdraw === 'Y')
+                return res.send(errResponse(baseResponse.USER_WITHDRAW));
+
+            const getOtherFollowingResult = await userProvider.retrieveFollowList([userIdx, myIdx], 'N', option);
+            if (getOtherFollowingResult.length === 0)
+                return res.send(errResponse(baseResponse.FOLLOWING_SEARCH_NOT_RESULT));
+            else
+                return res.send(response(baseResponse.FOLLOWING_LIST_SUCCESS, getOtherFollowingResult));
+
+        } else {   // 상대방의 팔로워 조회
+            const myStatusCheckRow = await userProvider.checkUserStatus(myIdx);
+            const userStatusCheckRow = await userProvider.checkUserStatus(userIdx);
+            if (userStatusCheckRow[0].isWithdraw === 'Y' || myStatusCheckRow[0].isWithdraw === 'Y')
+                return res.send(errResponse(baseResponse.USER_WITHDRAW));
+
+            const getOtherFollowerResult = await userProvider.retrieveFollowList([userIdx, myIdx], 'N', option);
+            if (getOtherFollowerResult.length === 0)
+                return res.send(errResponse(baseResponse.FOLLOWER_SEARCH_NOT_RESULT));
+            else
+                return res.send(response(baseResponse.FOLLOWER_LIST_SUCCESS, getOtherFollowerResult));
         }
     }
 };

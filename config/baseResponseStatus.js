@@ -14,6 +14,7 @@ module.exports = {
     FOLLOWING_LIST_SUCCESS : { "isSuccess": true, "code": 1009, "message":"팔로잉 조회를 성공했습니다." },
     FOLLOWER_LIST_SUCCESS : { "isSuccess": true, "code": 1010, "message":"팔로워 조회를 성공했습니다." },
     USER_CHECK_SUCCESS : { "isSuccess": true, "code": 1011, "message":"사용자를 확인했습니다." },
+    PROFILE_INQUIRE_SUCCESS : { "isSuccess": true, "code": 1012, "message":"프로필 조회에 성공했습니다." },
 
     // Common
     TOKEN_EMPTY : { "isSuccess": false, "code": 2000, "message":"JWT 토큰을 입력해주세요." },
@@ -29,8 +30,7 @@ module.exports = {
     FOLLOW_IDX_NOT_MATCH : { "isSuccess": false, "code": 2007, "message":"본인과 다른 사람의 인덱스를 입력해주세요." },
     FOLLOW_SEARCH_OPTION_EMPTY : { "isSuccess": false, "code": 2008, "message":"팔로우 조회 옵션을 입력해주세요." },
     FOLLOW_SEARCH_OPTION_ERROR : { "isSuccess": false, "code": 2009, "message":"팔로우 조회 옵션을 다시 입력해주세요. (following/follower)" },
-    FOLLOW_SEARCH_NOT_RESULT : { "isSuccess": false, "code": 2010, "message":"팔로우 조회 결과가 없습니다." },
-    USER_IDX_EMPTY : { "isSuccess": false, "code": 2011, "message":"사용자 인덱스를 입력해주세요." },
+    USER_IDX_EMPTY : { "isSuccess": false, "code": 2010, "message":"사용자 인덱스를 입력해주세요." },
 
     ACCESS_TOKEN_EMPTY : { "isSuccess": false, "code": 2050, "message": "accessToken을 입력해주세요." },
     ACCESS_TOKEN_INVALID : { "isSuccess": false, "code": 2051, "message": "유효하지 않은 accessToken 입니다." },
@@ -39,7 +39,9 @@ module.exports = {
     REDUNDANT_NICKNAME : { "isSuccess": false, "code": 3001, "message":"중복된 닉네임입니다." },
     USER_ALREADY_SIGNUP : { "isSuccess": false, "code": 3002, "message":"이미 회원가입한 유저입니다." },
     NOT_EXIST_USER : { "isSuccess": false, "code": 3003, "message":"존재하지 않는 유저입니다." },
-    KAKAO_LOGIN_FAILED : { "isSuccess": false, "code": 3007, "message":"카카오 로그인에 실패했습니다." },
+    USER_WITHDRAW : { "isSuccess": false, "code": 3004, "message":"탈퇴한 유저입니다." },
+    FOLLOWING_SEARCH_NOT_RESULT : { "isSuccess": false, "code": 3005, "message":"팔로잉 조회 결과가 없습니다." },
+    FOLLOWER_SEARCH_NOT_RESULT : { "isSuccess": false, "code": 3006, "message":"팔로워 조회 결과가 없습니다." },
 
     //Connection, Transaction 등의 서버 오류
     DB_ERROR : { "isSuccess": false, "code": 4000, "message": "데이터 베이스 에러"},
