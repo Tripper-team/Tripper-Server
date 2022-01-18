@@ -167,6 +167,16 @@ async function selectOtherFollow(connection, [myIdx, userIdx, option]) {
   return selectOtherFollowRow;
 }
 
+async function selectUserProfile(connection, userIdx) {
+  const selectUserProfileQuery = `
+    SELECT nickName, profileImgUrl
+    FROM User
+    WHERE User.idx = ?;
+  `;
+  const [selectUserProfileRow] = await connection.query(selectUserProfileQuery, userIdx);
+  return selectUserProfileRow;
+}
+
 
 
 module.exports = {
@@ -180,5 +190,6 @@ module.exports = {
   updateFollow,
   selectIsUserWithdraw,
   selectMyFollow,
-  selectOtherFollow
+  selectOtherFollow,
+  selectUserProfile
 };

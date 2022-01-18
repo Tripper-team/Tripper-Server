@@ -49,3 +49,11 @@ exports.retrieveFollowList = async function (userIdx, isMe, search_option) {
     return otherFollowResult;
   }
 };
+
+// 사용자 프로필 조회
+exports.retrieveUserProfile = async function (userIdx) {
+  const connection = await pool.getConnection(async (conn) => conn);
+  const profileResult = await userDao.selectUserProfile(connection, userIdx);
+  connection.release();
+  return profileResult;
+};
