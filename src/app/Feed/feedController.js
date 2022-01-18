@@ -10,8 +10,27 @@ require('dotenv').config();
 /**
  * API No. 12
  * API Name : 장소 검색 API
- * [GET] /app/
+ * [GET] /app/feed/area-search?word=
  */
-exports.searchArea = (req, res) => {
+exports.searchArea = async (req, res) => {
+    /**
+     * Body: REST_API_KEY (KAKAO)
+     */
+    const rest_key = req.body.rest_key;
+    const word = req.query.word;
 
+    let temp;
+    try {
+        temp = await axios({
+            method: 'GET',
+            url: `https://dapi.kakao.com/v2/local/search/keyword.${word}`,
+            headers: {
+                Authorization: `KakaoAK ${rest_key}`
+            }
+        });
+
+        console.log(temp);
+    } catch(err) {
+        console.log(err);
+    }
 };
