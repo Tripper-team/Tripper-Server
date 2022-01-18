@@ -17,19 +17,21 @@ exports.searchArea = async (req, res) => {
      * Body: REST_API_KEY (KAKAO)
      */
     const rest_key = req.body.rest_key;
-    const word = req.query.word;
+    const area = req.query.area;
 
-    let temp;
+    let result;
+    let url = `https://dapi.kakao.com/v2/local/search/keyword.json?query=${area}`;
     try {
-        temp = await axios({
+        result = await axios({
             method: 'GET',
-            url: `https://dapi.kakao.com/v2/local/search/keyword.${word}`,
+            url: encodeURI(url),
+            withCredentials: true,
             headers: {
-                Authorization: `KakaoAK ${rest_key}`
+                'Content-Type': 'application/json',
+                Authorization: `KakaoAK ${rest_key}`,
             }
         });
-
-        console.log(temp);
+        return res.send(response(baseResponse.SUCCESS, result.data.documents));
     } catch(err) {
         console.log(err);
     }

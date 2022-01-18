@@ -3,5 +3,5 @@ module.exports = function(app) {
     const jwtMiddleware = require('../../../config/jwtMiddleware');
 
     // 12. 장소 검색 API (카카오 API)
-    // app.get('/app/feed/area-search', jwtMiddleware, feed.searchArea);
+    app.get('/app/feeds/area-search', jwtMiddleware, feed.searchArea);
 };
