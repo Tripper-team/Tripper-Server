@@ -228,6 +228,8 @@ exports.getFollowList = async function (req, res) {
         return res.send(errResponse(baseResponse.FOLLOW_SEARCH_OPTION_EMPTY));
     if (option !== 'following' && option !== 'follower')
         return res.send(errResponse(baseResponse.FOLLOW_SEARCH_OPTION_ERROR));
+    if (!userIdx)
+        return res.send(errResponse(baseResponse.USER_IDX_EMPTY));
 
     // userIdx와 myIdx가 같다면 본인의 팔로잉, 팔로워 조회
     if (parseInt(userIdx) === parseInt(myIdx)) {
