@@ -11,7 +11,7 @@ const s3 = require('../../../config/aws_s3');
 const userDao = require("./userDao");
 require('dotenv').config();
 
-const regex_nickname = /^[ㄱ-ㅎ|가-힣|a-z|A-Z|0-9|]+$/;
+const regex_nickname = /^[가-힣a-zA-Z]+$/;
 
 const checkObjectEmpty = (obj) => {
     return Object.keys(obj).length === 0;
@@ -186,6 +186,12 @@ exports.editUserProfile = async function (req, res) {
      */
     const userIdx = req.verifiedToken.userIdx;
     const { profileImgUrl, nickName } = req.body;
+
+    const userStatusCheckRow = await userProvider.checkUserStatus(userIdx);
+    if (userStatusCheckRow[0].isWithdraw === 'Y')
+        return res.send(errResponse(baseResponse.USER_WITHDRAW));
+
+
 };
 
 /**
