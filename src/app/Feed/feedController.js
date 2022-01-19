@@ -18,12 +18,12 @@ exports.searchArea = async (req, res) => {
      * Query String: area, x, y, page
      */
     const rest_key = req.headers['kakao-rest-key'];
-    const area = req.query.area;   // 검색어
-    const x = req.query.x;   // 본인의 X좌표
-    const y = req.query.y;   // 본인의 Y좌표
-    const page = req.query.page;   // 결과 페이지 번호
-    const size = 15;   // 한 페이지에 보여질 문서의 개수
-    const radius = 20000;   // X,Y로 부터의 반경거리 (m)
+    const area = String(req.query.area);   // 검색어
+    const x = String(req.query.x);   // 본인의 X좌표 (경도)
+    const y = String(req.query.y);   // 본인의 Y좌표 (위도)
+    const page = parseInt(req.query.page);   // 결과 페이지 번호
+    const sort_method = "distance";   // 정확성 vs 거리순
+    const size = 10;   // 한 페이지에서 보여지는 data의 갯수
 
     if (!rest_key)
         return res.send(errResponse(baseResponse.KAKAO_REST_KEY_EMPTY));
@@ -35,16 +35,15 @@ exports.searchArea = async (req, res) => {
         return res.send(errResponse(baseResponse.POINT_Y_EMPTY));
     if (!page)
         return res.send(errResponse(baseResponse.PAGE_EMPTY));
-    if (page < 1 || page > 45)
+    if (page < 1 || page > 6)
         return res.send(errResponse(baseResponse.PAGE_NUMBER_ERROR));
 
     let result;
-    let url = `https://dapi.kakao.com/v2/local/search/keyword.json?query=${area}&x=${x}&y=${y}&radius=${radius}&page=${page}&size=${size}&sort=distance`;
+    let url = `https://dapi.kakao.com/v2/local/search/keyword.json?query=${area}&x=${x}&y=${y}&page=${page}&size=${size}&sort=${sort_method}`
     try {
         result = await axios({
             method: 'GET',
             url: encodeURI(url),
-            withCredentials: true,
             headers: {
                 'Content-Type': 'application/json',
                 Authorization: `KakaoAK ${rest_key}`,
@@ -54,9 +53,10 @@ exports.searchArea = async (req, res) => {
         return res.send(errResponse(baseResponse.AREA_SEARCH_FAILED));
     }
 
-    if ((result.data.documents).length === 0)
+    if ((result.data.documents).length === 0)   // 조회 결과가 없으면?
         return res.send(errResponse(baseResponse.AREA_SEARCH_RESULT_EMPTY));
 
+    let is_end = result.data.meta.is_end;
     let result_arr = result.data.documents;
     let new_result_arr = [];
 
@@ -76,5 +76,5 @@ exports.searchArea = async (req, res) => {
         new_result_arr.push(temp);
     }
 
-    return res.send(response(baseResponse.AREA_INQUIRE_KEYWORD_SUCCESS, { 'pageNum': page, 'list': new_result_arr }));
+    return res.send(response(baseResponse.AREA_INQUIRE_KEYWORD_SUCCESS, { 'pageNum': page, 'is_end': is_end, 'list': new_result_arr }));
 };
