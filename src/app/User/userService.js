@@ -7,6 +7,7 @@ const baseResponse = require("../../../config/baseResponseStatus");
 const {response} = require("../../../config/response");
 const {errResponse} = require("../../../config/response");
 const jwt = require("jsonwebtoken");
+const s3 = require('../../../config/aws_s3');
 
 exports.createUser = async function (email, profileImgUrl, kakaoId, ageGroup, gender, nickName) {
     try {
@@ -114,6 +115,38 @@ exports.checkUserExist = async (userIdx) => {
         } else return response(baseResponse.USER_CHECK_SUCCESS);
     } catch(err) {
         logger.error(`App - checkUserExist Service error\n: ${err.message}`);
+        return errResponse(baseResponse.DB_ERROR);
+    }
+};
+
+// 닉네임 변경
+exports.updateProfile = async function (userIdx, profileImgUrl, nickName) {
+    try {
+        const connection = await pool.getConnection(async (conn) => conn);
+        let s3_profileUrl;
+
+        // 이전 닉네임과 동일한지 확인하기
+        let userNick = await userDao.selectUserNickname(connection, userIdx); userNick = userNick[0].nickName;
+        if (userNick === nickName)
+            return errResponse(baseResponse.NICKNAME_EQUAL_BEFORE);
+
+        // 닉네임 중복 확인
+        const nickCheckResult = await userProvider.retrieveUserNickname(nickName);
+        if (nickCheckResult[0].isNickResult === 1)   // 닉네임이 존재한다면
+            return errResponse(baseResponse.REDUNDANT_NICKNAME);
+
+        // 프로필 사진
+        if (profileImgUrl !== undefined) {
+            s3_profileUrl = await s3.upload(profileImgUrl);
+            await userDao.updateUserProfile(connection, [userIdx, s3_profileUrl.Location, nickName]);
+        } else {
+            await userDao.updateUserProfile(connection, [userIdx, profileImgUrl, nickName]);
+        }
+
+        connection.release();
+        return response(baseResponse.PROFILE_EDIT_SUCCESS);
+    } catch(err) {
+        logger.error(`App - updateUserProfile Service error\n: ${err.message}`);
         return errResponse(baseResponse.DB_ERROR);
     }
 };

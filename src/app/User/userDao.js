@@ -177,7 +177,37 @@ async function selectUserProfile(connection, userIdx) {
   return selectUserProfileRow;
 }
 
+async function selectUserNickname(connection, userIdx) {
+  const selectUserNickQuery = `
+    SELECT nickName
+    FROM User
+    WHERE User.idx = ?;
+  `;
+  const [selectUserNickRow] = await connection.query(selectUserNickQuery, userIdx);
+  return selectUserNickRow;
+}
 
+async function updateUserProfile(connection, [userIdx, profileImgUrl, nickName]) {
+  let updateProfileQuery = "";
+
+  if (profileImgUrl === undefined) {
+    updateProfileQuery = `
+      UPDATE User
+      SET nickname = ?
+      WHERE User.idx = ?;
+    `;
+    const updateProfileResult = await connection.query(updateProfileQuery, [nickName, userIdx]);
+    return updateProfileResult;
+  } else {
+    updateProfileQuery = `
+      UPDATE User
+      SET nickname = ?, profileImgUrl = ?
+      WHERE User.idx = ?;
+    `;
+    const updateProfileResult = await connection.query(updateProfileQuery, [nickName, profileImgUrl, userIdx]);
+    return updateProfileResult;
+  }
+}
 
 module.exports = {
   selectIsKakaoIdExist,
@@ -191,5 +221,7 @@ module.exports = {
   selectIsUserWithdraw,
   selectMyFollow,
   selectOtherFollow,
-  selectUserProfile
+  selectUserProfile,
+  selectUserNickname,
+  updateUserProfile
 };

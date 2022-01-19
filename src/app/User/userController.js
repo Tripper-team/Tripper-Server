@@ -8,14 +8,13 @@ const axios = require("axios");
 const secret_config = require("../../../config/secret");
 const jwt = require("jsonwebtoken");
 const s3 = require('../../../config/aws_s3');
-const userDao = require("./userDao");
 require('dotenv').config();
 
-const regex_nickname = /^[ㄱ-ㅎ|가-힣|a-z|A-Z|0-9|]+$/;
+const regex_nickname = /^[가-힣a-zA-Z]+$/;
 
 const checkObjectEmpty = (obj) => {
     return Object.keys(obj).length === 0;
-}
+};
 
 /**
  * API No. 1
@@ -124,6 +123,8 @@ exports.signUp = async function (req, res) {
         return res.send(errResponse(baseResponse.KAKAO_ID_EMPTY));
     if (!nickName)
         return res.send(errResponse(baseResponse.NICKNAME_EMPTY));
+    if (!regex_nickname.test(nickName) || nickName.length > 10)
+        return res.send(errResponse(baseResponse.NICKNAME_ERROR_TYPE));
 
     let signUpTokenResult = await userService.createUser(email, profileImgUrl, kakaoId, ageGroup, gender, nickName);   // 회원가입 진행
     const signUpResult = await userProvider.getUserInfoByKakaoId(kakaoId);   // 회원가입 한 User 정보 출력
@@ -147,7 +148,7 @@ exports.checkNickname = async function (req, res) {
 
     if (!nickName)
         return res.send(errResponse(baseResponse.NICKNAME_EMPTY));
-    if (!regex_nickname.test(nickName))
+    if (!regex_nickname.test(nickName) || nickName.length > 10)
         return res.send(errResponse(baseResponse.NICKNAME_ERROR_TYPE));
 
     const checkNicknameResponse = await userService.checkNickRedundant(nickName);
@@ -184,7 +185,19 @@ exports.editUserProfile = async function (req, res) {
      * Body: profileImgUrl, nickName
      */
     const userIdx = req.verifiedToken.userIdx;
-    const { profileImgUrl, nickName } = req.body;
+    let { profileImgUrl, nickName } = req.body;
+
+    if (!nickName)
+        return res.send(errResponse(baseResponse.NICKNAME_EMPTY));
+    if (!regex_nickname.test(nickName) || nickName.length > 10)
+        return res.send(errResponse(baseResponse.NICKNAME_ERROR_TYPE));
+
+    const userStatusCheckRow = await userProvider.checkUserStatus(userIdx);
+    if (userStatusCheckRow[0].isWithdraw === 'Y')
+        return res.send(errResponse(baseResponse.USER_WITHDRAW));
+
+    const updateProfileresult = await userService.updateProfile(userIdx, profileImgUrl, nickName);
+    return res.send(updateProfileresult);
 };
 
 /**
