@@ -184,6 +184,7 @@ exports.editUserProfile = async function (req, res) {
      * Headers: JWT Token
      * Body: profileImgUrl, nickName
      */
+    // console.log(req.file);
     const userIdx = req.verifiedToken.userIdx;
     let { profileImgUrl, nickName } = req.body;
 
