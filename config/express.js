@@ -2,6 +2,7 @@ const express = require('express');
 const compression = require('compression');
 const methodOverride = require('method-override');
 var cors = require('cors');
+
 module.exports = function () {
     const app = express();
 
@@ -9,7 +10,9 @@ module.exports = function () {
 
     app.use(express.json());
 
-    app.use(express.urlencoded({extended: true}));
+    // extended가 true면 URL-encoded data는 qs로
+    // false면 URL-encoded data는 querystring으로
+    app.use(express.urlencoded({extended: false}));
 
     app.use(methodOverride());
 

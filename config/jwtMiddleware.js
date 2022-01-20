@@ -18,7 +18,7 @@ const jwtMiddleware = (req, res, next) => {
         (resolve, reject) => {
             jwt.verify(token, secret_config.jwtsecret , (err, verifiedToken) => {
                 if(err) reject(err);
-                resolve(verifiedToken)
+                resolve(verifiedToken);
             })
         }
     );
