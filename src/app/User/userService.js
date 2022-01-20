@@ -112,7 +112,10 @@ exports.checkUserExist = async (userIdx) => {
         if (userCheckResult[0].isUserExist === 0) {   // 해당하는 유저가 없다면
             connection.release();
             return errResponse(baseResponse.NOT_EXIST_USER);
-        } else return response(baseResponse.USER_CHECK_SUCCESS);
+        } else {
+            connection.release();
+            return response(baseResponse.USER_CHECK_SUCCESS);
+        }
     } catch(err) {
         logger.error(`App - checkUserExist Service error\n: ${err.message}`);
         return errResponse(baseResponse.DB_ERROR);
