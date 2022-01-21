@@ -24,4 +24,33 @@ let upload = multer({
     }),
 });
 
-module.exports = upload;
+
+let upload_multiple_thumnail = multer({
+    storage: multerS3({
+        s3: S3,
+        bucket: BUCKET_NAME,
+        contentType: multerS3.AUTO_CONTENT_TYPE,
+        acl: 'public-read',
+        key: (req, file, cb) => {
+            cb(null, `thumnails/${file.originalname}`);
+        },
+    }),
+});
+
+let upload_multiple_travel = multer({
+    storage: multerS3({
+        s3: S3,
+        bucket: BUCKET_NAME,
+        contentType: multerS3.AUTO_CONTENT_TYPE,
+        acl: 'public-read',
+        key: (req, file, cb) => {
+            cb(null, `travels/${file.originalname}`);
+        },
+    }),
+});
+
+module.exports = {
+    upload,
+    upload_multiple_thumnail,
+    upload_multiple_travel
+};

@@ -78,3 +78,14 @@ exports.searchArea = async (req, res) => {
 
     return res.send(response(baseResponse.AREA_INQUIRE_KEYWORD_SUCCESS, { 'pageNum': page, 'is_end': is_end, 'list': new_result_arr }));
 };
+
+/**
+ * API No. 14
+ * API Name : 임시 여행 게시물 이미지 업로드 API
+ * [POST] /app/feeds/timage-upload?option=
+ */
+exports.uploadTempImage = async function (req, res) {
+    const option = req.query.option;
+    let images;
+    console.log(req.files);
+};

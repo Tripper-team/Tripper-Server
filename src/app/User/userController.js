@@ -21,13 +21,13 @@ const checkObjectEmpty = (obj) => {
  * API Name : 카카오 로그인 API
  * [POST] /app/users/kakao-login
  */
-passport.use('kakao-login', new KakaoStrategy({
-    clientID: process.env.KAKAO_CLIENT_ID,
-    callbackURL: 'http://localhost:3000/auth/kakao/callback',
-}, async (accessToken, refreshToken, profile, done) => {
-    console.log("Access token: " + accessToken);
-    console.log(profile);
-}));
+// passport.use('kakao-login', new KakaoStrategy({
+//     clientID: process.env.KAKAO_CLIENT_ID,
+//     callbackURL: 'http://localhost:3000/auth/kakao/callback',
+// }, async (accessToken, refreshToken, profile, done) => {
+//     console.log("Access token: " + accessToken);
+//     console.log(profile);
+// }));
 exports.kakaoLogin = async function (req, res) {
     /**
      * Body: accessToken
