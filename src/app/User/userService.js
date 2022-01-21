@@ -126,7 +126,6 @@ exports.checkUserExist = async (userIdx) => {
 exports.updateProfile = async function (userIdx, profileImgUrl, nickName) {
     try {
         const connection = await pool.getConnection(async (conn) => conn);
-        let s3_profileUrl;
 
         // 이전 닉네임과 동일한지 확인하기
         let userNick = await userDao.selectUserNickname(connection, userIdx); userNick = userNick[0].nickName;
@@ -140,8 +139,7 @@ exports.updateProfile = async function (userIdx, profileImgUrl, nickName) {
 
         // 프로필 사진
         if (profileImgUrl !== undefined) {
-            s3_profileUrl = await s3.upload(profileImgUrl);
-            await userDao.updateUserProfile(connection, [userIdx, s3_profileUrl.Location, nickName]);
+            await userDao.updateUserProfile(connection, [userIdx, profileImgUrl, nickName]);
         } else {
             await userDao.updateUserProfile(connection, [userIdx, profileImgUrl, nickName]);
         }

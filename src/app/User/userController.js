@@ -21,13 +21,13 @@ const checkObjectEmpty = (obj) => {
  * API Name : 카카오 로그인 API
  * [POST] /app/users/kakao-login
  */
-// passport.use('kakao-login', new KakaoStrategy({
-//     clientID: process.env.KAKAO_CLIENT_ID,
-//     callbackURL: 'http://localhost:3000/auth/kakao/callback',
-// }, async (accessToken, refreshToken, profile, done) => {
-//     console.log("Access token: " + accessToken);
-//     console.log(profile);
-// }));
+passport.use('kakao-login', new KakaoStrategy({
+    clientID: process.env.KAKAO_CLIENT_ID,
+    callbackURL: 'http://localhost:3000/auth/kakao/callback',
+}, async (accessToken, refreshToken, profile, done) => {
+    console.log("Access token: " + accessToken);
+    console.log(profile);
+}));
 exports.kakaoLogin = async function (req, res) {
     /**
      * Body: accessToken
@@ -185,9 +185,16 @@ exports.editUserProfile = async function (req, res) {
      * Headers: JWT Token
      * Body: profileImgUrl, nickName
      */
-    // console.log(req.file);
+    let profileImage = req.file;
+    const nickName = req.body.nickName;
     const userIdx = req.verifiedToken.userIdx;
-    let { profileImgUrl, nickName } = req.body;
+
+    if (profileImage !== undefined)
+        profileImage = profileImage.location;
+
+    // console.log(profileImage);
+    // console.log(nickName);
+    // console.log(userIdx);
 
     if (!nickName)
         return res.send(errResponse(baseResponse.NICKNAME_EMPTY));
@@ -198,7 +205,7 @@ exports.editUserProfile = async function (req, res) {
     if (userStatusCheckRow[0].isWithdraw === 'Y')
         return res.send(errResponse(baseResponse.USER_WITHDRAW));
 
-    const updateProfileresult = await userService.updateProfile(userIdx, profileImgUrl, nickName);
+    const updateProfileresult = await userService.updateProfile(userIdx, profileImage, nickName);
     return res.send(updateProfileresult);
 };
 

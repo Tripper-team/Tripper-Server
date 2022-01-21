@@ -2,18 +2,15 @@ module.exports = function(app){
     const user = require('./userController');
     const jwtMiddleware = require('../../../config/jwtMiddleware');
     const passport = require('passport');
-    const multer = require('multer');
-    const upload = multer({
-        dest: './uploads/'
-    });
+    const upload = require('../../../config/aws_s3_multer');
 
     // 1. 카카오 로그인 API
     app.post('/app/users/kakao-login', user.kakaoLogin);
-    // app.get('/kakao', passport.authenticate('kakao-login'));
-    // // 위에서 카카오 서버로 로그인이 되면 카카오 Redirect URL을 통해 이쪽 라우터로 오게 된다.
-    // app.get('/auth/kakao/callback', passport.authenticate('kakao-login', {
-    //     failureRedirect : '/',   // kakaoStrategy에서 실패한다면 실행
-    // }), (req, res) => { res.redirect('/'); });   // 성공한다면 콜백 실행
+    app.get('/kakao', passport.authenticate('kakao-login'));
+    // 위에서 카카오 서버로 로그인이 되면 카카오 Redirect URL을 통해 이쪽 라우터로 오게 된다.
+    app.get('/auth/kakao/callback', passport.authenticate('kakao-login', {
+        failureRedirect : '/',   // kakaoStrategy에서 실패한다면 실행
+    }), (req, res) => { res.redirect('/'); });   // 성공한다면 콜백 실행
 
     // 2. 회원가입 API
     app.post('/app/users/sign-up', user.signUp);
@@ -25,7 +22,7 @@ module.exports = function(app){
     app.get('/app/users/profile-setting', jwtMiddleware, user.getProfile);
 
     // 5. 프로필 수정 API
-    app.patch('/app/users/profile-edit', jwtMiddleware, upload.single('file'), user.editUserProfile);
+    app.patch('/app/users/profile-edit', jwtMiddleware, upload.single('profileImage'), user.editUserProfile);
 
     // 6. 팔로우 API
     app.post('/app/users/following', jwtMiddleware, user.follow);
