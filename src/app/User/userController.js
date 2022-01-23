@@ -93,7 +93,8 @@ exports.kakaoLogin = async function (req, res) {
             }   // 유효기간 365일
         );
 
-        return res.send(response(baseResponse.KAKAO_LOGIN_SUCCESS, { 'userIdx': userIdx, 'jwt': token }));
+        const loginResult = await userProvider.getUserInfoByKakaoId(kakaoId);   // 로그인한 User 정보 출력
+        return res.send(response(baseResponse.KAKAO_LOGIN_SUCCESS, { 'userIdx': userIdx, 'jwt': token, 'information': loginResult }));
     }
     else
         return res.send(response(baseResponse.KAKAO_SIGN_UP, {
@@ -114,7 +115,7 @@ exports.signUp = async function (req, res) {
     /**
      * Body: email, profileImgUrl, kakaoId, ageGroup, gender, nickName
      */
-    const { email, profileImgUrl, kakaoId, ageGroup, gender, nickName } = req.body;
+    let { email, profileImgUrl, kakaoId, ageGroup, gender, nickName } = req.body;
 
     if (!email)
         return res.send(errResponse(baseResponse.EMAIL_EMPTY));
@@ -126,6 +127,11 @@ exports.signUp = async function (req, res) {
         return res.send(errResponse(baseResponse.NICKNAME_EMPTY));
     if (!regex_nickname.test(nickName) || nickName.length > 10)
         return res.send(errResponse(baseResponse.NICKNAME_ERROR_TYPE));
+
+    if (ageGroup === undefined)
+        ageGroup = null;
+    if (gender === undefined)
+        gender = null;
 
     let signUpTokenResult = await userService.createUser(email, profileImgUrl, kakaoId, ageGroup, gender, nickName);   // 회원가입 진행
     const signUpResult = await userProvider.getUserInfoByKakaoId(kakaoId);   // 회원가입 한 User 정보 출력
