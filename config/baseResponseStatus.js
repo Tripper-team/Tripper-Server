@@ -17,6 +17,8 @@ module.exports = {
     PROFILE_INQUIRE_SUCCESS : { "isSuccess": true, "code": 1012, "message":"프로필 조회에 성공했습니다." },
     AREA_INQUIRE_KEYWORD_SUCCESS : { "isSuccess": true, "code": 1013, "message":"키워드로 장소 검색에 성공했습니다." },
     PROFILE_EDIT_SUCCESS : { "isSuccess": true, "code": 1014, "message":"프로필 수정에 성공했습니다." },
+    UPLOAD_TEMP_THUMNAIL_SUCCESS : { "isSuccess": true, "code": 1015, "message":"임시로 썸네일 사진 업로드를 성공했습니다." },
+    UPLOAD_TEMP_TRAVEL_SUCCESS : { "isSuccess": true, "code": 1016, "message":"임시로 여행 사진 업로드를 성공했습니다." },
 
     // Common
     TOKEN_EMPTY : { "isSuccess": false, "code": 2000, "message":"JWT 토큰을 입력해주세요." },

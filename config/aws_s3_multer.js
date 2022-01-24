@@ -32,7 +32,7 @@ let upload_multiple_thumnail = multer({
         contentType: multerS3.AUTO_CONTENT_TYPE,
         acl: 'public-read',
         key: (req, file, cb) => {
-            cb(null, `thumnails/${file.originalname}`);
+            cb(null, `thumnails/${encodeURIComponent(file.originalname)}`);
         },
     }),
 });
@@ -52,5 +52,5 @@ let upload_multiple_travel = multer({
 module.exports = {
     upload,
     upload_multiple_thumnail,
-    upload_multiple_travel
+    upload_multiple_travel,
 };

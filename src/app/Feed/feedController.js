@@ -5,6 +5,9 @@ const {response, errResponse} = require("../../../config/response");
 const axios = require("axios");
 const secret_config = require("../../../config/secret");
 const jwt = require("jsonwebtoken");
+const s3Multer = require('../../../config/aws_s3_multer');
+const multiple_thum_upload = s3Multer.upload_multiple_thumnail;
+const multiple_travel_upload = s3Multer.upload_multiple_travel;
 require('dotenv').config();
 
 /**
@@ -77,15 +80,4 @@ exports.searchArea = async (req, res) => {
     }
 
     return res.send(response(baseResponse.AREA_INQUIRE_KEYWORD_SUCCESS, { 'pageNum': page, 'is_end': is_end, 'list': new_result_arr }));
-};
-
-/**
- * API No. 14
- * API Name : 임시 여행 게시물 이미지 업로드 API
- * [POST] /app/feeds/timage-upload?option=
- */
-exports.uploadTempImage = async function (req, res) {
-    const option = req.query.option;
-    let images;
-    console.log(req.files);
 };
