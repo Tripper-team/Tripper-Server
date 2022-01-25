@@ -17,6 +17,9 @@ module.exports = {
     PROFILE_INQUIRE_SUCCESS : { "isSuccess": true, "code": 1012, "message":"프로필 조회에 성공했습니다." },
     AREA_INQUIRE_KEYWORD_SUCCESS : { "isSuccess": true, "code": 1013, "message":"키워드로 장소 검색에 성공했습니다." },
     PROFILE_EDIT_SUCCESS : { "isSuccess": true, "code": 1014, "message":"프로필 수정에 성공했습니다." },
+    UPLOAD_TEMP_THUMNAIL_SUCCESS : { "isSuccess": true, "code": 1015, "message":"임시로 썸네일 사진 업로드를 성공했습니다." },
+    UPLOAD_TEMP_TRAVEL_SUCCESS : { "isSuccess": true, "code": 1016, "message":"임시로 여행 사진 업로드를 성공했습니다." },
+    AWS_S3_DELETE_SUCCESS : { "isSuccess": true, "code": 1017, "message":"임시로 저장된 사진을 삭제했습니다." },
 
     // Common
     TOKEN_EMPTY : { "isSuccess": false, "code": 2000, "message":"JWT 토큰을 입력해주세요." },
@@ -39,8 +42,10 @@ module.exports = {
     POINT_Y_EMPTY : { "isSuccess": false, "code": 2014, "message":"본인의 Y좌표를 입력해주세요." },
     PAGE_EMPTY : { "isSuccess": false, "code": 2015, "message":"조회하실 페이지 번호를 입력해주세요." },
     PAGE_NUMBER_ERROR : { "isSuccess": false, "code": 2016, "message":"페이지 번호는 1이상 5이하로 입력해주세요." },
-    UPLOAD_OPTION_EMPTY : { "isSuccess": false, "code": 2017, "message":"옵션을 입력해주세요. (thumnail, travel)" },
-    UPLOAD_OPTION_ERROR : { "isSuccess": false, "code": 2018, "message":"옵션은 thumnail,travel 중 하나를 입력해주세요." },
+    S3_PREFIX_EMPTY : { "isSuccess": false, "code": 2017, "message":"썸네일 사진인지 여행 사진인지 입력해주세요. (thumnail, travel)" },
+    S3_PREFIX_ERROR : { "isSuccess": false, "code": 2018, "message":"thumnail,travel 중 하나를 입력해주세요." },
+    S3_IMAGE_KEY_EMPTY : { "isSuccess": false, "code": 2019, "message":"삭제할 파일의 Key를 입력해주세요." },
+    AWS_S3_ERROR : { "isSuccess": false, "code": 2020, "message":"AWS S3 관련 에러가 발생했습니다. 서버측에 문의해주세요." },
 
     ACCESS_TOKEN_EMPTY : { "isSuccess": false, "code": 2050, "message": "accessToken을 입력해주세요." },
     ACCESS_TOKEN_INVALID : { "isSuccess": false, "code": 2051, "message": "유효하지 않은 accessToken 입니다." },
@@ -55,6 +60,8 @@ module.exports = {
     AREA_SEARCH_FAILED : { "isSuccess": false, "code": 3007, "message":"장소 검색에 에러가 발생했습니다." },
     AREA_SEARCH_RESULT_EMPTY : { "isSuccess": false, "code": 3008, "message":"장소 검색 결과가 없습니다." },
     NICKNAME_EQUAL_BEFORE : { "isSuccess": false, "code": 3009, "message":"이전 닉네임과 동일합니다." },
+    AWS_S3_FILE_NOT_FOUND : { "isSuccess": false, "code": 3010, "message":"작성하신 Key에 해당하는 파일을 찾지 못했습니다." },
+    AWS_S3_DIR_NOT_FOUND : { "isSuccess": false, "code": 3011, "message":"존재하지 않는 디렉토리 이름입니다." },
 
     //Connection, Transaction 등의 서버 오류
     DB_ERROR : { "isSuccess": false, "code": 4000, "message": "데이터 베이스 에러"},
