@@ -93,15 +93,7 @@ exports.kakaoLogin = async function (req, res) {
         );
 
         const loginResult = await userProvider.getUserInfoByKakaoId(kakaoId);   // 로그인한 User 정보 출력
-        return res.send(response(baseResponse.KAKAO_LOGIN_SUCCESS, {
-            'userIdx': userIdx,
-            'jwt': token,
-            'email': loginResult[0].email,
-            'nickName': loginResult[0].nickName,
-            'profileImgUrl': loginResult[0].profileImgUrl,
-            'kakaoId': loginResult[0].kakaoId,
-            'ageGroup': loginResult[0].ageGroup,
-            'gender': loginResult[0].gender}));
+        return res.send(response(baseResponse.KAKAO_LOGIN_SUCCESS, { 'userIdx': userIdx, 'jwt': token, 'information': loginResult }));
     }
     else
         return res.send(response(baseResponse.KAKAO_SIGN_UP, {
@@ -122,7 +114,7 @@ exports.signUp = async function (req, res) {
     /**
      * Body: email, profileImgUrl, kakaoId, ageGroup, gender, nickName
      */
-    const { email, profileImgUrl, kakaoId, ageGroup, gender, nickName } = req.body;
+    let { email, profileImgUrl, kakaoId, ageGroup, gender, nickName } = req.body;
 
     if (!email)
         return res.send(errResponse(baseResponse.EMAIL_EMPTY));
@@ -134,6 +126,11 @@ exports.signUp = async function (req, res) {
         return res.send(errResponse(baseResponse.NICKNAME_EMPTY));
     if (!regex_nickname.test(nickName) || nickName.length > 10)
         return res.send(errResponse(baseResponse.NICKNAME_ERROR_TYPE));
+
+    if (ageGroup === undefined)
+        ageGroup = null;
+    if (gender === undefined)
+        gender = null;
 
     let signUpTokenResult = await userService.createUser(email, profileImgUrl, kakaoId, ageGroup, gender, nickName);   // 회원가입 진행
     const signUpResult = await userProvider.getUserInfoByKakaoId(kakaoId);   // 회원가입 한 User 정보 출력
@@ -194,9 +191,16 @@ exports.editUserProfile = async function (req, res) {
      * Headers: JWT Token
      * Body: profileImgUrl, nickName
      */
-    // console.log(req.file);
+    let profileImage = req.file;
+    const nickName = req.body.nickName;
     const userIdx = req.verifiedToken.userIdx;
-    let { profileImgUrl, nickName } = req.body;
+
+    if (profileImage !== undefined)
+        profileImage = profileImage.location;
+
+    // console.log(profileImage);
+    // console.log(nickName);
+    // console.log(userIdx);
 
     if (!nickName)
         return res.send(errResponse(baseResponse.NICKNAME_EMPTY));
@@ -207,7 +211,7 @@ exports.editUserProfile = async function (req, res) {
     if (userStatusCheckRow[0].isWithdraw === 'Y')
         return res.send(errResponse(baseResponse.USER_WITHDRAW));
 
-    const updateProfileresult = await userService.updateProfile(userIdx, profileImgUrl, nickName);
+    const updateProfileresult = await userService.updateProfile(userIdx, profileImage, nickName);
     return res.send(updateProfileresult);
 };
 

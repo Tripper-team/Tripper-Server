@@ -23,7 +23,7 @@ class AWS_S3 {
         };
 
         let params = {
-            'Key': `image/${md5(url)}.jpg`,
+            'Key': `signUp/${md5(url)}.jpg`,
             'Bucket': BUCKET_NAME,
             'Body': await request(request_option),
             'ContentType': 'image/jpg'
