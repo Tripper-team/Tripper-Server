@@ -3,12 +3,52 @@ const feedService = require("../Feed/feedService");
 const baseResponse = require("../../../config/baseResponseStatus");
 const {response, errResponse} = require("../../../config/response");
 const axios = require("axios");
-const secret_config = require("../../../config/secret");
-const jwt = require("jsonwebtoken");
-const s3Multer = require('../../../config/aws_s3_multer');
-const multiple_thum_upload = s3Multer.upload_multiple_thumnail;
-const multiple_travel_upload = s3Multer.upload_multiple_travel;
+const AWS = require("aws-sdk");
 require('dotenv').config();
+
+const S3 = new AWS.S3({
+    accessKeyId: process.env.AWS_S3_ACCESS_KEY,
+    secretAccessKey: process.env.AWS_S3_SECRET_KEY,
+    region: 'ap-northeast-2'
+});
+
+const deleteS3Object = (params, key, res) => {
+    S3.listObjectsV2(params, (err, data) => {
+        if (err) {
+            res.send(response(baseResponse.AWS_S3_ERROR));
+            throw(err);
+        } else {
+            if (data !== null && data !== undefined) {
+                let fileList = data.Contents;
+                if (fileList !== null && fileList.length > 0) {
+                    let isFileExist = 0;
+                    fileList.forEach((fileInfo, idx) => {
+                        if (fileInfo.Key === key) {   // 일치하는 Key값의 파일이 있다면 삭제 진행
+                            isFileExist = 1;
+                            S3.deleteObject({
+                                Bucket: process.env.AWS_S3_BUCKET_NAME,
+                                Key: `${key}`
+                            }, (err, data) => {
+                                if (err) {   // AWS S3 설정관련 에러 발생
+                                    res.send(response(baseResponse.AWS_S3_ERROR));
+                                    throw(err);
+                                }
+                                else   // 성공 메세지
+                                    res.send(response(baseResponse.AWS_S3_DELETE_SUCCESS));
+                            });
+
+                            return false;
+                        }
+                    });
+                    if (isFileExist === 0)
+                        res.send(response(baseResponse.AWS_S3_FILE_NOT_FOUND));
+                }
+            } else {
+                res.send(response(baseResponse.AWS_S3_DIR_NOT_FOUND));
+            }
+        }
+    });
+};
 
 /**
  * API No. 12
@@ -80,4 +120,22 @@ exports.searchArea = async (req, res) => {
     }
 
     return res.send(response(baseResponse.AREA_INQUIRE_KEYWORD_SUCCESS, { 'pageNum': page, 'is_end': is_end, 'list': new_result_arr }));
+};
+
+exports.deleteTempImage = async function (req, res) {
+    const image_key = req.headers.image_key;
+    const dirname = req.query.dirname;
+    const s3_dirname = `${dirname}s`;
+
+    if (!dirname)
+        return res.send(response(baseResponse.S3_PREFIX_EMPTY));
+    if (dirname !== "thumnail" && dirname !== "travel")
+        return res.send(response(baseResponse.S3_PREFIX_ERROR));
+    if (!image_key)
+        return res.send(response(baseResponse.S3_IMAGE_KEY_EMPTY));
+
+    deleteS3Object({
+        Bucket: process.env.AWS_S3_BUCKET_NAME,
+        Prefix: `${s3_dirname}/`
+    }, image_key, res);
 };

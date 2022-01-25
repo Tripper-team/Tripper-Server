@@ -52,8 +52,6 @@ module.exports = function(app) {
             res.send(response(baseResponse.UPLOAD_TEMP_TRAVEL_SUCCESS, result));
         });
 
-    // 16. 임시 여행 게시물 이미지 삭제 API (썸네일)
-
-    // 17. 임시 여행 게시물 이미지 삭제 API (여행)
-
+    // 16. 임시 여행 게시물 이미지 삭제 API
+    app.delete('/app/feeds/timage-delete', jwtMiddleware, feed.deleteTempImage);
 };
