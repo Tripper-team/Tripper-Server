@@ -27,7 +27,7 @@ module.exports = {
 
     //Request error
     NICKNAME_EMPTY : { "isSuccess": false, "code": 2001, "message":"닉네임을 입력해주세요." },
-    NICKNAME_ERROR_TYPE : { "isSuccess": false, "code": 2002, "message":"닉네임 형식이 잘못되었습니다. (한영 포함 10자 이내)" },
+    NICKNAME_ERROR_TYPE : { "isSuccess": false, "code": 2002, "message":"닉네임 형식이 잘못되었습니다. (한글,영어,숫자 포함 2자 이상, 10자 이하)" },
     EMAIL_EMPTY : { "isSuccess": false, "code": 2003, "message":"이메일을 입력해주세요." },
     PROFILE_IMG_EMPTY : { "isSuccess": false, "code": 2004, "message":"프로필 사진의 경로를 입력해주세요." },
     KAKAO_ID_EMPTY : { "isSuccess": false, "code": 2005, "message":"카카오 고유번호를 입력해주세요." },
@@ -46,6 +46,7 @@ module.exports = {
     S3_PREFIX_ERROR : { "isSuccess": false, "code": 2018, "message":"thumnail,travel 중 하나를 입력해주세요." },
     S3_IMAGE_KEY_EMPTY : { "isSuccess": false, "code": 2019, "message":"삭제할 파일의 Key를 입력해주세요." },
     AWS_S3_ERROR : { "isSuccess": false, "code": 2020, "message":"AWS S3 관련 에러가 발생했습니다. 서버측에 문의해주세요." },
+    NICKNAME_BAD_WORD : { "isSuccess": false, "code": 2021, "message":"부적절한 용어가 포함되어 있습니다. 다시 설정해주세요." },
 
     ACCESS_TOKEN_EMPTY : { "isSuccess": false, "code": 2050, "message": "accessToken을 입력해주세요." },
     ACCESS_TOKEN_INVALID : { "isSuccess": false, "code": 2051, "message": "유효하지 않은 accessToken 입니다." },

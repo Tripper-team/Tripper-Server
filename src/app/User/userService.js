@@ -53,7 +53,7 @@ exports.createUser = async function (email, profileImgUrl, kakaoId, ageGroup, ge
 // 닉네임 중복확인
 exports.checkNickRedundant = async function (nickName) {
     try {
-        const nickCheckResult = await userProvider.retrieveUserNickname(nickName);
+        const nickCheckResult = await userProvider.retrieveUserNicknameCheck(nickName);
         if (nickCheckResult[0].isNickResult === 1)   // 닉네임이 존재한다면
             return errResponse(baseResponse.REDUNDANT_NICKNAME);
         else

@@ -22,8 +22,8 @@ class AWS_S3 {
             encoding: null   // 파일을 어떻게 읽을 것인지?
         };
 
-        let params = {
-            'Key': `signUp/${md5(url)}.jpg`,
+        const params = {
+            'Key': `KakaoProfile/${md5(url)}.jpg`,
             'Bucket': BUCKET_NAME,
             'Body': await request(request_option),
             'ContentType': 'image/jpg'

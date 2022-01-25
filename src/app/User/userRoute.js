@@ -1,7 +1,7 @@
 module.exports = function(app){
     const user = require('./userController');
     const jwtMiddleware = require('../../../config/jwtMiddleware');
-    const passport = require('passport');
+    // const passport = require('passport');
     const upload = require('../../../config/aws_s3_multer');
     const single_upload = upload.upload;
 
