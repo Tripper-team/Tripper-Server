@@ -99,7 +99,17 @@ exports.kakaoLogin = async function (req, res) {
         );
 
         const loginResult = await userProvider.getUserInfoByKakaoId(kakaoId);   // 로그인한 User 정보 출력
-        return res.send(response(baseResponse.KAKAO_LOGIN_SUCCESS, { 'userIdx': userIdx, 'jwt': token, 'information': loginResult }));
+        return res.send(response(baseResponse.KAKAO_LOGIN_SUCCESS,
+            {
+                'userIdx': userIdx,
+                'jwt': token,
+                'email': loginResult[0].email,
+                'nickName': loginResult[0].nickName,
+                'profileImgUrl': loginResult[0].profileImgUrl,
+                'kakaoId': loginResult[0].kakaoId,
+                'ageGroup': loginResult[0].ageGroup,
+                'gender': loginResult[0].gender
+            }));
     }
     else
         return res.send(response(baseResponse.KAKAO_SIGN_UP, {
