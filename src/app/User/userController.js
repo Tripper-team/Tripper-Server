@@ -92,7 +92,16 @@ exports.kakaoLogin = async function (req, res) {
             }   // 유효기간 365일
         );
 
-        return res.send(response(baseResponse.KAKAO_LOGIN_SUCCESS, { 'userIdx': userIdx, 'jwt': token }));
+        const loginResult = await userProvider.getUserInfoByKakaoId(kakaoId);   // 로그인한 User 정보 출력
+        return res.send(response(baseResponse.KAKAO_LOGIN_SUCCESS, {
+            'userIdx': userIdx,
+            'jwt': token,
+            'email': loginResult[0].email,
+            'nickName': loginResult[0].nickName,
+            'profileImgUrl': loginResult[0].profileImgUrl,
+            'kakaoId': loginResult[0].kakaoId,
+            'ageGroup': loginResult[0].ageGroup,
+            'gender': loginResult[0].gender}));
     }
     else
         return res.send(response(baseResponse.KAKAO_SIGN_UP, {
@@ -142,9 +151,10 @@ exports.signUp = async function (req, res) {
  */
 exports.checkNickname = async function (req, res) {
     /**
-     * Body: nickName
+     * Query String: nickName
      */
-    const nickName = req.body.nickName;
+    const nickName = req.query.nickname;
+    // console.log(nickName);
 
     if (!nickName)
         return res.send(errResponse(baseResponse.NICKNAME_EMPTY));
