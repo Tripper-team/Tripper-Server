@@ -2,18 +2,24 @@ const userProvider = require("../User/userProvider");
 const userService = require("../User/userService");
 const baseResponse = require("../../../config/baseResponseStatus");
 const {response, errResponse} = require("../../../config/response");
-const passport = require("passport");
-const KakaoStrategy = require("passport-kakao").Strategy
+// const passport = require("passport");
+// const KakaoStrategy = require("passport-kakao").Strategy
 const axios = require("axios");
 const secret_config = require("../../../config/secret");
 const jwt = require("jsonwebtoken");
 const s3 = require('../../../config/aws_s3');
+const fs = require('fs');
+const fword_array = fs.readFileSync('config/fword_list.txt').toString().split("\n");
 require('dotenv').config();
 
-const regex_nickname = /^[가-힣a-zA-Z]+$/;
+const regex_nickname = /^[가-힣a-zA-Z0-9]+$/;   // 닉네임 정규식
 
-const checkObjectEmpty = (obj) => {
-    return Object.keys(obj).length === 0;
+const checkNickFword = (fword_array, nick) => {   // 닉네임에 부적절한 용어가 포함되어 있는지 체크
+    for (let f in fword_array) {
+        if (nick.includes(fword_array[f]))
+            return true;
+    }
+    return false;
 };
 
 /**
@@ -51,7 +57,7 @@ exports.kakaoLogin = async function (req, res) {
     }
 
     const email = user_kakao_profile.data.kakao_account.email;   // 사용자 이메일 (카카오)
-    const profileImgUrl = user_kakao_profile.data.kakao_account.profile.profile_image_url;   // 사용자 프로필 이미지
+    const profileImgUrl = user_kakao_profile.data.kakao_account.profile.profile_image_url;   // 사용자 프로필 이미지 URL
     const kakaoId = String(user_kakao_profile.data.id);   // 카카오 고유ID
     let ageGroup = user_kakao_profile.data.kakao_account.age_range;   // 연령대
     let gender = user_kakao_profile.data.kakao_account.gender;   // 성별
@@ -61,6 +67,7 @@ exports.kakaoLogin = async function (req, res) {
     if (gender === undefined)
         gender = null;
 
+    console.log("[카카오 로그인 API]");
     console.log("사용자 카카오 이메일: " + email);
     console.log("사용자 프로필 사진: " + profileImgUrl);
     console.log("사용자 카카오 고유ID: " + kakaoId);
@@ -69,12 +76,11 @@ exports.kakaoLogin = async function (req, res) {
 
     // Amazon S3
     const s3_profileUrl = await s3.upload(profileImgUrl);
-    // console.log(s3_profileUrl.Location);
 
     // 사용자 카카오 고유번호가 DB에 존재하는지 안하는지 체크할 것
     // 존재한다면 -> 바로 JWT 발급 및 로그인 처리 + 사용자 status 수정
     // 존재하지 않는다면 -> 회원가입 API 진행 (닉네임 입력 페이지로)
-    const kakaoIdCheckResult = await userProvider.retrieveUserKakaoId(kakaoId);
+    const kakaoIdCheckResult = await userProvider.retrieveKakaoIdCheck(kakaoId);
     if (kakaoIdCheckResult[0].isKakaoIdExist === 1) {   // 존재한다면
         // 유저 인덱스 가져오기
         const userIdxResult = await userProvider.getUserInfoByKakaoId(kakaoId);
@@ -87,7 +93,7 @@ exports.kakaoLogin = async function (req, res) {
             },
             secret_config.jwtsecret,   // 비밀키
             {
-                expiresIn: "365d",
+                expiresIn: "365d",   // 유효기간 추후 변경 (Refresh token도 같이 사용)
                 subject: "userInfo",
             }   // 유효기간 365일
         );
@@ -124,8 +130,10 @@ exports.signUp = async function (req, res) {
         return res.send(errResponse(baseResponse.KAKAO_ID_EMPTY));
     if (!nickName)
         return res.send(errResponse(baseResponse.NICKNAME_EMPTY));
-    if (!regex_nickname.test(nickName) || nickName.length > 10)
+    if (!regex_nickname.test(nickName) || nickName.length > 10 || nickName.length < 2)
         return res.send(errResponse(baseResponse.NICKNAME_ERROR_TYPE));
+    if (checkNickFword(fword_array, nickName))
+        return res.send(errResponse(baseResponse.NICKNAME_BAD_WORD));
 
     if (ageGroup === undefined)
         ageGroup = null;
@@ -155,8 +163,10 @@ exports.checkNickname = async function (req, res) {
 
     if (!nickName)
         return res.send(errResponse(baseResponse.NICKNAME_EMPTY));
-    if (!regex_nickname.test(nickName) || nickName.length > 10)
+    if (!regex_nickname.test(nickName) || nickName.length > 10 || nickName.length < 2)
         return res.send(errResponse(baseResponse.NICKNAME_ERROR_TYPE));
+    if (checkNickFword(fword_array, nickName))
+        return res.send(errResponse(baseResponse.NICKNAME_BAD_WORD));
 
     const checkNicknameResponse = await userService.checkNickRedundant(nickName);
     return res.send(checkNicknameResponse);
