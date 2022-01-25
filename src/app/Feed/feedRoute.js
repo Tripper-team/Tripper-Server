@@ -1,6 +1,3 @@
-const jwtMiddleware = require("../../../config/jwtMiddleware");
-const {response} = require("../../../config/response");
-const baseResponse = require("../../../config/baseResponseStatus");
 module.exports = function(app) {
     const feed = require('./feedController');
     const jwtMiddleware = require('../../../config/jwtMiddleware');
@@ -20,7 +17,19 @@ module.exports = function(app) {
         jwtMiddleware,
         multiple_thum_upload.array('thumnails', 5),
         (req, res) => {
-            res.send(response(baseResponse.UPLOAD_TEMP_THUMNAIL_SUCCESS));
+            let result = [];
+            for(let i in req.files) {
+                let temp = {
+                    originalname: req.files[i].originalname,
+                    key: req.files[i].key,
+                    location: req.files[i].location,
+                    contentType: req.files[i].contentType
+                }
+
+                result.push(temp);
+            }
+
+            res.send(response(baseResponse.UPLOAD_TEMP_THUMNAIL_SUCCESS, result));
         });
 
     // 15. 임시 여행 게시물 이미지 업로드 API (여행)
@@ -28,7 +37,19 @@ module.exports = function(app) {
         jwtMiddleware,
         multiple_travel_upload.array('travels', 5),
         (req, res) => {
-            res.send(response(baseResponse.UPLOAD_TEMP_TRAVEL_SUCCESS));
+            let result = [];
+            for(let i in req.files) {
+                let temp = {
+                    originalname: req.files[i].originalname,
+                    key: req.files[i].key,
+                    location: req.files[i].location,
+                    contentType: req.files[i].contentType
+                }
+
+                result.push(temp);
+            }
+
+            res.send(response(baseResponse.UPLOAD_TEMP_TRAVEL_SUCCESS, result));
         });
 
     // 16. 임시 여행 게시물 이미지 삭제 API (썸네일)
