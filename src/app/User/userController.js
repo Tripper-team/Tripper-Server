@@ -9,6 +9,7 @@ const secret_config = require("../../../config/secret");
 const jwt = require("jsonwebtoken");
 const s3 = require('../../../config/aws_s3');
 const fs = require('fs');
+const userDao = require("./userDao");
 const fword_array = fs.readFileSync('config/fword_list.txt').toString().split("\n");
 require('dotenv').config();
 
@@ -278,6 +279,11 @@ exports.getFollowList = async function (req, res) {
         return res.send(errResponse(baseResponse.FOLLOW_SEARCH_OPTION_ERROR));
     if (!userIdx)
         return res.send(errResponse(baseResponse.USER_IDX_EMPTY));
+
+
+    const userCheckResult = await userProvider.retrieveUserIdxCheck(userIdx);
+    if (userCheckResult[0].isUserExist === 0)    // 해당하는 유저가 없다면
+        return res.send(errResponse(baseResponse.NOT_EXIST_USER));
 
     // userIdx와 myIdx가 같다면 본인의 팔로잉, 팔로워 조회
     if (parseInt(userIdx) === parseInt(myIdx)) {
