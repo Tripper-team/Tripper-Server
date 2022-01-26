@@ -133,21 +133,16 @@ exports.updateProfile = async function (userIdx, profileImgUrl, nickName) {
             return errResponse(baseResponse.NICKNAME_EQUAL_BEFORE);
 
         // 닉네임 중복 확인
-        const nickCheckResult = await userProvider.retrieveUserNickname(nickName);
+        const nickCheckResult = await userProvider.retrieveUserNicknameCheck(nickName);
         if (nickCheckResult[0].isNickResult === 1)   // 닉네임이 존재한다면
             return errResponse(baseResponse.REDUNDANT_NICKNAME);
 
-        // 프로필 사진
-        if (profileImgUrl !== undefined) {
-            await userDao.updateUserProfile(connection, [userIdx, profileImgUrl, nickName]);
-        } else {
-            await userDao.updateUserProfile(connection, [userIdx, profileImgUrl, nickName]);
-        }
+        await userDao.updateUserProfile(connection, [userIdx, profileImgUrl, nickName]);
 
         connection.release();
         return response(baseResponse.PROFILE_EDIT_SUCCESS);
     } catch(err) {
-        logger.error(`App - updateUserProfile Service error\n: ${err.message}`);
+        logger.error(`App - updateProfile Service error\n: ${err.message}`);
         return errResponse(baseResponse.DB_ERROR);
     }
 };

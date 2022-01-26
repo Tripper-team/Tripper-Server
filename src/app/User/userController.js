@@ -225,8 +225,10 @@ exports.editUserProfile = async function (req, res) {
 
     if (!nickName)
         return res.send(errResponse(baseResponse.NICKNAME_EMPTY));
-    if (!regex_nickname.test(nickName) || nickName.length > 10)
+    if (!regex_nickname.test(nickName) || nickName.length > 10 || nickName.length < 2)
         return res.send(errResponse(baseResponse.NICKNAME_ERROR_TYPE));
+    if (checkNickFword(fword_array, nickName))
+        return res.send(errResponse(baseResponse.NICKNAME_BAD_WORD));
 
     const userStatusCheckRow = await userProvider.checkUserStatus(userIdx);
     if (userStatusCheckRow[0].isWithdraw === 'Y')
