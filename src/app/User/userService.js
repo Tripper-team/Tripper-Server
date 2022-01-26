@@ -8,11 +8,66 @@ const {response} = require("../../../config/response");
 const {errResponse} = require("../../../config/response");
 const jwt = require("jsonwebtoken");
 const s3 = require('../../../config/aws_s3');
+const AWS = require("aws-sdk");
+
+let resultCode = 0;
+
+const S3 = new AWS.S3({
+    accessKeyId: process.env.AWS_S3_ACCESS_KEY,
+    secretAccessKey: process.env.AWS_S3_SECRET_KEY,
+    region: 'ap-northeast-2'
+});
+
+const checkFileKeyAndDelete = (fileInfo, key) => {
+    let deleteParams;
+    const storedKey = fileInfo.Key;
+
+    if (storedKey.includes(key)) {
+        deleteParams = { Bucket: process.env.AWS_S3_BUCKET_NAME, Key: storedKey };
+        S3.deleteObject(deleteParams, (err, data) => {
+            if (err) {
+                resultCode = 2020;
+                console.log(err);
+            }
+            else {
+                resultCode = 1017;
+                console.log(data);
+            }
+        });
+
+        return true;
+    } else {
+        resultCode = 3010;
+        return false;
+    }
+};
+
+const deleteS30bject = async (param1, param2, key) => {
+    let kakaoListObjects = await S3.listObjectsV2(param1).promise();
+    let profileListObjects = await S3.listObjectsV2(param2).promise();
+
+    if (kakaoListObjects.Contents.length === 0) {   // kakaoProfiles에서 파일을 못찾았다면
+        // Profiles로 진행
+        if (profileListObjects.Contents.length === 0)    // profiles에서 파일을 찾지 못했다면
+            resultCode = 3010;
+        else {
+            profileListObjects.Contents.forEach((fileInfo) => {
+                if (checkFileKeyAndDelete(fileInfo, key))
+                    return false;
+            });
+        }
+    } else {   // kakaoProfiles에서 파일을 찾았다면
+        kakaoListObjects.Contents.forEach((fileInfo) => {
+            if (checkFileKeyAndDelete(fileInfo, key))
+                return false;
+        });
+    }
+};
 
 exports.createUser = async function (email, profileImgUrl, kakaoId, ageGroup, gender, nickName) {
     try {
         // 회원가입을 이미 한 유저인지 아닌지 확인할 것
-        const kakaoIdCheckResult = await userProvider.retrieveUserKakaoId(kakaoId);
+        const kakaoIdCheckResult = await userProvider.retrieveKakaoIdCheck(kakaoId);
         // console.log(kakaoIdCheckResult);
         if (kakaoIdCheckResult[0].isKakaoIdExist === 1)
             return errResponse(baseResponse.USER_ALREADY_SIGNUP);
@@ -133,21 +188,48 @@ exports.updateProfile = async function (userIdx, profileImgUrl, nickName) {
             return errResponse(baseResponse.NICKNAME_EQUAL_BEFORE);
 
         // 닉네임 중복 확인
-        const nickCheckResult = await userProvider.retrieveUserNickname(nickName);
+        const nickCheckResult = await userProvider.retrieveUserNicknameCheck(nickName);
         if (nickCheckResult[0].isNickResult === 1)   // 닉네임이 존재한다면
             return errResponse(baseResponse.REDUNDANT_NICKNAME);
 
-        // 프로필 사진
-        if (profileImgUrl !== undefined) {
-            await userDao.updateUserProfile(connection, [userIdx, profileImgUrl, nickName]);
-        } else {
-            await userDao.updateUserProfile(connection, [userIdx, profileImgUrl, nickName]);
-        }
+        // 이미지를 새로 업로드 하면? -> 기존의 사진이 있는 S3 저장소에 있는 사진 삭제
+        // 이후 새로 업로드 하는 사진 S3에 추가
+        // DB에 새로 업로드
+        let beforeProfileImgUrl = await userDao.selectUserProfile(connection, userIdx);
+        beforeProfileImgUrl = beforeProfileImgUrl[0].profileImgUrl;
+        const befProfileImgUrlSplitted = beforeProfileImgUrl.split("/");
+        const befProfileImgName = befProfileImgUrlSplitted[befProfileImgUrlSplitted.length - 1];
 
-        connection.release();
-        return response(baseResponse.PROFILE_EDIT_SUCCESS);
+        if (profileImgUrl !== undefined) {   // 새로운 프로필 이미지가 사용자로부터 왔으면
+            console.log("Before result code: " + resultCode);
+            await deleteS30bject(   // 삭제 진행
+                { Bucket: process.env.AWS_S3_BUCKET_NAME, Prefix: "kakaoProfiles/" },
+                { Bucket: process.env.AWS_S3_BUCKET_NAME, Prefix: "profiles/"},
+                befProfileImgName
+            );
+            console.log("After result code: " + resultCode);
+
+            if (resultCode === 2020) {
+                connection.release();
+                return errResponse(baseResponse.AWS_S3_ERROR);
+            }
+            else if (resultCode === 3010) {
+                connection.release();
+                return errResponse(baseResponse.AWS_S3_FILE_NOT_FOUND);
+            }
+            else {
+                await userDao.updateUserProfile(connection, [userIdx, profileImgUrl, nickName]);
+                connection.release();
+                return response(baseResponse.PROFILE_EDIT_SUCCESS);
+            }
+        }
+        else {   // 새로운 프로필 이미지가 안왔으면
+            await userDao.updateUserProfile(connection, [userIdx, profileImgUrl, nickName]);
+            connection.release();
+            return response(baseResponse.PROFILE_EDIT_SUCCESS);
+        }
     } catch(err) {
-        logger.error(`App - updateUserProfile Service error\n: ${err.message}`);
+        logger.error(`App - updateProfile Service error\n: ${err.message}`);
         return errResponse(baseResponse.DB_ERROR);
     }
 };
