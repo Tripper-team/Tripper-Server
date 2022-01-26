@@ -57,3 +57,11 @@ exports.retrieveUserProfile = async function (userIdx) {
   connection.release();
   return profileResult;
 };
+
+// 사용자 인덱스 체크하기
+exports.retrieveUserIdxCheck = async function (userIdx) {
+  const connection = await pool.getConnection(async (conn) => conn);
+  const userIdxCheckResult = await userDao.selectIsUserExistByIdx(connection, userIdx);
+  connection.release();
+  return userIdxCheckResult;
+};

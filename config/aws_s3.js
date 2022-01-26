@@ -2,8 +2,9 @@
 
 const AWS = require('aws-sdk');
 const request = require('request-promise');
-const md5 = require('md5');
+// const md5 = require('md5');
 const BUCKET_NAME = 'tripper-bucket';
+const uuid = require('uuid');
 require('dotenv').config();
 
 const S3 = new AWS.S3({
@@ -23,7 +24,7 @@ class AWS_S3 {
         };
 
         const params = {
-            'Key': `KakaoProfile/${md5(url)}.jpg`,
+            'Key': `kakaoProfiles/${uuid.v4().toString().replaceAll("-", "")}`,
             'Bucket': BUCKET_NAME,
             'Body': await request(request_option),
             'ContentType': 'image/jpg'
