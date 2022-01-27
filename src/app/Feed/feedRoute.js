@@ -2,8 +2,6 @@ module.exports = function(app) {
     const feed = require('./feedController');
     const jwtMiddleware = require('../../../config/jwtMiddleware');
     const s3Multer = require('../../../config/multer');
-    const multiple_thum_upload = s3Multer.multiple_thumnail_upload;
-    const multiple_travel_upload = s3Multer.multiple_travel_upload;
     const {response, errResponse} = require("../../../config/response");
     const baseResponse = require("../../../config/baseResponseStatus");
 
@@ -15,7 +13,7 @@ module.exports = function(app) {
     // 14. 임시 여행 게시물 이미지 업로드 API (썸네일)
     app.post('/app/feeds/timage-upload/thumnail',
         jwtMiddleware,
-        multiple_thum_upload.array('thumnails', 5),
+        s3Multer.multiple_thumnail_upload.array('thumnails', 5),
         (req, res) => {
             let result = [];
             for(let i in req.files) {
@@ -35,7 +33,7 @@ module.exports = function(app) {
     // 15. 임시 여행 게시물 이미지 업로드 API (여행)
     app.post('/app/feeds/timage-upload/travel',
         jwtMiddleware,
-        multiple_travel_upload.array('travels', 5),
+        s3Multer.multiple_travel_upload.array('travels', 5),
         (req, res) => {
             let result = [];
             for(let i in req.files) {

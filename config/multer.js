@@ -45,12 +45,14 @@ const multiple_thumnail_upload = multer({
         bucket: process.env.AWS_S3_BUCKET_NAME,
         contentType: multerS3.AUTO_CONTENT_TYPE,
         acl: 'public-read',
-        encoding: null,
         key: (req, file, cb) => {
             // cb(null, `thumnails/${file.originalname}`);
-            cb(null, `temp/thumnails/${uuid.v4().toString().replaceAll("-", "")}_${file.originalname}`);
+            cb(null, `temp/thumnails/${uuid.v4().toString().replaceAll("-", "")}`);
         },
     }),
+    limits: {
+        fileSize: 1000 * 1000 * 10
+    }
 });
 
 const multiple_travel_upload = multer({
@@ -59,12 +61,14 @@ const multiple_travel_upload = multer({
         bucket: process.env.AWS_S3_BUCKET_NAME,
         contentType: multerS3.AUTO_CONTENT_TYPE,
         acl: 'public-read',
-        encoding: null,
         key: (req, file, cb) => {
             // cb(null, `travels/${file.originalname}`);
-            cb(null, `temp/travels/${uuid.v4().toString().replaceAll("-", "")}_${file.originalname}`);
+            cb(null, `temp/travels/${uuid.v4().toString().replaceAll("-", "")}`);
         },
     }),
+    limits: {
+        fileSize: 1000 * 1000 * 10
+    }
 });
 
 
