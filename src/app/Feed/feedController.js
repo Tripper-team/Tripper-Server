@@ -3,51 +3,38 @@ const feedService = require("../Feed/feedService");
 const baseResponse = require("../../../config/baseResponseStatus");
 const {response, errResponse} = require("../../../config/response");
 const axios = require("axios");
-const AWS = require("aws-sdk");
+const s3 = require('../../../config/s3');
 require('dotenv').config();
 
-const S3 = new AWS.S3({
-    accessKeyId: process.env.AWS_S3_ACCESS_KEY,
-    secretAccessKey: process.env.AWS_S3_SECRET_KEY,
-    region: 'ap-northeast-2'
-});
+const deleteS3Object = async (params, key, res) => {
+    let listObjects = await s3.listObjectsV2(params).promise();
+    let deleteParams;
+    let find = 0;
 
-const deleteS3Object = (params, key, res) => {
-    S3.listObjectsV2(params, (err, data) => {
-        if (err) {
-            res.send(response(baseResponse.AWS_S3_ERROR));
-            throw(err);
-        } else {
-            if (data !== null && data !== undefined) {
-                let fileList = data.Contents;
-                if (fileList !== null && fileList.length > 0) {
-                    let isFileExist = 0;
-                    fileList.forEach((fileInfo, idx) => {
-                        if (fileInfo.Key === key) {   // 일치하는 Key값의 파일이 있다면 삭제 진행
-                            isFileExist = 1;
-                            S3.deleteObject({
-                                Bucket: process.env.AWS_S3_BUCKET_NAME,
-                                Key: `${key}`
-                            }, (err, data) => {
-                                if (err) {   // AWS S3 설정관련 에러 발생
-                                    res.send(response(baseResponse.AWS_S3_ERROR));
-                                    throw(err);
-                                }
-                                else   // 성공 메세지
-                                    res.send(response(baseResponse.AWS_S3_DELETE_SUCCESS));
-                            });
+    if (listObjects.Contents.length === 0)
+        return res.send(errResponse(baseResponse.AWS_S3_FILE_NOT_FOUND));
 
-                            return false;
-                        }
-                    });
-                    if (isFileExist === 0)
-                        res.send(response(baseResponse.AWS_S3_FILE_NOT_FOUND));
+    listObjects.Contents.forEach((info) => {
+        const storedKey = info.Key;
+        if (storedKey === key) {
+            find = 1;
+            deleteParams = { Bucket: process.env.AWS_S3_BUCKET_NAME, Key: storedKey };
+            s3.deleteObject(deleteParams, (err, data) => {
+                if (err) {
+                    console.log("AWS 문제로 인해 삭제에 실패했습니다.");
+                    return res.send(errResponse(baseResponse.AWS_S3_ERROR));
+                } else {
+                    console.log("삭제에 성공했습니다!");
+                    console.log(data);
+                    return res.send(response(baseResponse.AWS_S3_DELETE_SUCCESS));
                 }
-            } else {
-                res.send(response(baseResponse.AWS_S3_DIR_NOT_FOUND));
-            }
+            });
+            return false;
         }
     });
+
+    if (find === 0)
+        return res.send(errResponse(baseResponse.AWS_S3_KEY_NOT_MATCH));
 };
 
 /**
@@ -122,19 +109,24 @@ exports.searchArea = async (req, res) => {
     return res.send(response(baseResponse.AREA_INQUIRE_KEYWORD_SUCCESS, { 'pageNum': page, 'is_end': is_end, 'list': new_result_arr }));
 };
 
+/**
+ * API No. 16
+ * API Name : 임시 여행 게시물 이미지 삭제 API
+ * [DELETE] /app/feeds/timage-delete?dirname=
+ */
 exports.deleteTempImage = async function (req, res) {
     const image_key = req.headers.image_key;
     const dirname = req.query.dirname;
-    const s3_dirname = `${dirname}s`;
+    const s3_dirname = `temp/${dirname}`;
 
     if (!dirname)
         return res.send(response(baseResponse.S3_PREFIX_EMPTY));
-    if (dirname !== "thumnail" && dirname !== "travel")
+    if (dirname !== "thumnails" && dirname !== "travels")
         return res.send(response(baseResponse.S3_PREFIX_ERROR));
     if (!image_key)
         return res.send(response(baseResponse.S3_IMAGE_KEY_EMPTY));
 
-    deleteS3Object({
+    await deleteS3Object({
         Bucket: process.env.AWS_S3_BUCKET_NAME,
         Prefix: `${s3_dirname}/`
     }, image_key, res);
