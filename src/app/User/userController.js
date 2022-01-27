@@ -172,9 +172,9 @@ exports.signUp = async function (req, res) {
  */
 exports.checkNickname = async function (req, res) {
     /**
-     * Body: nickName
+     * Query String: nickName
      */
-    const nickName = req.body.nickName;
+    const nickName = req.query.nickname;
 
     if (!nickName)
         return res.send(errResponse(baseResponse.NICKNAME_EMPTY));
