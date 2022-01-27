@@ -9,6 +9,7 @@ module.exports = function(app) {
     app.get('/app/feeds/area-search-keyword', feed.searchArea);
 
     // 13. 여행 게시물 작성하기 API
+    app.post('/app/feeds', jwtMiddleware, feed.postFeed);
 
     // 14. 임시 여행 게시물 이미지 업로드 API (썸네일)
     app.post('/app/feeds/timage-upload/thumnail',

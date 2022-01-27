@@ -110,6 +110,15 @@ exports.searchArea = async (req, res) => {
 };
 
 /**
+ * API No. 13
+ * API Name : 여행 게시물 작성하기 API
+ * [POST] /app/feeds/
+ */
+exports.postFeed = async function (req, res) {
+    console.log(req.body);
+};
+
+/**
  * API No. 16
  * API Name : 임시 여행 게시물 이미지 삭제 API
  * [DELETE] /app/feeds/timage-delete?dirname=
