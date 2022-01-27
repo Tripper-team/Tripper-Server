@@ -2,8 +2,7 @@ module.exports = function(app){
     const user = require('./userController');
     const jwtMiddleware = require('../../../config/jwtMiddleware');
     // const passport = require('passport');
-    const upload = require('../../../config/aws_s3_multer');
-    const single_upload = upload.upload;
+    const s3Multer = require('../../../config/multer');
 
     // 1. 카카오 로그인 API
     app.post('/app/users/kakao-login', user.kakaoLogin);
@@ -23,7 +22,7 @@ module.exports = function(app){
     app.get('/app/users/profile-setting', jwtMiddleware, user.getProfile);
 
     // 5. 프로필 수정 API
-    app.patch('/app/users/profile-edit', jwtMiddleware, single_upload.single('profileImage'), user.editUserProfile);
+    app.patch('/app/users/profile-edit', jwtMiddleware, s3Multer.single_upload.single('profileImage'), user.editUserProfile);
 
     // 6. 팔로우 API
     app.post('/app/users/following', jwtMiddleware, user.follow);

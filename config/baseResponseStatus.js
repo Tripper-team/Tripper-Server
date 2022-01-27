@@ -61,7 +61,7 @@ module.exports = {
     AREA_SEARCH_FAILED : { "isSuccess": false, "code": 3007, "message":"장소 검색에 에러가 발생했습니다." },
     AREA_SEARCH_RESULT_EMPTY : { "isSuccess": false, "code": 3008, "message":"장소 검색 결과가 없습니다." },
     NICKNAME_EQUAL_BEFORE : { "isSuccess": false, "code": 3009, "message":"이전 닉네임과 동일합니다." },
-    AWS_S3_FILE_NOT_FOUND : { "isSuccess": false, "code": 3010, "message":"작성하신 Key에 해당하는 파일을 찾지 못했습니다." },
+    AWS_S3_FILE_NOT_FOUND : { "isSuccess": false, "code": 3010, "message":"작성하신 Key에 해당하는 파일을 찾지 못했습니다. 삭제를 제외하고 새로 업로드합니다." },
     AWS_S3_DIR_NOT_FOUND : { "isSuccess": false, "code": 3011, "message":"존재하지 않는 디렉토리 이름입니다." },
 
     //Connection, Transaction 등의 서버 오류

@@ -1,9 +1,9 @@
 module.exports = function(app) {
     const feed = require('./feedController');
     const jwtMiddleware = require('../../../config/jwtMiddleware');
-    const s3Multer = require('../../../config/aws_s3_multer');
-    const multiple_thum_upload = s3Multer.upload_multiple_thumnail;
-    const multiple_travel_upload = s3Multer.upload_multiple_travel;
+    const s3Multer = require('../../../config/multer');
+    const multiple_thum_upload = s3Multer.multiple_thumnail_upload;
+    const multiple_travel_upload = s3Multer.multiple_travel_upload;
     const {response, errResponse} = require("../../../config/response");
     const baseResponse = require("../../../config/baseResponseStatus");
 

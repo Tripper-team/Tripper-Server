@@ -7,20 +7,23 @@ const {response, errResponse} = require("../../../config/response");
 const axios = require("axios");
 const secret_config = require("../../../config/secret");
 const jwt = require("jsonwebtoken");
-const s3 = require('../../../config/aws_s3');
+const s3Multer = require('../../../config/multer');
 const fs = require('fs');
 const userDao = require("./userDao");
-const fword_array = fs.readFileSync('config/fword_list.txt').toString().split("\n");
+const fword_array = fs.readFileSync('config/fword_list.txt').toString().replaceAll('\r', "").split("\n");
 require('dotenv').config();
 
 const regex_nickname = /^[가-힣a-zA-Z0-9]+$/;   // 닉네임 정규식
 
 const checkNickFword = (fword_array, nick) => {   // 닉네임에 부적절한 용어가 포함되어 있는지 체크
-    for (let f in fword_array) {
-        if (nick.includes(fword_array[f]))
-            return true;
-    }
-    return false;
+    let find = 0;
+    fword_array.forEach((word) => {
+        if (nick.includes(word)) {
+            find = 1;
+            return false;
+        }
+    });
+    return find;
 };
 
 /**
@@ -76,7 +79,8 @@ exports.kakaoLogin = async function (req, res) {
     console.log("사용자 성별: " + gender);
 
     // Amazon S3
-    const s3_profileUrl = await s3.upload(profileImgUrl);
+    // const s3_profileUrl = await s3.upload(profileImgUrl);
+    const s3_profileUrl = await s3Multer.kakao_upload(profileImgUrl);
 
     // 사용자 카카오 고유번호가 DB에 존재하는지 안하는지 체크할 것
     // 존재한다면 -> 바로 JWT 발급 및 로그인 처리 + 사용자 status 수정
