@@ -1,22 +1,32 @@
-'use strict';
-
-const AWS = require('aws-sdk');
-const BUCKET_NAME = 'tripper-bucket';
 const multer = require('multer');
 const multerS3 = require('multer-s3');
+const s3 = require('./s3');
 const uuid = require('uuid');
+const md5 = require('md5');
+const request = require("request-promise");
 require('dotenv').config();
 
-const S3 = new AWS.S3({
-    accessKeyId: process.env.AWS_S3_ACCESS_KEY,
-    secretAccessKey: process.env.AWS_S3_SECRET_KEY,
-    region: 'ap-northeast-2'
-});
+const kakao_upload = async (url) => {
+    const request_option = {
+        method: 'GET',
+        url: url,
+        encoding: null
+    };
 
-const upload = multer({
+    const params = {
+        'Key': `kakaoProfiles/${md5(url)}`,
+        'Bucket': process.env.AWS_S3_BUCKET_NAME,
+        'Body': await request(request_option),
+        'ContentType': 'image/jpg'
+    };
+
+    return await s3.upload(params).promise();
+};
+
+const single_upload = multer({
     storage: multerS3({
-        s3: S3,
-        bucket: BUCKET_NAME,
+        s3: s3,
+        bucket: process.env.AWS_S3_BUCKET_NAME,
         contentType: multerS3.AUTO_CONTENT_TYPE,
         acl: 'public-read',
         key: (req, file, cb) => {
@@ -24,13 +34,15 @@ const upload = multer({
             cb(null, `profiles/${uuid.v4().toString().replaceAll("-", "")}`);
         },
     }),
+    limits: {
+        fileSize: 1000 * 1000 * 10
+    }
 });
 
-
-const upload_multiple_thumnail = multer({
+const multiple_thumnail_upload = multer({
     storage: multerS3({
-        s3: S3,
-        bucket: BUCKET_NAME,
+        s3: s3,
+        bucket: process.env.AWS_S3_BUCKET_NAME,
         contentType: multerS3.AUTO_CONTENT_TYPE,
         acl: 'public-read',
         encoding: null,
@@ -41,10 +53,10 @@ const upload_multiple_thumnail = multer({
     }),
 });
 
-const upload_multiple_travel = multer({
+const multiple_travel_upload = multer({
     storage: multerS3({
-        s3: S3,
-        bucket: BUCKET_NAME,
+        s3: s3,
+        bucket: process.env.AWS_S3_BUCKET_NAME,
         contentType: multerS3.AUTO_CONTENT_TYPE,
         acl: 'public-read',
         encoding: null,
@@ -55,8 +67,10 @@ const upload_multiple_travel = multer({
     }),
 });
 
+
 module.exports = {
-    upload,
-    upload_multiple_thumnail,
-    upload_multiple_travel,
+    kakao_upload,
+    single_upload,
+    multiple_thumnail_upload,
+    multiple_travel_upload
 };
