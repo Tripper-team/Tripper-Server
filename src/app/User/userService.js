@@ -7,17 +7,11 @@ const baseResponse = require("../../../config/baseResponseStatus");
 const {response} = require("../../../config/response");
 const {errResponse} = require("../../../config/response");
 const jwt = require("jsonwebtoken");
-const AWS = require("aws-sdk");
-
-const S3 = new AWS.S3({
-    accessKeyId: process.env.AWS_S3_ACCESS_KEY,
-    secretAccessKey: process.env.AWS_S3_SECRET_KEY,
-    region: 'ap-northeast-2'
-});
+const s3 = require('../../../config/s3');
 
 const deleteS3Object = async (param1, param2, key) => {
-    let kakaoListObjects = await S3.listObjectsV2(param1).promise();
-    let profileListObjects = await S3.listObjectsV2(param2).promise();
+    let kakaoListObjects = await s3.listObjectsV2(param1).promise();
+    let profileListObjects = await s3.listObjectsV2(param2).promise();
     let isExist = 0;
     let deleteParams;
     // console.log(kakaoListObjects.Contents);
@@ -29,7 +23,7 @@ const deleteS3Object = async (param1, param2, key) => {
         if (kakaoStoredKey.includes(key)) {
             isExist = 1;
             deleteParams = { Bucket: process.env.AWS_S3_BUCKET_NAME, Key: kakaoStoredKey };
-            S3.deleteObject(deleteParams, (err, data) => {
+            s3.deleteObject(deleteParams, (err, data) => {
                 if (err) {
                     console.log("[kakaoProfiles] 이미지는 업로드 했지만 이전 사진을 삭제하지는 못했습니다! (AWS문제)");
                     throw(err);
@@ -48,7 +42,7 @@ const deleteS3Object = async (param1, param2, key) => {
             if (profileStoredKey.includes(key)) {
                 isExist = 1;
                 deleteParams = { Bucket: process.env.AWS_S3_BUCKET_NAME, Key: profileStoredKey };
-                S3.deleteObject(deleteParams, (err, data) => {
+                s3.deleteObject(deleteParams, (err, data) => {
                     if (err) {
                         console.log("[profiles] 이미지는 업로드 했지만 이전 사진을 삭제하지는 못했습니다! (AWS문제)");
                         throw(err);
@@ -75,11 +69,13 @@ exports.createUser = async function (email, profileImgUrl, kakaoId, ageGroup, ge
         if (kakaoIdCheckResult[0].isKakaoIdExist === 1)
             return errResponse(baseResponse.USER_ALREADY_SIGNUP);
 
-        const age_arr = ageGroup.split('~');
-        let age;
+        let age_arr, age;
 
-        if (age_arr[0] === '0') age = '10대 미만';
-        else age = `${String(age_arr[0])}대`;
+        if (ageGroup !== undefined) {
+            age_arr = ageGroup.split('~');
+            if (age_arr[0] === '0') age = '10대 미만';
+            else age = `${String(age_arr[0])}대`;
+        }
 
         const connection = await pool.getConnection(async (conn) => conn);
 
