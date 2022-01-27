@@ -150,11 +150,6 @@ exports.signUp = async function (req, res) {
     if (checkNickFword(fword_array, nickName))
         return res.send(errResponse(baseResponse.NICKNAME_BAD_WORD));
 
-    if (ageGroup === undefined)
-        ageGroup = null;
-    if (gender === undefined)
-        gender = null;
-
     let signUpTokenResult = await userService.createUser(email, profileImgUrl, kakaoId, ageGroup, gender, nickName);   // 회원가입 진행
     const signUpResult = await userProvider.getUserInfoByKakaoId(kakaoId);   // 회원가입 한 User 정보 출력
 
@@ -174,7 +169,6 @@ exports.checkNickname = async function (req, res) {
      * Query String: nickName
      */
     const nickName = req.query.nickname;
-    // console.log(nickName);
 
     if (!nickName)
         return res.send(errResponse(baseResponse.NICKNAME_EMPTY));
