@@ -48,6 +48,17 @@ module.exports = {
     AWS_S3_ERROR : { "isSuccess": false, "code": 2020, "message":"AWS S3 관련 에러가 발생했습니다. 서버측에 문의해주세요." },
     NICKNAME_BAD_WORD : { "isSuccess": false, "code": 2021, "message":"부적절한 용어가 포함되어 있습니다. 다시 설정해주세요." },
 
+    FEED_INFORMATION_EMPTY : { "isSuccess": false, "code": 2022, "message":"여행 게시물에 업로드 하는 정보들을 입력해주세요. (information: {})" },
+    FEED_STARTDATE_EMPTY : { "isSuccess": false, "code": 2023, "message":"여행 출발 날짜를 선택해주세요." },
+    FEED_ENDDATE_EMPTY : { "isSuccess": false, "code": 2024, "message":"여행 도착 날짜를 선택해주세요." },
+    FEED_DATE_ERROR_TYPE : { "isSuccess": false, "code": 2025, "message":"날짜는 YYYY-MM-DD 형식으로 입력해주세요." },
+    FEED_TRAFFIC_EMPTY : { "isSuccess": false, "code": 2026, "message":"이동 수단을 입력해주세요." },
+    FEED_TRAFFIC_ERROR_TYPE : { "isSuccess": false, "code": 2027, "message":"이동 수단을 잘못 입력하셨습니다. 다시 입력해주세요." },
+    FEED_TITLE_EMPTY : { "isSuccess": false, "code": 2028, "message":"여행 제목을 입력해주세요." },
+    FEED_INTRODUCE_EMPTY : { "isSuccess": false, "code": 2029, "message":"여행 소개글을 입력해주세요." },
+    FEED_DAY_EMPTY : { "isSuccess": false, "code": 2030, "message":"Day를 입력해주세요. (Day: {})" },
+    FEED_DAY_NOT_MATCH : { "isSuccess": false, "code": 2031, "message":"입력하신 Day의 길이와 여행 기간이 다릅니다. 다시 입력해주세요." },
+
     ACCESS_TOKEN_EMPTY : { "isSuccess": false, "code": 2050, "message": "accessToken을 입력해주세요." },
     ACCESS_TOKEN_INVALID : { "isSuccess": false, "code": 2051, "message": "유효하지 않은 accessToken 입니다." },
 
