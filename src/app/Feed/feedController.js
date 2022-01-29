@@ -229,6 +229,23 @@ exports.deleteTempImage = async function (req, res) {
 };
 
 /**
+ * API No. 18
+ * API Name : 여행 게시물 삭제하기 API
+ * [PATCH] /app/feeds/:feedIdx/deletion
+ */
+exports.deleteFeed = async function (req, res) {
+    const userIdx = req.verifiedToken.userIdx;
+    const travelIdx = req.params.feedIdx;
+
+    if (!travelIdx)
+        return res.send(errResponse(baseResponse.TRAVEL_IDX_EMPTY));
+
+    const deleteFeedResponse = await feedService.patchFeedToDeleted(userIdx, travelIdx);
+    return res.send(deleteFeedResponse);
+};
+
+
+/**
  * API No. 19
  * API Name : 여행 게시물 좋아요 API
  * [POST] /app/feeds/like

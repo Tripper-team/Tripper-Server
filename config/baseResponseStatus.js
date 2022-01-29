@@ -23,6 +23,8 @@ module.exports = {
     TRAVEL_LIKE_SUCCESS : { "isSuccess": true, "code": 1018, "message":"좋아요를 활성화 했습니다." },
     TRAVEL_UNLIKE_SUCCESS : { "isSuccess": true, "code": 1019, "message":"좋아요를 비활성화 했습니다." },
     TRAVEL_SCORE_SUCCESS : { "isSuccess": true, "code": 1020, "message":"여행 게시물에 점수 부여를 성공했습니다." },
+    TRAVEL_SCORE_EDIT_SUCCESS : { "isSuccess": true, "code": 1021, "message":"이미 여행 게시물에 점수가 부여되어 있기 때문에 점수 수정에 성공했습니다." },
+    TRAVEL_DELETE_SUCCESS : { "isSuccess": true, "code": 1022, "message":"여행 게시물 삭제에 성공했습니다." },
 
     // Common
     TOKEN_EMPTY : { "isSuccess": false, "code": 2000, "message":"JWT 토큰을 입력해주세요." },
@@ -84,7 +86,7 @@ module.exports = {
     TRAVEL_NOT_EXIST : { "isSuccess": false, "code": 3012, "message":"존재하지 않는 여행 게시물입니다." },
     TRAVEL_STATUS_PRIVATE : { "isSuccess": false, "code": 3013, "message":"비공개 여행 게시물입니다." },
     TRAVEL_STATUS_DELETED : { "isSuccess": false, "code": 3014, "message":"삭제된 여행 게시물입니다." },
-    TRAVEL_SCORE_EXIST : { "isSuccess": false, "code": 3015, "message":"이미 해당 게시물에 점수를 부여했습니다. 점수를 수정하시려면 점수 수정 API를 사용해주세요." },
+    TRAVEL_WRITER_WRONG : { "isSuccess": false, "code": 3015, "message":"여행 게시물 작성자와 다릅니다." },
 
     //Connection, Transaction 등의 서버 오류
     DB_ERROR : { "isSuccess": false, "code": 4000, "message": "데이터 베이스 에러"},
