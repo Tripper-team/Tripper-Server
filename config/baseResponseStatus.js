@@ -20,6 +20,9 @@ module.exports = {
     UPLOAD_TEMP_THUMNAIL_SUCCESS : { "isSuccess": true, "code": 1015, "message":"임시로 썸네일 사진 업로드를 성공했습니다." },
     UPLOAD_TEMP_TRAVEL_SUCCESS : { "isSuccess": true, "code": 1016, "message":"임시로 여행 사진 업로드를 성공했습니다." },
     AWS_S3_DELETE_SUCCESS : { "isSuccess": true, "code": 1017, "message":"임시로 저장된 사진을 삭제했습니다." },
+    TRAVEL_LIKE_SUCCESS : { "isSuccess": true, "code": 1018, "message":"좋아요를 활성화 했습니다." },
+    TRAVEL_UNLIKE_SUCCESS : { "isSuccess": true, "code": 1019, "message":"좋아요를 비활성화 했습니다." },
+
 
     // Common
     TOKEN_EMPTY : { "isSuccess": false, "code": 2000, "message":"JWT 토큰을 입력해주세요." },
@@ -48,6 +51,21 @@ module.exports = {
     AWS_S3_ERROR : { "isSuccess": false, "code": 2020, "message":"AWS S3 관련 에러가 발생했습니다. 서버측에 문의해주세요." },
     NICKNAME_BAD_WORD : { "isSuccess": false, "code": 2021, "message":"부적절한 용어가 포함되어 있습니다. 다시 설정해주세요." },
 
+    FEED_INFORMATION_EMPTY : { "isSuccess": false, "code": 2022, "message":"여행 게시물에 업로드 하는 정보들을 입력해주세요. (information: {})" },
+    FEED_STARTDATE_EMPTY : { "isSuccess": false, "code": 2023, "message":"여행 출발 날짜를 선택해주세요." },
+    FEED_ENDDATE_EMPTY : { "isSuccess": false, "code": 2024, "message":"여행 도착 날짜를 선택해주세요." },
+    FEED_DATE_ERROR_TYPE : { "isSuccess": false, "code": 2025, "message":"날짜는 YYYY-MM-DD 형식으로 입력해주세요." },
+    FEED_TRAFFIC_EMPTY : { "isSuccess": false, "code": 2026, "message":"이동 수단을 입력해주세요." },
+    FEED_TRAFFIC_ERROR_TYPE : { "isSuccess": false, "code": 2027, "message":"이동 수단을 잘못 입력하셨습니다. 다시 입력해주세요." },
+    FEED_TITLE_EMPTY : { "isSuccess": false, "code": 2028, "message":"여행 제목을 입력해주세요." },
+    FEED_INTRODUCE_EMPTY : { "isSuccess": false, "code": 2029, "message":"여행 소개글을 입력해주세요." },
+    FEED_DAY_EMPTY : { "isSuccess": false, "code": 2030, "message":"Day를 입력해주세요. (Day: {})" },
+    FEED_DAY_NOT_MATCH : { "isSuccess": false, "code": 2031, "message":"입력하신 Day의 길이와 여행 기간이 다릅니다. 다시 입력해주세요." },
+
+    TRAVEL_IDX_EMPTY : { "isSuccess": false, "code": 2032, "message":"여행 인덱스(travelIdx)를 입력해주세요." },
+    TRAVEL_SCORE_EMPTY : { "isSuccess": false, "code": 2033, "message":"점수를 입력해주세요." },
+    TRAVEL_SCORE_TYPE_ERROR : { "isSuccess": false, "code": 2034, "message":"점수는 1점부터 5점까지 부여가 가능합니다." },
+
     ACCESS_TOKEN_EMPTY : { "isSuccess": false, "code": 2050, "message": "accessToken을 입력해주세요." },
     ACCESS_TOKEN_INVALID : { "isSuccess": false, "code": 2051, "message": "유효하지 않은 accessToken 입니다." },
 
@@ -63,6 +81,9 @@ module.exports = {
     NICKNAME_EQUAL_BEFORE : { "isSuccess": false, "code": 3009, "message":"이전 닉네임과 동일합니다." },
     AWS_S3_FILE_NOT_FOUND : { "isSuccess": false, "code": 3010, "message":"폴더가 비어있습니다. 제거할 대상이 없습니다." },
     AWS_S3_KEY_NOT_MATCH : { "isSuccess": false, "code": 3011, "message":"보내주신 Key에 맞는 파일을 찾지 못했습니다. 다시 입력해주세요." },
+    TRAVEL_NOT_EXIST : { "isSuccess": false, "code": 3012, "message":"존재하지 않는 여행 게시물입니다." },
+    TRAVEL_STATUS_PRIVATE : { "isSuccess": false, "code": 3013, "message":"비공개 여행 게시물입니다." },
+    TRAVEL_STATUS_DELETED : { "isSuccess": false, "code": 3014, "message":"삭제된 여행 게시물입니다." },
 
     //Connection, Transaction 등의 서버 오류
     DB_ERROR : { "isSuccess": false, "code": 4000, "message": "데이터 베이스 에러"},

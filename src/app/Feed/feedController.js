@@ -1,10 +1,21 @@
 const feedProvider = require("../Feed/feedProvider");
 const feedService = require("../Feed/feedService");
+const userProvider = require("../User/userProvider");
 const baseResponse = require("../../../config/baseResponseStatus");
 const {response, errResponse} = require("../../../config/response");
 const axios = require("axios");
 const s3 = require('../../../config/s3');
 require('dotenv').config();
+
+const regex_date = /^(19|20)\d{2}-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[0-1])$/;
+
+function calDay(firstDate, secondDate) {
+    let dateFirstDate = new Date(firstDate.substring(0, 4), firstDate.substring(4, 6) - 1, firstDate.substring(6, 8));
+    let dateSecondDate =
+        new Date(secondDate.substring(0, 4), secondDate.substring(4, 6) - 1, secondDate.substring(6, 8));
+    let betweenTime = Math.abs(dateSecondDate.getTime() - dateFirstDate.getTime());
+    return Math.floor(betweenTime / (1000 * 60 * 60 * 24));
+}
 
 const deleteS3Object = async (params, key, res) => {
     let listObjects = await s3.listObjectsV2(params).promise();
@@ -115,7 +126,83 @@ exports.searchArea = async (req, res) => {
  * [POST] /app/feeds/
  */
 exports.postFeed = async function (req, res) {
-    console.log(req.body);
+    const information = req.body.information;
+    const metadata = req.body.metadata;
+    const day = req.body.day;
+    const userIdx = req.verifiedToken.userIdx;
+
+    console.log("[information]");
+    console.log(information);
+    console.log("[metadata]");
+    console.log(metadata);
+    console.log("[day]");
+    console.log(day);
+
+    // user
+    const userStatusCheckRow = await userProvider.checkUserStatus(userIdx);
+    if (userStatusCheckRow[0].isWithdraw === 'Y')
+        return res.send(errResponse(baseResponse.USER_WITHDRAW));
+
+    // information
+    const startDate = information.startDate;
+    const endDate = information.endDate;
+    const dateDiff = calDay(startDate.replace(/-/gi, ""), endDate.replace(/-/gi, "")) + 1;
+    let traffic = information.traffic;
+    const title = information.title;
+    const introduce = information.introduce;
+
+    // metadata
+    const hashtagArr = metadata.hashtag;
+    const thumnails = metadata.thumnails;
+
+    // information validation -> 제목, 소개만 필수
+    if (!information)
+        return res.send(errResponse(baseResponse.FEED_INFORMATION_EMPTY));
+    if (!startDate)
+        return res.send(errResponse(baseResponse.FEED_STARTDATE_EMPTY));
+    if (!endDate)
+        return res.send(errResponse(baseResponse.FEED_ENDDATE_EMPTY));
+    if (!regex_date.test(startDate) || !regex_date.test(endDate))
+        return res.send(errResponse(baseResponse.FEED_DATE_ERROR_TYPE))
+    if (!traffic)
+        return res.send(errResponse(baseResponse.FEED_TRAFFIC_EMPTY));
+    if (!title)
+        return res.send(errResponse(baseResponse.FEED_TITLE_EMPTY));
+    if (!introduce)
+        return res.send(errResponse(baseResponse.FEED_INTRODUCE_EMPTY));
+
+    // traffic 형식 validation
+    switch(traffic)
+    {
+        case '자차로 여행':
+            traffic = 'C';
+            break;
+        case '대중교통 여행':
+            traffic = 'P';
+            break;
+        case '자전거 여행':
+            traffic = 'B';
+            break;
+        case '도보 여행':
+            traffic = 'W';
+            break;
+        default:
+            return res.send(errResponse(baseResponse.FEED_TRAFFIC_ERROR_TYPE));
+    }
+
+    // Day
+    if (!day)
+        return res.send(errResponse(baseResponse.FEED_DAY_EMPTY));
+    if (day.length !== dateDiff)
+        return res.send(errResponse(baseResponse.FEED_DAY_NOT_MATCH));
+
+    // metadata -> 해시태그, 썸네일 사진 없어도 괜찮음!
+
+    const createFeedResult = await feedService.createNewFeed(
+        userIdx, startDate, endDate, traffic, title,
+        introduce, hashtagArr, thumnails, day, dateDiff
+    );
+    return res.send(response(baseResponse.SUCCESS, createFeedResult));
 };
 
 /**
@@ -129,14 +216,51 @@ exports.deleteTempImage = async function (req, res) {
     const s3_dirname = `temp/${dirname}`;
 
     if (!dirname)
-        return res.send(response(baseResponse.S3_PREFIX_EMPTY));
+        return res.send(errResponse(baseResponse.S3_PREFIX_EMPTY));
     if (dirname !== "thumnails" && dirname !== "travels")
-        return res.send(response(baseResponse.S3_PREFIX_ERROR));
+        return res.send(errResponse(baseResponse.S3_PREFIX_ERROR));
     if (!image_key)
-        return res.send(response(baseResponse.S3_IMAGE_KEY_EMPTY));
+        return res.send(errResponse(baseResponse.S3_IMAGE_KEY_EMPTY));
 
     await deleteS3Object({
         Bucket: process.env.AWS_S3_BUCKET_NAME,
         Prefix: `${s3_dirname}/`
     }, image_key, res);
+};
+
+/**
+ * API No. 19
+ * API Name : 여행 게시물 좋아요 API
+ * [POST] /app/feeds/like
+ */
+exports.postFeedLike = async function (req, res) {
+    const travelIdx = req.body.travelIdx;
+    const userIdx = req.verifiedToken.userIdx;
+
+    if (!travelIdx)
+        return res.send(errResponse(baseResponse.TRAVEL_IDX_EMPTY));
+
+    const likeFeedResponse = await feedService.createFeedLike(userIdx, travelIdx);
+    return res.send(likeFeedResponse);
+};
+
+/**
+ * API No. 20
+ * API Name : 여행 게시물 점수부여 API
+ * [POST] /app/feeds/score
+ */
+exports.postFeedScore = async function (req, res) {
+    const userIdx = req.verifiedToken.userIdx;
+    const travelIdx = req.body.travelIdx;
+    const score = req.body.score;
+
+    if (!travelIdx)
+        return res.send(errResponse(baseResponse.TRAVEL_IDX_EMPTY));
+    if (!score)
+        return res.send(errResponse(baseResponse.TRAVEL_SCORE_EMPTY));
+    if (score < 1 || score > 5)
+        return res.send(errResponse(baseResponse.TRAVEL_SCORE_TYPE_ERROR));
+
+    const scoreFeedResponse = await feedService.createFeedScore(userIdx, travelIdx, score);
+    return res.send(scoreFeedResponse);
 };

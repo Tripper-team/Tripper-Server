@@ -10,7 +10,7 @@ const jwt = require("jsonwebtoken");
 const s3Multer = require('../../../config/multer');
 const fs = require('fs');
 const userDao = require("./userDao");
-const fword_array = fs.readFileSync('config/fword_list.txt').toString().replaceAll('\r', "").split("\n");
+const fword_array = fs.readFileSync('config/fword_list.txt').toString().replace(/\r/gi, "").split("\n");
 require('dotenv').config();
 
 const regex_nickname = /^[가-힣a-zA-Z0-9]+$/;   // 닉네임 정규식
@@ -38,6 +38,7 @@ const checkNickFword = (fword_array, nick) => {   // 닉네임에 부적절한 �
 //     console.log("Access token: " + accessToken);
 //     console.log(profile);
 // }));
+
 exports.kakaoLogin = async function (req, res) {
     /**
      * Body: accessToken
