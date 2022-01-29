@@ -165,6 +165,22 @@ async function updateTravelLike(connection, [userIdx, travelIdx, status]) {
     return await connection.query(updateTravelLikeQuery, [userIdx, travelIdx]);
 }
 
+async function insertTravelScore(connection, [userIdx, travelIdx, score]) {
+    const insertTravelScoreQuery = `
+        INSERT INTO TravelScore(userIdx, travelIdx, score)
+        VALUES (?, ?, ?);
+    `;
+    return await connection.query(insertTravelScoreQuery, [userIdx, travelIdx, score]);
+}
+
+async function selectIsScoreExist(connection, [userIdx, travelIdx]) {
+    const selectIsScoreExistQuery = `
+        SELECT EXISTS(SELECT score FROM TravelScore WHERE userIdx = ? AND travelIdx = ?) AS isScoreExist;
+    `;
+    const [selectIsScoreExistRow] = await connection.query(selectIsScoreExistQuery, [userIdx, travelIdx]);
+    return selectIsScoreExistRow;
+}
+
 module.exports = {
     insertNewFeed,
     selectFeedIdxByAll,
@@ -183,5 +199,7 @@ module.exports = {
     selectTravelStatus,
     selectTravelUserLike,
     insertTravelLike,
-    updateTravelLike
+    updateTravelLike,
+    insertTravelScore,
+    selectIsScoreExist
 };

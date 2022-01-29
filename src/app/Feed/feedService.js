@@ -126,7 +126,30 @@ exports.createFeedScore = async function (userIdx, travelIdx, score) {
     const connection = await pool.getConnection(async (conn) => conn);
 
     try {
+        // user
+        const userStatusCheckRow = await userProvider.checkUserStatus(userIdx);
+        if (userStatusCheckRow[0].isWithdraw === 'Y')
+            return errResponse(baseResponse.USER_WITHDRAW);
 
+        // 실제 존재하는 feed인지 확인하기
+        const isFeedExist = (await feedDao.selectIsTravelExist(connection, travelIdx))[0].isTravelExist;
+        if (isFeedExist === 0)
+            return errResponse(baseResponse.TRAVEL_NOT_EXIST);
+
+        // 비공개 또는 삭제된 게시물인지 확인하기
+        const feedStatusCheckRow = (await feedDao.selectTravelStatus(connection, travelIdx))[0].travelStatus;
+        if (feedStatusCheckRow === "PRIVATE")
+            return errResponse(baseResponse.TRAVEL_STATUS_PRIVATE);
+        else if (feedStatusCheckRow === 'DELETED')
+            return errResponse(baseResponse.TRAVEL_STATUS_DELETED);
+
+        // 점수가 이미 업로드 되어있는지 확인하기
+        const scoreCheckRow = await feedDao.selectIsScoreExist(connection, [userIdx, travelIdx]);
+        if (scoreCheckRow[0].isScoreExist === 1)
+            return errResponse(baseResponse.TRAVEL_SCORE_EXIST);
+
+        await feedDao.insertTravelScore(connection, [userIdx, travelIdx, score]);
+        return response(baseResponse.TRAVEL_SCORE_SUCCESS);
     } catch(err) {
         logger.error(`App - createFeedScore Service error\n: ${err.message}`);
         await connection.rollback();
