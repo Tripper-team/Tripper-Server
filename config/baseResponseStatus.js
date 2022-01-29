@@ -66,7 +66,7 @@ module.exports = {
     FEED_DAY_EMPTY : { "isSuccess": false, "code": 2030, "message":"Day를 입력해주세요. (Day: {})" },
     FEED_DAY_NOT_MATCH : { "isSuccess": false, "code": 2031, "message":"입력하신 Day의 길이와 여행 기간이 다릅니다. 다시 입력해주세요." },
 
-    TRAVEL_IDX_EMPTY : { "isSuccess": false, "code": 2032, "message":"여행 인덱스(travelIdx)를 입력해주세요." },
+    TRAVEL_IDX_EMPTY : { "isSuccess": false, "code": 2032, "message":"여행 인덱스(feedIdx)를 입력해주세요." },
     TRAVEL_SCORE_EMPTY : { "isSuccess": false, "code": 2033, "message":"점수를 입력해주세요." },
     TRAVEL_SCORE_TYPE_ERROR : { "isSuccess": false, "code": 2034, "message":"점수는 1점부터 5점까지 부여가 가능합니다." },
 
