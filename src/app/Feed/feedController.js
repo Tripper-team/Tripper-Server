@@ -229,6 +229,23 @@ exports.deleteTempImage = async function (req, res) {
 };
 
 /**
+ * API No. 18
+ * API Name : 여행 게시물 삭제하기 API
+ * [PATCH] /app/feeds/:feedIdx/deletion
+ */
+exports.deleteFeed = async function (req, res) {
+    const userIdx = req.verifiedToken.userIdx;
+    const travelIdx = req.params.feedIdx;
+
+    if (!travelIdx)
+        return res.send(errResponse(baseResponse.TRAVEL_IDX_EMPTY));
+
+    const deleteFeedResponse = await feedService.patchFeedToDeleted(userIdx, travelIdx);
+    return res.send(deleteFeedResponse);
+};
+
+
+/**
  * API No. 19
  * API Name : 여행 게시물 좋아요 API
  * [POST] /app/feeds/like
@@ -263,4 +280,20 @@ exports.postFeedScore = async function (req, res) {
 
     const scoreFeedResponse = await feedService.createFeedScore(userIdx, travelIdx, score);
     return res.send(scoreFeedResponse);
+};
+
+/**
+ * API No. 10
+ * API Name : 여행 게시물 공개 범위 전환 API
+ * [PATCH] /app/feeds/:feedIdx/change-status
+ */
+exports.patchFeedStatus = async function (req, res) {
+    const userIdx = req.verifiedToken.userIdx;
+    const travelIdx = req.params.feedIdx;
+
+    if (!travelIdx)
+        return res.send(errResponse(baseResponse.TRAVEL_IDX_EMPTY));
+
+    const patchFeedStatusResponse = await feedService.patchFeedStatus(userIdx, travelIdx);
+    return res.send(patchFeedStatusResponse);
 };

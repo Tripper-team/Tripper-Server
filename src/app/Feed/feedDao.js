@@ -165,6 +165,50 @@ async function updateTravelLike(connection, [userIdx, travelIdx, status]) {
     return await connection.query(updateTravelLikeQuery, [userIdx, travelIdx]);
 }
 
+async function insertTravelScore(connection, [userIdx, travelIdx, score]) {
+    const insertTravelScoreQuery = `
+        INSERT INTO TravelScore(userIdx, travelIdx, score)
+        VALUES (?, ?, ?);
+    `;
+    return await connection.query(insertTravelScoreQuery, [userIdx, travelIdx, score]);
+}
+
+async function selectIsScoreExist(connection, [userIdx, travelIdx]) {
+    const selectIsScoreExistQuery = `
+        SELECT EXISTS(SELECT score FROM TravelScore WHERE userIdx = ? AND travelIdx = ?) AS isScoreExist;
+    `;
+    const [selectIsScoreExistRow] = await connection.query(selectIsScoreExistQuery, [userIdx, travelIdx]);
+    return selectIsScoreExistRow;
+}
+
+async function updateTravelScore(connection, [userIdx, travelIdx, score]) {
+    const updateTravelScoreQuery = `
+        UPDATE TravelScore
+        SET score = ?
+        WHERE userIdx = ? AND travelIdx = ?;
+    `;
+    return await connection.query(updateTravelScoreQuery, [score, userIdx, travelIdx]);
+}
+
+async function selectFeedWriterIdx(connection, travelIdx) {
+    const selectFeedWriterIdxQuery = `
+        SELECT userIdx
+        FROM Travel
+        WHERE Travel.idx = ?;
+    `;
+    const [selectFeedWriterIdxRow] = await connection.query(selectFeedWriterIdxQuery, travelIdx);
+    return selectFeedWriterIdxRow;
+}
+
+async function updateTravelStatus(connection, [userIdx, travelIdx, status]) {
+    const updateTravelStatusQuery = `
+        UPDATE Travel
+        SET status = ?
+        WHERE userIdx = ? AND Travel.idx = ?;
+    `;
+    return await connection.query(updateTravelStatusQuery, [status, userIdx, travelIdx]);
+}
+
 module.exports = {
     insertNewFeed,
     selectFeedIdxByAll,
@@ -183,5 +227,10 @@ module.exports = {
     selectTravelStatus,
     selectTravelUserLike,
     insertTravelLike,
-    updateTravelLike
+    updateTravelLike,
+    insertTravelScore,
+    selectIsScoreExist,
+    updateTravelScore,
+    selectFeedWriterIdx,
+    updateTravelStatus
 };

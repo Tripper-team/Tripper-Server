@@ -126,9 +126,110 @@ exports.createFeedScore = async function (userIdx, travelIdx, score) {
     const connection = await pool.getConnection(async (conn) => conn);
 
     try {
+        // user
+        const userStatusCheckRow = await userProvider.checkUserStatus(userIdx);
+        if (userStatusCheckRow[0].isWithdraw === 'Y')
+            return errResponse(baseResponse.USER_WITHDRAW);
 
+        // 실제 존재하는 feed인지 확인하기
+        const isFeedExist = (await feedDao.selectIsTravelExist(connection, travelIdx))[0].isTravelExist;
+        if (isFeedExist === 0)
+            return errResponse(baseResponse.TRAVEL_NOT_EXIST);
+
+        // 비공개 또는 삭제된 게시물인지 확인하기
+        const feedStatusCheckRow = (await feedDao.selectTravelStatus(connection, travelIdx))[0].travelStatus;
+        if (feedStatusCheckRow === "PRIVATE")
+            return errResponse(baseResponse.TRAVEL_STATUS_PRIVATE);
+        else if (feedStatusCheckRow === 'DELETED')
+            return errResponse(baseResponse.TRAVEL_STATUS_DELETED);
+
+        // 점수가 이미 업로드 되어있는지 확인하기
+        // 이미 업로드 되어있으면 수정으로 넘어가기
+        const scoreCheckRow = await feedDao.selectIsScoreExist(connection, [userIdx, travelIdx]);
+        if (scoreCheckRow[0].isScoreExist === 1) {   // 이미 업로드가 되어있을 경우
+            await feedDao.updateTravelScore(connection, [userIdx, travelIdx, score]);
+            return response(baseResponse.TRAVEL_SCORE_EDIT_SUCCESS);
+        }
+        else {   // 처음 업로드하는 경우
+            await feedDao.insertTravelScore(connection, [userIdx, travelIdx, score]);
+            return response(baseResponse.TRAVEL_SCORE_SUCCESS);
+        }
     } catch(err) {
         logger.error(`App - createFeedScore Service error\n: ${err.message}`);
+        await connection.rollback();
+        return errResponse(baseResponse.DB_ERROR);
+    } finally {
+        connection.release();
+    }
+};
+
+exports.patchFeedToDeleted = async function (userIdx, travelIdx) {
+    const connection = await pool.getConnection(async (conn) => conn);
+
+    try {
+        const userStatusCheckRow = await userProvider.checkUserStatus(userIdx);
+        if (userStatusCheckRow[0].isWithdraw === 'Y')
+            return errResponse(baseResponse.USER_WITHDRAW);
+
+        // 실제 존재하는 feed인지 확인하기
+        const isFeedExist = (await feedDao.selectIsTravelExist(connection, travelIdx))[0].isTravelExist;
+        if (isFeedExist === 0)
+            return errResponse(baseResponse.TRAVEL_NOT_EXIST);
+
+        // 이미 삭제된 게시물인지 확인하기
+        const feedStatusCheckRow = (await feedDao.selectTravelStatus(connection, travelIdx))[0].travelStatus;
+        if (feedStatusCheckRow === 'DELETED')
+            return errResponse(baseResponse.TRAVEL_STATUS_DELETED);
+
+        // 사용자가 작성한 게시물인지 확인하기
+        const feedWriterIdx = (await feedDao.selectFeedWriterIdx(connection, travelIdx))[0].userIdx;
+        if (userIdx !== feedWriterIdx)
+            return errResponse(baseResponse.TRAVEL_WRITER_WRONG);
+
+        await feedDao.updateTravelStatus(connection, [userIdx, travelIdx, "DELETED"]);
+        return response(baseResponse.TRAVEL_DELETE_SUCCESS);
+    } catch(err) {
+        logger.error(`App - patchFeedToDeleted Service error\n: ${err.message}`);
+        await connection.rollback();
+        return errResponse(baseResponse.DB_ERROR);
+    } finally {
+        connection.release();
+    }
+};
+
+exports.patchFeedStatus = async function (userIdx, travelIdx) {
+    const connection = await pool.getConnection(async (conn) => conn);
+
+    try {
+        const userStatusCheckRow = await userProvider.checkUserStatus(userIdx);
+        if (userStatusCheckRow[0].isWithdraw === 'Y')
+            return errResponse(baseResponse.USER_WITHDRAW);
+
+        // 실제 존재하는 feed인지 확인하기
+        const isFeedExist = (await feedDao.selectIsTravelExist(connection, travelIdx))[0].isTravelExist;
+        if (isFeedExist === 0)
+            return errResponse(baseResponse.TRAVEL_NOT_EXIST);
+
+        // 이미 삭제된 게시물인지 확인하기
+        const feedStatusCheckResult = (await feedDao.selectTravelStatus(connection, travelIdx))[0].travelStatus;
+        if (feedStatusCheckResult === 'DELETED')
+            return errResponse(baseResponse.TRAVEL_STATUS_DELETED);
+
+        // 사용자가 작성한 게시물인지 확인하기
+        const feedWriterIdx = (await feedDao.selectFeedWriterIdx(connection, travelIdx))[0].userIdx;
+        if (userIdx !== feedWriterIdx)
+            return errResponse(baseResponse.TRAVEL_WRITER_WRONG);
+
+        if (feedStatusCheckResult === 'PUBLIC') {
+            await feedDao.updateTravelStatus(connection, [userIdx, travelIdx, "PRIVATE"]);
+            return response(baseResponse.TRAVEL_STATUS_TO_PRIVATE_SUCCESS);
+        }
+        else if (feedStatusCheckResult === 'PRIVATE') {
+            await feedDao.updateTravelStatus(connection, [userIdx, travelIdx, "PUBLIC"]);
+            return response(baseResponse.TRAVEL_STATUS_TO_PUBLIC_SUCCESS);
+        }
+    } catch(err) {
+        logger.error(`App - patchFeedStatus Service error\n: ${err.message}`);
         await connection.rollback();
         return errResponse(baseResponse.DB_ERROR);
     } finally {
