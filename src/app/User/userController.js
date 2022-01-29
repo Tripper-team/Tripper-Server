@@ -10,7 +10,7 @@ const jwt = require("jsonwebtoken");
 const s3Multer = require('../../../config/multer');
 const fs = require('fs');
 const userDao = require("./userDao");
-const fword_array = fs.readFileSync('config/fword_list.txt').toString().replace('\r', "").split("\n");
+const fword_array = fs.readFileSync('config/fword_list.txt').toString().replace(/\r/gi, "").split("\n");
 require('dotenv').config();
 
 const regex_nickname = /^[가-힣a-zA-Z0-9]+$/;   // 닉네임 정규식
