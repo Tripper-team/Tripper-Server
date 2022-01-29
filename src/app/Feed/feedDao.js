@@ -110,6 +110,61 @@ async function insertHashtag(connection, tag) {
     return await connection.query(insertHashtagQuery, tag);
 }
 
+async function selectIsTravelExist(connection, travelIdx) {
+    const selectIsTravelExistQuery = `
+        SELECT EXISTS(SELECT idx FROM Travel WHERE idx = ?) AS isTravelExist;
+    `;
+    const [selectIsTravelExistRow] = await connection.query(selectIsTravelExistQuery, travelIdx);
+    return selectIsTravelExistRow;
+}
+
+async function selectTravelStatus(connection, travelIdx) {
+    const selectTravelStatusQuery = `
+        SELECT status AS travelStatus
+        FROM Travel
+        WHERE Travel.idx = ?;
+    `;
+    const [selectTravelStatusRow] = await connection.query(selectTravelStatusQuery, travelIdx);
+    return selectTravelStatusRow;
+}
+
+async function selectTravelUserLike(connection, [userIdx, travelIdx]) {
+    const selectTravelUserLikeQuery = `
+        SELECT status AS likeStatus
+        FROM TravelLike
+        WHERE userIdx = ? AND travelIdx = ?;
+    `;
+    const [selectTravelUserLikeRow] = await connection.query(selectTravelUserLikeQuery, [userIdx, travelIdx]);
+    return selectTravelUserLikeRow;
+}
+
+async function insertTravelLike(connection, [userIdx, travelIdx]) {
+    const insertTravelLikeQuery = `
+        INSERT INTO TravelLike(userIdx, travelIdx, status)
+        VALUES (?, ?, 'Y');
+    `;
+    return await connection.query(insertTravelLikeQuery, [userIdx, travelIdx]);
+}
+
+async function updateTravelLike(connection, [userIdx, travelIdx, status]) {
+    let updateTravelLikeQuery = '';
+
+    if (status === 'Y') {
+        updateTravelLikeQuery = `
+            UPDATE TravelLike
+            SET status = 'Y'
+            WHERE userIdx = ? AND travelIdx = ?;
+        `;
+    } else {
+        updateTravelLikeQuery = `
+            UPDATE TravelLike
+            SET status = 'N'
+            WHERE userIdx = ? AND travelIdx = ?;
+        `;
+    }
+    return await connection.query(updateTravelLikeQuery, [userIdx, travelIdx]);
+}
+
 module.exports = {
     insertNewFeed,
     selectFeedIdxByAll,
@@ -123,5 +178,10 @@ module.exports = {
     selectIsTagExist,
     selectTagIdx,
     insertTravelHashtag,
-    insertHashtag
+    insertHashtag,
+    selectIsTravelExist,
+    selectTravelStatus,
+    selectTravelUserLike,
+    insertTravelLike,
+    updateTravelLike
 };

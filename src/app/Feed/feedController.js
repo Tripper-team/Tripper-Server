@@ -216,14 +216,51 @@ exports.deleteTempImage = async function (req, res) {
     const s3_dirname = `temp/${dirname}`;
 
     if (!dirname)
-        return res.send(response(baseResponse.S3_PREFIX_EMPTY));
+        return res.send(errResponse(baseResponse.S3_PREFIX_EMPTY));
     if (dirname !== "thumnails" && dirname !== "travels")
-        return res.send(response(baseResponse.S3_PREFIX_ERROR));
+        return res.send(errResponse(baseResponse.S3_PREFIX_ERROR));
     if (!image_key)
-        return res.send(response(baseResponse.S3_IMAGE_KEY_EMPTY));
+        return res.send(errResponse(baseResponse.S3_IMAGE_KEY_EMPTY));
 
     await deleteS3Object({
         Bucket: process.env.AWS_S3_BUCKET_NAME,
         Prefix: `${s3_dirname}/`
     }, image_key, res);
+};
+
+/**
+ * API No. 19
+ * API Name : 여행 게시물 좋아요 API
+ * [POST] /app/feeds/like
+ */
+exports.postFeedLike = async function (req, res) {
+    const travelIdx = req.body.travelIdx;
+    const userIdx = req.verifiedToken.userIdx;
+
+    if (!travelIdx)
+        return res.send(errResponse(baseResponse.TRAVEL_IDX_EMPTY));
+
+    const likeFeedResponse = await feedService.createFeedLike(userIdx, travelIdx);
+    return res.send(likeFeedResponse);
+};
+
+/**
+ * API No. 20
+ * API Name : 여행 게시물 점수부여 API
+ * [POST] /app/feeds/score
+ */
+exports.postFeedScore = async function (req, res) {
+    const userIdx = req.verifiedToken.userIdx;
+    const travelIdx = req.body.travelIdx;
+    const score = req.body.score;
+
+    if (!travelIdx)
+        return res.send(errResponse(baseResponse.TRAVEL_IDX_EMPTY));
+    if (!score)
+        return res.send(errResponse(baseResponse.TRAVEL_SCORE_EMPTY));
+    if (score < 1 || score > 5)
+        return res.send(errResponse(baseResponse.TRAVEL_SCORE_TYPE_ERROR));
+
+    const scoreFeedResponse = await feedService.createFeedScore(userIdx, travelIdx, score);
+    return res.send(scoreFeedResponse);
 };

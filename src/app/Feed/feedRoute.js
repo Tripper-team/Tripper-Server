@@ -53,4 +53,10 @@ module.exports = function(app) {
 
     // 16. 임시 여행 게시물 이미지 삭제 API
     app.delete('/app/feeds/timage-delete', jwtMiddleware, feed.deleteTempImage);
+
+    // 19. 여행 게시물 좋아요 API
+    app.post('/app/feeds/like', jwtMiddleware, feed.postFeedLike);
+    
+    // 20. 여행 게시물 점수부여 API
+    app.post('/app/feeds/score', jwtMiddleware, feed.postFeedScore);
 };

@@ -20,6 +20,9 @@ module.exports = {
     UPLOAD_TEMP_THUMNAIL_SUCCESS : { "isSuccess": true, "code": 1015, "message":"임시로 썸네일 사진 업로드를 성공했습니다." },
     UPLOAD_TEMP_TRAVEL_SUCCESS : { "isSuccess": true, "code": 1016, "message":"임시로 여행 사진 업로드를 성공했습니다." },
     AWS_S3_DELETE_SUCCESS : { "isSuccess": true, "code": 1017, "message":"임시로 저장된 사진을 삭제했습니다." },
+    TRAVEL_LIKE_SUCCESS : { "isSuccess": true, "code": 1018, "message":"좋아요를 활성화 했습니다." },
+    TRAVEL_UNLIKE_SUCCESS : { "isSuccess": true, "code": 1019, "message":"좋아요를 비활성화 했습니다." },
+
 
     // Common
     TOKEN_EMPTY : { "isSuccess": false, "code": 2000, "message":"JWT 토큰을 입력해주세요." },
@@ -59,6 +62,10 @@ module.exports = {
     FEED_DAY_EMPTY : { "isSuccess": false, "code": 2030, "message":"Day를 입력해주세요. (Day: {})" },
     FEED_DAY_NOT_MATCH : { "isSuccess": false, "code": 2031, "message":"입력하신 Day의 길이와 여행 기간이 다릅니다. 다시 입력해주세요." },
 
+    TRAVEL_IDX_EMPTY : { "isSuccess": false, "code": 2032, "message":"여행 인덱스(travelIdx)를 입력해주세요." },
+    TRAVEL_SCORE_EMPTY : { "isSuccess": false, "code": 2033, "message":"점수를 입력해주세요." },
+    TRAVEL_SCORE_TYPE_ERROR : { "isSuccess": false, "code": 2034, "message":"점수는 1점부터 5점까지 부여가 가능합니다." },
+
     ACCESS_TOKEN_EMPTY : { "isSuccess": false, "code": 2050, "message": "accessToken을 입력해주세요." },
     ACCESS_TOKEN_INVALID : { "isSuccess": false, "code": 2051, "message": "유효하지 않은 accessToken 입니다." },
 
@@ -74,6 +81,9 @@ module.exports = {
     NICKNAME_EQUAL_BEFORE : { "isSuccess": false, "code": 3009, "message":"이전 닉네임과 동일합니다." },
     AWS_S3_FILE_NOT_FOUND : { "isSuccess": false, "code": 3010, "message":"폴더가 비어있습니다. 제거할 대상이 없습니다." },
     AWS_S3_KEY_NOT_MATCH : { "isSuccess": false, "code": 3011, "message":"보내주신 Key에 맞는 파일을 찾지 못했습니다. 다시 입력해주세요." },
+    TRAVEL_NOT_EXIST : { "isSuccess": false, "code": 3012, "message":"존재하지 않는 여행 게시물입니다." },
+    TRAVEL_STATUS_PRIVATE : { "isSuccess": false, "code": 3013, "message":"비공개 여행 게시물입니다." },
+    TRAVEL_STATUS_DELETED : { "isSuccess": false, "code": 3014, "message":"삭제된 여행 게시물입니다." },
 
     //Connection, Transaction 등의 서버 오류
     DB_ERROR : { "isSuccess": false, "code": 4000, "message": "데이터 베이스 에러"},

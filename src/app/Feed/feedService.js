@@ -5,6 +5,7 @@ const feedDao = require("./feedDao");
 const baseResponse = require("../../../config/baseResponseStatus");
 const {response} = require("../../../config/response");
 const {errResponse} = require("../../../config/response");
+const userProvider = require("../User/userProvider");
 
 exports.createNewFeed = async function (userIdx, startDate, endDate, traffic, title,
                                         introduce, hashtagArr, thumnails, day, dateDiff)
@@ -74,6 +75,60 @@ exports.createNewFeed = async function (userIdx, startDate, endDate, traffic, ti
         await connection.commit();
     } catch(err) {
         logger.error(`App - createNewFeed Service error\n: ${err.message}`);
+        await connection.rollback();
+        return errResponse(baseResponse.DB_ERROR);
+    } finally {
+        connection.release();
+    }
+};
+
+exports.createFeedLike = async function (userIdx, travelIdx) {
+    const connection = await pool.getConnection(async (conn) => conn);
+
+    try {
+        // user
+        const userStatusCheckRow = await userProvider.checkUserStatus(userIdx);
+        if (userStatusCheckRow[0].isWithdraw === 'Y')
+            return errResponse(baseResponse.USER_WITHDRAW);
+
+        // 실제 존재하는 feed인지 확인하기
+        const isFeedExist = (await feedDao.selectIsTravelExist(connection, travelIdx))[0].isTravelExist;
+        if (isFeedExist === 0)
+            return errResponse(baseResponse.TRAVEL_NOT_EXIST);
+
+        // 비공개 또는 삭제된 게시물인지 확인하기
+        const feedStatusCheckRow = (await feedDao.selectTravelStatus(connection, travelIdx))[0].travelStatus;
+        if (feedStatusCheckRow === "PRIVATE")
+            return errResponse(baseResponse.TRAVEL_STATUS_PRIVATE);
+        else if (feedStatusCheckRow === 'DELETED')
+            return errResponse(baseResponse.TRAVEL_STATUS_DELETED);
+
+        const travelUserLikeRow = await feedDao.selectTravelUserLike(connection, [userIdx, travelIdx]);
+        if (travelUserLikeRow.length === 0 || travelUserLikeRow[0].likeStatus === 'N') {   // 좋아요가 안눌린 상태라면?
+            if (travelUserLikeRow.length === 0) await feedDao.insertTravelLike(connection, [userIdx, travelIdx]);
+            else await feedDao.updateTravelLike(connection, [userIdx, travelIdx, "Y"]);
+            return response(baseResponse.TRAVEL_LIKE_SUCCESS);
+        }
+        else {
+            await feedDao.updateTravelLike(connection, [userIdx, travelIdx, "N"]);
+            return response(baseResponse.TRAVEL_UNLIKE_SUCCESS);
+        }
+    } catch(err) {
+        logger.error(`App - createFeedLike Service error\n: ${err.message}`);
+        await connection.rollback();
+        return errResponse(baseResponse.DB_ERROR);
+    } finally {
+        connection.release();
+    }
+}
+
+exports.createFeedScore = async function (userIdx, travelIdx, score) {
+    const connection = await pool.getConnection(async (conn) => conn);
+
+    try {
+
+    } catch(err) {
+        logger.error(`App - createFeedScore Service error\n: ${err.message}`);
         await connection.rollback();
         return errResponse(baseResponse.DB_ERROR);
     } finally {
