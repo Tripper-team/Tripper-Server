@@ -38,6 +38,7 @@ const checkNickFword = (fword_array, nick) => {   // 닉네임에 부적절한 �
 //     console.log("Access token: " + accessToken);
 //     console.log(profile);
 // }));
+
 exports.kakaoLogin = async function (req, res) {
     /**
      * Body: accessToken
