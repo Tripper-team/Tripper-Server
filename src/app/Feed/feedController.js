@@ -144,14 +144,19 @@ exports.postFeed = async function (req, res) {
     // information
     const startDate = information.startDate;
     const endDate = information.endDate;
-    const dateDiff = calDay(startDate.replace(/-/gi, ""), endDate.replace(/-/gi, "")) + 1;
     let traffic = information.traffic;
     const title = information.title;
     const introduce = information.introduce;
 
     // metadata
-    const hashtagArr = metadata.hashtag;
-    const thumnails = metadata.thumnails;
+    let hashtagArr, thumnails;
+    if (metadata === undefined) {
+        hashtagArr = [];
+        thumnails = [];
+    } else {
+        hashtagArr = metadata.hashtag;
+        thumnails = metadata.thumnails;
+    }
 
     // information validation -> 제목, 소개만 필수
     if (!information)
@@ -187,6 +192,8 @@ exports.postFeed = async function (req, res) {
         default:
             return res.send(errResponse(baseResponse.FEED_TRAFFIC_ERROR_TYPE));
     }
+
+    const dateDiff = calDay(startDate.replace(/-/gi, ""), endDate.replace(/-/gi, "")) + 1;
 
     // Day
     if (!day)

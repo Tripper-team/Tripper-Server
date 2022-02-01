@@ -19,20 +19,16 @@ exports.createNewFeed = async function (userIdx, startDate, endDate, traffic, ti
         await feedDao.insertNewFeed(connection, [userIdx, title, introduce, traffic, startDate, endDate]);   // 1. Travel 테이블에 값 넣어서 travelIdx 생성
 
         travelIdx = (await feedDao.selectFeedIdxByAll(connection, [userIdx, title, traffic, startDate, endDate]))[0].idx;   // 2. travelIdx 가져옴
-        console.log("travelIdx: " + travelIdx);
 
         for (let i=1; i<=dateDiff; i++)   // 3. Day 테이블에 row 생성
             await feedDao.insertNewDay(connection, [travelIdx, i]);
 
         dayIdxArr = await feedDao.selectDayIdxOfTravel(connection, travelIdx);   // 4. dayIdx 가져오기
-        console.log("[dayIdxArr]");
-        console.log(dayIdxArr);
 
         for (let i=0; i<dayIdxArr.length; i++) {   // 5. day에 입력된 data들을 dayIdx를 가지고 DB에 insert
             let areaArr = day[i].area;
             if (areaArr !== undefined && areaArr.length !== 0) {   // area(장소)를 입력했다면
                 for (let j=0; j<areaArr.length; j++) {
-                    console.log(i,j);
                     await feedDao.insertDayArea(connection, [dayIdxArr[i].dayIdx, areaArr[j].category, areaArr[j].latitude, areaArr[j].longitude, areaArr[j].name, areaArr[j].address]);
                     dayAreaIdx = (await feedDao.selectDayAreaIdx(connection, [dayIdxArr[i].dayIdx, areaArr[j].category, areaArr[j].latitude, areaArr[j].longitude, areaArr[j].name]))[0].dayAreaIdx;   // dayAreaIdx 가져오기
                     if (areaArr[j].review !== undefined) {   // review도 입력했다면
