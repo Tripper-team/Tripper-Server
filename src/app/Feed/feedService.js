@@ -25,18 +25,16 @@ exports.createNewFeed = async function (userIdx, startDate, endDate, traffic, ti
             await feedDao.insertNewDay(connection, [travelIdx, i]);
 
         dayIdxArr = await feedDao.selectDayIdxOfTravel(connection, travelIdx);   // 4. dayIdx 가져오기
-        console.log("dayIdxArr: " + dayIdxArr[0].dayIdx);
-        console.log("dayIdxArr: " + dayIdxArr[1].dayIdx);
+        console.log("[dayIdxArr]");
+        console.log(dayIdxArr);
 
         for (let i=0; i<dayIdxArr.length; i++) {   // 5. day에 입력된 data들을 dayIdx를 가지고 DB에 insert
-            const areaArr = day[i].area;
+            let areaArr = day[i].area;
             if (areaArr !== undefined && areaArr.length !== 0) {   // area(장소)를 입력했다면
                 for (let j=0; j<areaArr.length; j++) {
-                    console.log("i: " + i);
-                    console.log("j: " + j);
+                    console.log(i,j);
                     await feedDao.insertDayArea(connection, [dayIdxArr[i].dayIdx, areaArr[j].category, areaArr[j].latitude, areaArr[j].longitude, areaArr[j].name, areaArr[j].address]);
-                    dayAreaIdx = (await feedDao.selectDayAreaIdx(connection, [dayIdxArr[i].dayIdx, areaArr[j].category, areaArr[j].latitude, areaArr[j].longitude, areaArr[j].name, areaArr[j].address]))[0].dayAreaIdx;   // dayAreaIdx 가져오기
-                    console.log(dayAreaIdx);
+                    dayAreaIdx = (await feedDao.selectDayAreaIdx(connection, [dayIdxArr[i].dayIdx, areaArr[j].category, areaArr[j].latitude, areaArr[j].longitude, areaArr[j].name]))[0].dayAreaIdx;   // dayAreaIdx 가져오기
                     if (areaArr[j].review !== undefined) {   // review도 입력했다면
                         if (!areaArr[j].review.images) await feedDao.insertDayAreaReview(connection, [dayAreaIdx, areaArr[j].review.comment]);
                         else if (!areaArr[j].review.comment) {
@@ -48,38 +46,36 @@ exports.createNewFeed = async function (userIdx, startDate, endDate, traffic, ti
                                 await feedDao.insertDayAreaImage(connection, dayAreaIdx, img);
                         }
                     }
-                    else await feedDao.insertDayArea(connection, [dayIdxArr[i].dayIdx, areaArr[j].category, areaArr[j].latitude, areaArr[j].longitude, areaArr[j].name, areaArr[j].address]);
                 }
             }
         }
-        await connection.commit();
-        //
-        // // 6. metadata
-        // if (!(thumnails.length === 0 || !thumnails)) {   // 썸네일 사진이 있다면
-        //     for (let timg of thumnails)
-        //         await feedDao.insertThumnails(connection, [travelIdx, timg]);
-        // }
-        //
-        // if (!(hashtagArr.length === 0) || !hashtagArr) {   // 해시태그가 있다면
-        //     // 전체 해시태그에 추가 (단, 중복 확인은 해야함)
-        //     for (let tag of hashtagArr) {
-        //         const checkTagResult = await feedDao.selectIsTagExist(connection, tag);
-        //         if (checkTagResult[0].isTagExist === 1) {   // 전체 해시태그 DB에 해당 태그가 존재하면?
-        //             // 해당 태그 인덱스를 가져와서 TravelHashtag에 추가
-        //             tagIdx = (await feedDao.selectTagIdx(connection, tag))[0].tagIdx;
-        //             await feedDao.insertTravelHashtag(connection, [travelIdx, tagIdx]);
-        //         } else {   // 전체 해시태그 DB에 해당 태그가 존재하지 않으면?
-        //             // 전체 해시태그에 추가
-        //             // 이후 해당 태그 인덱스를 가져와서 TravelHashtag에 추가할 것
-        //             await feedDao.insertHashtag(connection, tag);
-        //             tagIdx = (await feedDao.selectTagIdx(connection, tag))[0].tagIdx;
-        //             await feedDao.insertTravelHashtag(connection, [travelIdx, tagIdx]);
-        //         }
-        //     }
-        // }
-        //
+
+        // 6. metadata
+        if (!(thumnails.length === 0 || !thumnails)) {   // 썸네일 사진이 있다면
+            for (let timg of thumnails)
+                await feedDao.insertThumnails(connection, [travelIdx, timg]);
+        }
+
+        if (!(hashtagArr.length === 0) || !hashtagArr) {   // 해시태그가 있다면
+            // 전체 해시태그에 추가 (단, 중복 확인은 해야함)
+            for (let tag of hashtagArr) {
+                const checkTagResult = await feedDao.selectIsTagExist(connection, tag);
+                if (checkTagResult[0].isTagExist === 1) {   // 전체 해시태그 DB에 해당 태그가 존재하면?
+                    // 해당 태그 인덱스를 가져와서 TravelHashtag에 추가
+                    tagIdx = (await feedDao.selectTagIdx(connection, tag))[0].tagIdx;
+                    await feedDao.insertTravelHashtag(connection, [travelIdx, tagIdx]);
+                } else {   // 전체 해시태그 DB에 해당 태그가 존재하지 않으면?
+                    // 전체 해시태그에 추가
+                    // 이후 해당 태그 인덱스를 가져와서 TravelHashtag에 추가할 것
+                    await feedDao.insertHashtag(connection, tag);
+                    tagIdx = (await feedDao.selectTagIdx(connection, tag))[0].tagIdx;
+                    await feedDao.insertTravelHashtag(connection, [travelIdx, tagIdx]);
+                }
+            }
+        }
+
         // await connection.rollback();
-        // // await connection.commit();
+        await connection.commit();
     } catch(err) {
         logger.error(`App - createNewFeed Service error\n: ${err.message}`);
         await connection.rollback();

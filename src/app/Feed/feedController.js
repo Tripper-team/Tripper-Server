@@ -58,7 +58,7 @@ exports.searchArea = async (req, res) => {
      * Headers: REST_API_KEY (KAKAO)
      * Query String: area, x, y, page
      */
-    const rest_key = req.headers['kakao-rest-key'];
+    const rest_key = process.env.KAKAO_REST_KEY;
     const area = String(req.query.area);   // 검색어
     const x = String(req.query.x);   // 본인의 X좌표 (경도)
     const y = String(req.query.y);   // 본인의 Y좌표 (위도)
@@ -66,8 +66,6 @@ exports.searchArea = async (req, res) => {
     const sort_method = "distance";   // 정확성 vs 거리순
     const size = 10;   // 한 페이지에서 보여지는 data의 갯수
 
-    if (!rest_key)
-        return res.send(errResponse(baseResponse.KAKAO_REST_KEY_EMPTY));
     if (!area)
         return res.send(errResponse(baseResponse.AREA_EMPTY));
     if (!x)

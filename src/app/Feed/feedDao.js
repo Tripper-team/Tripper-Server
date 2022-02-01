@@ -42,15 +42,13 @@ async function insertDayArea(connection, [dayIdx, category, latitude, longitude,
     return await connection.query(insertDayAreaQuery, [dayIdx, category, latitude, longitude, name, address]);
 }
 
-async function selectDayAreaIdx(connection, [dayIdx, category, latitude, longitude, name, address]) {
-    console.log("[Dao]");
-    console.log(dayIdx, category, latitude, longitude, name, address);
+async function selectDayAreaIdx(connection, [dayIdx, category, latitude, longitude, name]) {
     const selectDayAreaIdxQuery = `
         SELECT idx AS dayAreaIdx
         FROM DayArea
-        WHERE dayIdx = ? AND areaCategory = ? AND areaName = ? AND areaLatitude = ? AND areaLongitude = ? AND areaAddress = ?;
+        WHERE dayIdx = ? AND areaCategory = ? AND areaName = ? AND areaLatitude = ? AND areaLongitude = ?;
     `;
-    const [selectDayAreaIdxRow] = await connection.query(selectDayAreaIdxQuery, [dayIdx, category, name, latitude, longitude, address]);
+    const [selectDayAreaIdxRow] = await connection.query(selectDayAreaIdxQuery, [dayIdx, category, name, latitude, longitude]);
     return selectDayAreaIdxRow;
 }
 
