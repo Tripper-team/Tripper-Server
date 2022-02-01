@@ -207,7 +207,7 @@ exports.postFeed = async function (req, res) {
         userIdx, startDate, endDate, traffic, title,
         introduce, hashtagArr, thumnails, day, dateDiff
     );
-    return res.send(response(baseResponse.SUCCESS, createFeedResult));
+    return res.send(createFeedResult);
 };
 
 /**

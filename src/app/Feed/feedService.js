@@ -72,6 +72,7 @@ exports.createNewFeed = async function (userIdx, startDate, endDate, traffic, ti
 
         // await connection.rollback();
         await connection.commit();
+        return response(baseResponse.TRAVEL_UPLOAD_SUCCESS);
     } catch(err) {
         logger.error(`App - createNewFeed Service error\n: ${err.message}`);
         await connection.rollback();
