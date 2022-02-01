@@ -27,6 +27,7 @@ module.exports = {
     TRAVEL_DELETE_SUCCESS : { "isSuccess": true, "code": 1022, "message":"여행 게시물 삭제에 성공했습니다." },
     TRAVEL_STATUS_TO_PUBLIC_SUCCESS : { "isSuccess": true, "code": 1023, "message":"해당 게시물을 공개 범위로 설정했습니다." },
     TRAVEL_STATUS_TO_PRIVATE_SUCCESS : { "isSuccess": true, "code": 1024, "message":"해당 게시물을 비공개 범위로 설정했습니다." },
+    TRAVEL_UPLOAD_SUCCESS : { "isSuccess": true, "code": 1025, "message":"게시물을 업로드했습니다." },
 
     // Common
     TOKEN_EMPTY : { "isSuccess": false, "code": 2000, "message":"JWT 토큰을 입력해주세요." },

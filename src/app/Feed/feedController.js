@@ -58,7 +58,7 @@ exports.searchArea = async (req, res) => {
      * Headers: REST_API_KEY (KAKAO)
      * Query String: area, x, y, page
      */
-    const rest_key = req.headers['kakao-rest-key'];
+    const rest_key = process.env.KAKAO_REST_KEY;
     const area = String(req.query.area);   // 검색어
     const x = String(req.query.x);   // 본인의 X좌표 (경도)
     const y = String(req.query.y);   // 본인의 Y좌표 (위도)
@@ -66,8 +66,6 @@ exports.searchArea = async (req, res) => {
     const sort_method = "distance";   // 정확성 vs 거리순
     const size = 10;   // 한 페이지에서 보여지는 data의 갯수
 
-    if (!rest_key)
-        return res.send(errResponse(baseResponse.KAKAO_REST_KEY_EMPTY));
     if (!area)
         return res.send(errResponse(baseResponse.AREA_EMPTY));
     if (!x)
@@ -146,14 +144,19 @@ exports.postFeed = async function (req, res) {
     // information
     const startDate = information.startDate;
     const endDate = information.endDate;
-    const dateDiff = calDay(startDate.replace(/-/gi, ""), endDate.replace(/-/gi, "")) + 1;
     let traffic = information.traffic;
     const title = information.title;
     const introduce = information.introduce;
 
     // metadata
-    const hashtagArr = metadata.hashtag;
-    const thumnails = metadata.thumnails;
+    let hashtagArr, thumnails;
+    if (metadata === undefined) {
+        hashtagArr = [];
+        thumnails = [];
+    } else {
+        hashtagArr = metadata.hashtag;
+        thumnails = metadata.thumnails;
+    }
 
     // information validation -> 제목, 소개만 필수
     if (!information)
@@ -190,6 +193,8 @@ exports.postFeed = async function (req, res) {
             return res.send(errResponse(baseResponse.FEED_TRAFFIC_ERROR_TYPE));
     }
 
+    const dateDiff = calDay(startDate.replace(/-/gi, ""), endDate.replace(/-/gi, "")) + 1;
+
     // Day
     if (!day)
         return res.send(errResponse(baseResponse.FEED_DAY_EMPTY));
@@ -202,7 +207,7 @@ exports.postFeed = async function (req, res) {
         userIdx, startDate, endDate, traffic, title,
         introduce, hashtagArr, thumnails, day, dateDiff
     );
-    return res.send(response(baseResponse.SUCCESS, createFeedResult));
+    return res.send(createFeedResult);
 };
 
 /**

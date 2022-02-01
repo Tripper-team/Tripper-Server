@@ -42,13 +42,13 @@ async function insertDayArea(connection, [dayIdx, category, latitude, longitude,
     return await connection.query(insertDayAreaQuery, [dayIdx, category, latitude, longitude, name, address]);
 }
 
-async function selectDayAreaIdx(connection, dayIdx) {
+async function selectDayAreaIdx(connection, [dayIdx, category, latitude, longitude, name]) {
     const selectDayAreaIdxQuery = `
         SELECT idx AS dayAreaIdx
         FROM DayArea
-        WHERE dayIdx = ?;
+        WHERE dayIdx = ? AND areaCategory = ? AND areaName = ? AND areaLatitude = ? AND areaLongitude = ?;
     `;
-    const [selectDayAreaIdxRow] = await connection.query(selectDayAreaIdxQuery, dayIdx);
+    const [selectDayAreaIdxRow] = await connection.query(selectDayAreaIdxQuery, [dayIdx, category, name, latitude, longitude]);
     return selectDayAreaIdxRow;
 }
 

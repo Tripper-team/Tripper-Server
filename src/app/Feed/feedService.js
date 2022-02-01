@@ -26,29 +26,27 @@ exports.createNewFeed = async function (userIdx, startDate, endDate, traffic, ti
         dayIdxArr = await feedDao.selectDayIdxOfTravel(connection, travelIdx);   // 4. dayIdx 가져오기
 
         for (let i=0; i<dayIdxArr.length; i++) {   // 5. day에 입력된 data들을 dayIdx를 가지고 DB에 insert
-            if (day[i].area !== undefined) {   // area를 클라이언트에서 입력했다면
-                if (day[i].review !== undefined) {   // review도 입력했다면
-                    await feedDao.insertDayArea(connection, [dayIdxArr[i].dayIdx, day[i].area.category, day[i].area.latitude, day[i].area.longitude, day[i].area.name, day[i].area.address]);   // DayArea 생성
-                    dayAreaIdx = (await feedDao.selectDayAreaIdx(connection, dayIdxArr[i].dayIdx))[0].dayAreaIdx;   // dayAreaIdx 가져오기
-                    if (!day[i].review.images)   // review에서 image를 안넣었을 경우
-                        await feedDao.insertDayAreaReview(connection, [dayAreaIdx, day[i].review.comment]);
-                    else if (!day[i].review.comment) {   // review에서 comment만 안넣었을 경우
-                        for (let img of day[i].review.images)
-                            await feedDao.insertDayAreaImage(connection, dayAreaIdx, img);
-                    }
-                    else {   // 둘다 있을 경우?
-                        await feedDao.insertDayAreaReview(connection, [dayAreaIdx, day[i].review.comment]);
-                        for (let img of day[i].review.images)
-                            await feedDao.insertDayAreaImage(connection, dayAreaIdx, img);
+            let areaArr = day[i].area;
+            if (areaArr !== undefined && areaArr.length !== 0) {   // area(장소)를 입력했다면
+                for (let j=0; j<areaArr.length; j++) {
+                    await feedDao.insertDayArea(connection, [dayIdxArr[i].dayIdx, areaArr[j].category, areaArr[j].latitude, areaArr[j].longitude, areaArr[j].name, areaArr[j].address]);
+                    dayAreaIdx = (await feedDao.selectDayAreaIdx(connection, [dayIdxArr[i].dayIdx, areaArr[j].category, areaArr[j].latitude, areaArr[j].longitude, areaArr[j].name]))[0].dayAreaIdx;   // dayAreaIdx 가져오기
+                    if (areaArr[j].review !== undefined) {   // review도 입력했다면
+                        if (!areaArr[j].review.images) await feedDao.insertDayAreaReview(connection, [dayAreaIdx, areaArr[j].review.comment]);
+                        else if (!areaArr[j].review.comment) {
+                            for (let img of areaArr[j].review.images)
+                                await feedDao.insertDayAreaImage(connection, dayAreaIdx, img);
+                        } else {
+                            await feedDao.insertDayAreaReview(connection, [dayAreaIdx, areaArr[j].review.comment]);
+                            for (let img of areaArr[j].review.images)
+                                await feedDao.insertDayAreaImage(connection, dayAreaIdx, img);
+                        }
                     }
                 }
-                // review를 입력 안했다면 area만 넣기
-                else await feedDao.insertDayArea(connection, [dayIdxArr[i].dayIdx, day[i].area.category, day[i].area.latitude, day[i].area.longitude, day[i].area.name, day[i].area.address]);
             }
         }
 
         // 6. metadata
-        console.log(thumnails);
         if (!(thumnails.length === 0 || !thumnails)) {   // 썸네일 사진이 있다면
             for (let timg of thumnails)
                 await feedDao.insertThumnails(connection, [travelIdx, timg]);
@@ -72,7 +70,9 @@ exports.createNewFeed = async function (userIdx, startDate, endDate, traffic, ti
             }
         }
 
+        // await connection.rollback();
         await connection.commit();
+        return response(baseResponse.TRAVEL_UPLOAD_SUCCESS);
     } catch(err) {
         logger.error(`App - createNewFeed Service error\n: ${err.message}`);
         await connection.rollback();
