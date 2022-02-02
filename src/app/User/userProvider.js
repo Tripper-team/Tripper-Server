@@ -66,7 +66,17 @@ exports.retrieveUserIdxCheck = async function (userIdx) {
   return userIdxCheckResult;
 };
 
-exports.retrieveUserMyPage = async function (myIdx, userIdx, search_option) {
+exports.retrieveUserMyPage = async function (myIdx, search_option) {
   const connection = await pool.getConnection(async (conn) => conn);
+
+  const userInfoResult = await userDao.selectUserInfoInMyPage(connection, myIdx);
+  const userFeedResultByOption = await userDao.selectUserFeedInMyPageByOption(connection, [myIdx, search_option]);
+  // console.log(userInfoResult);
+  // console.log(userFeedResultByOption);
+
   connection.release();
+  return {
+    "userInfo": userInfoResult[0],
+    "feedResult": userFeedResultByOption
+  };
 };
