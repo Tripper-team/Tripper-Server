@@ -65,3 +65,8 @@ exports.retrieveUserIdxCheck = async function (userIdx) {
   connection.release();
   return userIdxCheckResult;
 };
+
+exports.retrieveUserMyPage = async function (myIdx, userIdx, search_option) {
+  const connection = await pool.getConnection(async (conn) => conn);
+  connection.release();
+};

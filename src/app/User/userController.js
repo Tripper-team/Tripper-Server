@@ -352,3 +352,23 @@ exports.autoLogin = async function (req, res) {
     console.log("[자동로그인] userIdx: " + userIdx);
     return res.send(response(baseResponse.AUTO_LOGIN_SUCCESS));
 };
+
+/**
+ * API No. P3
+ * API Name : 마이페이지 조회 API
+ * [GET] /app/users/profile?user=&search=
+ */
+exports.getMyPage = async function (req, res) {
+    /**
+     * Headers: x-access-token
+     * Query String: user, search
+     */
+    const myIdx = req.verifiedToken.userIdx;
+    const userIdx = req.query.user;   // 마이페이지 조회할 사람의 인덱스
+    const search_option = req.query.search;   // My Trip 또는 좋아요
+
+    // Validation
+
+    const userMyPageResult = await userProvider.retrieveUserMyPage(myIdx, userIdx, search_option);
+    return res.send(userMyPageResult);
+};
