@@ -71,6 +71,10 @@ module.exports = {
     TRAVEL_SCORE_EMPTY : { "isSuccess": false, "code": 2033, "message":"점수를 입력해주세요." },
     TRAVEL_SCORE_TYPE_ERROR : { "isSuccess": false, "code": 2034, "message":"점수는 1점부터 5점까지 부여가 가능합니다." },
 
+    MYPAGE_OPTION_EMPTY : { "isSuccess": false, "code": 2035, "message":"마이페이지 조회 옵션을 입력해주세요." },
+    MYPAGE_OPTION_ERROR_TYPE :{ "isSuccess": false, "code": 2036, "message":"마이페이지 조회 옵션은 좋아요 또는 내여행으로 입력해주세요." },
+    AREA_LENGTH_ERROR : { "isSuccess": false, "code": 2037, "message":"키워드는 2글자 이상으로 입력해주세요." },
+
     ACCESS_TOKEN_EMPTY : { "isSuccess": false, "code": 2050, "message": "accessToken을 입력해주세요." },
     ACCESS_TOKEN_INVALID : { "isSuccess": false, "code": 2051, "message": "유효하지 않은 accessToken 입니다." },
 

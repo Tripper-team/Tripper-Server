@@ -66,8 +66,11 @@ exports.searchArea = async (req, res) => {
     const sort_method = "distance";   // 정확성 vs 거리순
     const size = 10;   // 한 페이지에서 보여지는 data의 갯수Q
 
+
     if (!area)
         return res.send(errResponse(baseResponse.AREA_EMPTY));
+    if (area.length < 2)
+        return res.send(errResponse(baseResponse.AREA_LENGTH_ERROR));
     if (!x)
         return res.send(errResponse(baseResponse.POINT_X_EMPTY));
     if (!y)
