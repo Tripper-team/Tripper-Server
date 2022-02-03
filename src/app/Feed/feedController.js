@@ -305,3 +305,57 @@ exports.patchFeedStatus = async function (req, res) {
     const patchFeedStatusResponse = await feedService.patchFeedStatus(userIdx, travelIdx);
     return res.send(patchFeedStatusResponse);
 };
+
+/**
+ * API No. FD13
+ * API Name : 여행 게시물 댓글 생성하기 API
+ * [POST] /app/feeds/comment
+ */
+exports.postComment = async function (req, res) {
+    const userIdx = req.verifiedToken.userIdx;
+    const { travelIdx, comment, isParent } = req.body;
+
+    // Validation
+    if (!travelIdx)
+        return res.send(errResponse(baseResponse.TRAVEL_IDX_EMPTY));
+    if (!comment)
+        return res.send(errResponse(baseResponse.TRAVEL_COMMENT_EMPTY));
+    if (comment.length > 200)
+        return res.send(errResponse(baseResponse.TRAVEL_COMMENT_LENGTH_ERROR));
+
+    const userStatusCheckRow = await userProvider.checkUserStatus(userIdx);
+    if (userStatusCheckRow[0].isWithdraw === 'Y')
+        return res.send(errResponse(baseResponse.USER_WITHDRAW));
+
+    const createCommentResponse = await feedService.createTravelComment(userIdx, travelIdx, comment, isParent);
+    return res.send(createCommentResponse);
+};
+
+/**
+ * API No. FD14
+ * API Name : 여행 게시물 댓글 수정하기 API
+ * [PATCH] /app/feeds/:feedIdx/comments/:commentIdx
+ */
+exports.patchComment = async function (req, res) {
+    const travelIdx = req.params.feedIdx;
+    const commentIdx = req.params.commentIdx;
+    const comment = req.body.comment;
+    const userIdx = req.verifiedToken.userIdx;
+
+    // Validation
+    if (!travelIdx)
+        return res.send(errResponse(baseResponse.TRAVEL_IDX_EMPTY));
+    if (!commentIdx)
+        return res.send(errResponse(baseResponse.TRAVEL_COMMENT_IDX_EMPTY));
+    if (!comment)
+        return res.send(errResponse(baseResponse.TRAVEL_COMMENT_EMPTY));
+    if (comment.length > 200)
+        return res.send(errResponse(baseResponse.TRAVEL_COMMENT_LENGTH_ERROR));
+
+    const userStatusCheckRow = await userProvider.checkUserStatus(userIdx);
+    if (userStatusCheckRow[0].isWithdraw === 'Y')
+        return res.send(errResponse(baseResponse.USER_WITHDRAW));
+
+    const patchCommentResponse = await feedService.changeTravelComment(userIdx, travelIdx, commentIdx, comment);
+    return res.send(patchCommentResponse);
+};

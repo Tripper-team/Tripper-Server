@@ -65,4 +65,10 @@ module.exports = function(app) {
 
     // FD10. 여행 게시물 공개 범위 전환 API
     app.patch('/app/feeds/:feedIdx/change-status', jwtMiddleware, feed.patchFeedStatus);
+
+    // FD13. 여행 게시물 댓글 작성하기 API
+    app.post('/app/feeds/comments', jwtMiddleware, feed.postComment);
+
+    // FD14. 여행 게시물 댓글 수정하기 API
+    app.patch('/app/feeds/:feedIdx/comments/commentIdx', jwtMiddleware, feed.patchComment);
 };
