@@ -209,6 +209,43 @@ async function updateTravelStatus(connection, [userIdx, travelIdx, status]) {
     return await connection.query(updateTravelStatusQuery, [status, userIdx, travelIdx]);
 }
 
+async function selectIsParentCommentExist(connection, isParent) {
+    const selectIsParentCommentExistQuery = `
+        SELECT EXISTS(SELECT idx FROM TravelComment WHERE idx = ? AND isParent = 0) AS isParentCommentExist;
+    `;
+    const [selectIsParentCommentExistRow] = await connection.query(selectIsParentCommentExistQuery, isParent);
+    return selectIsParentCommentExistRow;
+}
+
+async function selectTravelCommentCount(connection, travelIdx) {
+    const selectTravelCommentCountQuery = `
+        SELECT COUNT(idx) AS commentCount
+        FROM TravelComment
+        WHERE travelIdx = ?;
+    `;
+    const [selectTravelCommentCountRow] = await connection.query(selectTravelCommentCountQuery, travelIdx);
+    return selectTravelCommentCountRow;
+}
+
+async function insertTravelComment(connection, [travelIdx, userIdx, comment, isParent]) {
+    const insertTravelCommentQuery = `
+        INSERT INTO TravelComment(travelIdx, userIdx, comment, isParent)
+        VALUES (?, ?, ?, ?);
+    `;
+    return await connection.query(insertTravelCommentQuery, [travelIdx, userIdx, comment, isParent]);
+}
+
+async function selectTravelCommentIdx(connection, [travelIdx, userIdx, comment, isParent]) {
+    const selectTravelCommentIdxQuery = `
+        SELECT idx AS commentIdx
+        FROM TravelComment
+        WHERE travelIdx = ? AND userIdx = ? AND comment = ? AND isParent = ?
+                AND createdAt = (SELECT MAX(createdAt) FROM TravelComment WHERE travelIdx = ? AND userIdx = ? AND comment = ? AND isParent = ?);
+    `;
+    const [selectTravelCommentIdxRow] = await connection.query(selectTravelCommentIdxQuery, [travelIdx, userIdx, comment, isParent, travelIdx, userIdx, comment, isParent]);
+    return selectTravelCommentIdxRow;
+}
+
 module.exports = {
     insertNewFeed,
     selectFeedIdxByAll,
@@ -232,5 +269,9 @@ module.exports = {
     selectIsScoreExist,
     updateTravelScore,
     selectFeedWriterIdx,
-    updateTravelStatus
+    updateTravelStatus,
+    selectIsParentCommentExist,
+    selectTravelCommentCount,
+    insertTravelComment,
+    selectTravelCommentIdx
 };

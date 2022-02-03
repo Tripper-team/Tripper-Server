@@ -356,19 +356,27 @@ exports.autoLogin = async function (req, res) {
 /**
  * API No. P3
  * API Name : 마이페이지 조회 API
- * [GET] /app/users/profile?user=&search=
+ * [GET] /app/users/profile?search=
  */
 exports.getMyPage = async function (req, res) {
     /**
      * Headers: x-access-token
-     * Query String: user, search
+     * Query String: search
      */
     const myIdx = req.verifiedToken.userIdx;
-    const userIdx = req.query.user;   // 마이페이지 조회할 사람의 인덱스
-    const search_option = req.query.search;   // My Trip 또는 좋아요
+    const search_option = req.query.search;   // My Trip(내여행) 또는 좋아요
 
     // Validation
+    if (!search_option)
+        return res.send(errResponse(baseResponse.MYPAGE_OPTION_EMPTY));
+    if (search_option !== "내여행" && search_option !== "좋아요")
+        return res.send(errResponse(baseResponse.MYPAGE_OPTION_ERROR_TYPE));
 
-    const userMyPageResult = await userProvider.retrieveUserMyPage(myIdx, userIdx, search_option);
-    return res.send(userMyPageResult);
+    // 사용자 status 체크
+    const myStatusCheckRow = await userProvider.checkUserStatus(myIdx);
+    if (myStatusCheckRow[0].isWithdraw === 'Y')
+        return res.send(errResponse(baseResponse.USER_WITHDRAW));
+
+    const userMyPageResult = await userProvider.retrieveUserMyPage(myIdx, search_option);
+    return res.send(response(baseResponse.SUCCESS, userMyPageResult));
 };
