@@ -31,7 +31,7 @@ const single_upload = multer({
         acl: 'public-read',
         key: (req, file, cb) => {
             // cb(null, `profiles/${file.originalname}`);
-            cb(null, `profiles/${uuid.v4().toString().replaceAll("-", "")}`);
+            cb(null, `profiles/${uuid.v4().toString().replace(/-/gi, "")}`);
         },
     }),
     limits: {
@@ -47,7 +47,7 @@ const multiple_thumnail_upload = multer({
         acl: 'public-read',
         key: (req, file, cb) => {
             // cb(null, `thumnails/${file.originalname}`);
-            cb(null, `temp/thumnails/${uuid.v4().toString().replaceAll("-", "")}`);
+            cb(null, `temp/thumnails/${uuid.v4().toString().replace(/-/gi, "")}`);
         },
     }),
     limits: {
@@ -63,7 +63,7 @@ const multiple_travel_upload = multer({
         acl: 'public-read',
         key: (req, file, cb) => {
             // cb(null, `travels/${file.originalname}`);
-            cb(null, `temp/travels/${uuid.v4().toString().replaceAll("-", "")}`);
+            cb(null, `temp/travels/${uuid.v4().toString().replace(/-/gi, "")}`);
         },
     }),
     limits: {
