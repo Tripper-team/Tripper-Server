@@ -236,3 +236,68 @@ exports.patchFeedStatus = async function (userIdx, travelIdx) {
         connection.release();
     }
 };
+
+exports.createTravelComment = async function (userIdx, travelIdx, comment, isParent) {
+    const connection = await pool.getConnection(async (conn) => conn);
+
+    try {
+        // 실제로 있는 게시물인지 확인하기
+        const isFeedExist = (await feedDao.selectIsTravelExist(connection, travelIdx))[0].isTravelExist;
+        if (isFeedExist === 0)
+            return errResponse(baseResponse.TRAVEL_NOT_EXIST);
+
+        // 게시물 상태 확인하기 (숨김 또는 삭제됨)
+        const feedStatusCheckRow = (await feedDao.selectTravelStatus(connection, travelIdx))[0].travelStatus;
+        if (feedStatusCheckRow === "PRIVATE")
+            return errResponse(baseResponse.TRAVEL_STATUS_PRIVATE);
+        else if (feedStatusCheckRow === 'DELETED')
+            return errResponse(baseResponse.TRAVEL_STATUS_DELETED);
+
+        /*
+            isParent가 null이 아니면 -> 대댓글 (부모 댓글의 idx)
+            isParent가 그러면 실제로 존재하는 부모 댓글 idx인지 확인하기
+         */
+        if (isParent != null) {
+           const checkParentCommentExist = (await feedDao.selectIsParentCommentExist(connection, isParent))[0].isParentCommentExist;
+           if (checkParentCommentExist === 0)
+               return errResponse(baseResponse.TRAVEL_COMMENT_PARENT_NOT_EXIST);
+        }
+
+        // 아무 댓글도 없는 게시물에 처음으로 대댓글을 다는지 확인하기
+        const checkCommentCount = (await feedDao.selectTravelCommentCount(connection, travelIdx))[0].commentCount;
+        if (checkCommentCount === 0) {
+            if (isParent != null)
+                return errResponse(baseResponse.TRAVEL_FIRST_COMMENT_MUST_PARENT);
+        }
+
+        if (!isParent) isParent = 0;
+
+        await connection.beginTransaction();
+
+        await feedDao.insertTravelComment(connection, [travelIdx, userIdx, comment, isParent]);
+        const newCommentIdx = (await feedDao.selectTravelCommentIdx(connection, [travelIdx, userIdx, comment, isParent]))[0].commentIdx;
+
+        await connection.commit();
+        return response(baseResponse.TRAVEL_COMMENT_CREATE_SUCCESS, { 'commentIdx': newCommentIdx });
+    } catch(err) {
+        logger.error(`App - createFeedComment Service error\n: ${err.message}`);
+        await connection.rollback();
+        return errResponse(baseResponse.DB_ERROR);
+    } finally {
+        connection.release();
+    }
+};
+
+exports.changeTravelComment = async function (userIdx, travelIdx, commentIdx, comment) {
+    const connection = await pool.getConnection(async (conn) => conn);
+
+    try {
+
+    } catch(err) {
+        logger.error(`App - changeTravelComment Service error\n: ${err.message}`);
+        await connection.rollback();
+        return errResponse(baseResponse.DB_ERROR);
+    } finally {
+        connection.release();
+    }
+};
