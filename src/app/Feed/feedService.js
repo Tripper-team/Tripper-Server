@@ -339,3 +339,35 @@ exports.changeTravelComment = async function (userIdx, travelIdx, commentIdx, co
         connection.release();
     }
 };
+
+exports.retrieveTravelComment = async function (travelIdx) {
+    const connection = await pool.getConnection(async (conn) => conn);
+
+    try {
+        // 실제로 있는 게시물인지 확인하기
+        const isFeedExist = (await feedDao.selectIsTravelExist(connection, travelIdx))[0].isTravelExist;
+        if (isFeedExist === 0)
+            return errResponse(baseResponse.TRAVEL_NOT_EXIST);
+
+        // 게시물 상태 확인하기 (숨김 또는 삭제됨)
+        const feedStatusCheckRow = (await feedDao.selectTravelStatus(connection, travelIdx))[0].travelStatus;
+        // if (feedStatusCheckRow === "PRIVATE")
+        //     return errResponse(baseResponse.TRAVEL_STATUS_PRIVATE);
+        if (feedStatusCheckRow === 'DELETED')
+            return errResponse(baseResponse.TRAVEL_STATUS_DELETED);
+
+        await connection.beginTransaction();
+
+        const totalCommentCount = (await feedDao.selectTotalCommentCount(connection, travelIdx))[0].totalCount;   // 총 댓글 갯수 조회
+        const travelCommentResult = await feedDao.selectTravelCommentList(connection, travelIdx);   // 댓글 목록 조회
+
+        await connection.commit();
+        return [totalCommentCount, travelCommentResult];
+    } catch(err) {
+        logger.error(`App - retrieveTravelComment Service error\n: ${err.message}`);
+        await connection.rollback();
+        return errResponse(baseResponse.DB_ERROR);
+    } finally {
+        connection.release();
+    }
+};

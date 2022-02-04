@@ -1,3 +1,4 @@
+const jwtMiddleware = require("../../../config/jwtMiddleware");
 module.exports = function(app) {
     const feed = require('./feedController');
     const jwtMiddleware = require('../../../config/jwtMiddleware');
@@ -71,4 +72,7 @@ module.exports = function(app) {
 
     // FD14. 여행 게시물 댓글 수정하기 API
     app.patch('/app/feeds/:feedIdx/comments/:commentIdx', jwtMiddleware, feed.patchComment);
+
+    // FD15. 여행 게시물 댓글 조회하기 API
+    app.get('/app/feeds/:feedIdx/comments-list', feed.getFeedComment);
 };

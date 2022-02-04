@@ -300,6 +300,35 @@ async function selectTravelComment(connection, commentIdx) {
     return selectTravelCommentRow;
 }
 
+async function selectTravelCommentList(connection, travelIdx) {
+    const selectTravelCommentListQuery = `
+        SELECT C.idx AS commentIdx, C.userIdx,
+               nickName AS userNickname, profileImgUrl AS userProfileImage,
+               comment, C.isParent AS isParent, C.status AS commentStatus, T.count AS commentCount, C.createdAt
+        FROM TravelComment AS C
+                 INNER JOIN User AS U ON U.idx = C.userIdx AND U.isWithdraw != 'Y'
+    INNER JOIN Travel ON Travel.idx = C.travelIdx AND Travel.status != 'DELETED'
+            LEFT JOIN (
+            SELECT isParent, COUNT(isParent) AS count
+            FROM TravelComment
+            GROUP BY isParent
+            ) AS T ON C.idx = T.isParent
+        WHERE C.travelIdx = ? AND C.status != 'N'
+        ORDER BY IF(C.isParent = 0, commentIdx, C.isParent);    
+    `;
+    const [selectTravelCommentListRow] = await connection.query(selectTravelCommentListQuery, travelIdx);
+    return selectTravelCommentListRow;
+}
+
+async function selectTotalCommentCount(connection, travelIdx) {
+    const selectTotalCommentCountQuery = `
+        SELECT COUNT(idx) AS totalCount
+        FROM TravelComment;
+    `;
+    const [selectTotalCommentCountRow] = await connection.query(selectTotalCommentCountQuery, travelIdx);
+    return selectTotalCommentCountRow;
+}
+
 module.exports = {
     insertNewFeed,
     selectFeedIdxByAll,
@@ -333,5 +362,7 @@ module.exports = {
     selectIsMyComment,
     selectCommentStatus,
     selectTravelComment,
-    updateTravelCommentStatus
+    updateTravelCommentStatus,
+    selectTravelCommentList,
+    selectTotalCommentCount
 };

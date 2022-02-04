@@ -360,3 +360,20 @@ exports.patchComment = async function (req, res) {
     const patchCommentResponse = await feedService.changeTravelComment(userIdx, travelIdx, commentIdx, comment);
     return res.send(patchCommentResponse);
 };
+
+
+/**
+ * API No. FD15
+ * API Name : 여행 게시물 댓글 조회하기 API
+ * [GET] /app/feeds/:feedIdx/comments-list
+ */
+exports.getFeedComment = async function (req, res) {
+    const travelIdx = req.params.feedIdx;
+
+    // validation
+    if (!travelIdx)
+        return res.send(errResponse(baseResponse.TRAVEL_IDX_EMPTY));
+
+    const getTravelCommentResponse = await feedService.retrieveTravelComment(travelIdx);
+    return res.send(response(baseResponse.SUCCESS, { 'totalCommentCount': getTravelCommentResponse[0], 'comments': getTravelCommentResponse[1] }));
+};
