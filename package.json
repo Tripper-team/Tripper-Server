@@ -30,6 +30,7 @@
     "passport": "^0.5.2",
     "passport-kakao": "^1.0.1",
     "regex-email": "^1.0.2",
+    "request": "^2.88.2",
     "request-promise": "^4.2.6",
     "uuid": "^8.3.2",
     "winston": "^3.2.1",

@@ -63,8 +63,8 @@ exports.searchArea = async (req, res) => {
     const x = String(req.query.x);   // 본인의 X좌표 (경도)
     const y = String(req.query.y);   // 본인의 Y좌표 (위도)
     const page = parseInt(req.query.page);   // 결과 페이지 번호
-    const sort_method = "distance";   // 정확성 vs 거리순
-    const size = 10;   // 한 페이지에서 보여지는 data의 갯수Q
+    const sort_method = "accuracy";   // 정확성 vs 거리순
+    const size = 10;   // 한 페이지에서 보여지는 data의 갯수
 
 
     if (!area)

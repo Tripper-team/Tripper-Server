@@ -43,7 +43,8 @@ exports.kakaoLogin = async function (req, res) {
     /**
      * Body: accessToken
      */
-    const { accessToken } = req.body;
+    const accessToken  = req.body.accessToken;
+    console.log(accessToken);
 
     if (!accessToken)   // 카카오 accessToken 입력 체크
         return res.send(errResponse(baseResponse.ACCESS_TOKEN_EMPTY));   // 2050: accessToken을 입력해주세요.
@@ -198,6 +199,7 @@ exports.getProfile = async function (req, res) {
         return res.send(errResponse(baseResponse.USER_WITHDRAW));
 
     const userProfileResult = await userProvider.retrieveUserProfile(userIdx);
+    console.log(userProfileResult);
     return res.send(response(baseResponse.PROFILE_INQUIRE_SUCCESS, userProfileResult));
 };
 
@@ -217,6 +219,9 @@ exports.editUserProfile = async function (req, res) {
 
     if (profileImage !== undefined)
         profileImage = profileImage.location;
+
+    console.log("API 실행");
+    console.log(profileImage);
 
     // console.log(profileImage);
     // console.log(nickName);
