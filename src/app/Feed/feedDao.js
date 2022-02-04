@@ -209,6 +209,126 @@ async function updateTravelStatus(connection, [userIdx, travelIdx, status]) {
     return await connection.query(updateTravelStatusQuery, [status, userIdx, travelIdx]);
 }
 
+async function selectIsParentCommentExist(connection, isParent) {
+    const selectIsParentCommentExistQuery = `
+        SELECT EXISTS(SELECT idx FROM TravelComment WHERE idx = ? AND isParent = 0) AS isParentCommentExist;
+    `;
+    const [selectIsParentCommentExistRow] = await connection.query(selectIsParentCommentExistQuery, isParent);
+    return selectIsParentCommentExistRow;
+}
+
+async function selectTravelCommentCount(connection, travelIdx) {
+    const selectTravelCommentCountQuery = `
+        SELECT COUNT(idx) AS commentCount
+        FROM TravelComment
+        WHERE travelIdx = ?;
+    `;
+    const [selectTravelCommentCountRow] = await connection.query(selectTravelCommentCountQuery, travelIdx);
+    return selectTravelCommentCountRow;
+}
+
+async function insertTravelComment(connection, [travelIdx, userIdx, comment, isParent]) {
+    const insertTravelCommentQuery = `
+        INSERT INTO TravelComment(travelIdx, userIdx, comment, isParent)
+        VALUES (?, ?, ?, ?);
+    `;
+    return await connection.query(insertTravelCommentQuery, [travelIdx, userIdx, comment, isParent]);
+}
+
+async function selectTravelCommentIdx(connection, [travelIdx, userIdx, comment, isParent]) {
+    const selectTravelCommentIdxQuery = `
+        SELECT idx AS commentIdx
+        FROM TravelComment
+        WHERE travelIdx = ? AND userIdx = ? AND comment = ? AND isParent = ?
+                AND createdAt = (SELECT MAX(createdAt) FROM TravelComment WHERE travelIdx = ? AND userIdx = ? AND comment = ? AND isParent = ?);
+    `;
+    const [selectTravelCommentIdxRow] = await connection.query(selectTravelCommentIdxQuery, [travelIdx, userIdx, comment, isParent, travelIdx, userIdx, comment, isParent]);
+    return selectTravelCommentIdxRow;
+}
+
+async function updateTravelComment(connection, [userIdx, travelIdx, commentIdx, comment]) {
+    const updateTravelCommentQuery = `
+        UPDATE TravelComment
+        SET comment = ?
+        WHERE userIdx = ? AND travelIdx = ? AND TravelComment.idx = ?;
+    `;
+    return await connection.query(updateTravelCommentQuery, [comment, userIdx, travelIdx, commentIdx]);
+}
+
+async function updateTravelCommentStatus(connection, [userIdx, travelIdx, commentIdx]) {
+    const updateTravelCommentStatusQuery = `
+        UPDATE TravelComment
+        SET status = 'M'
+        WHERE userIdx = ? AND travelIdx = ? AND TravelComment.idx = ?;
+    `;
+    return await connection.query(updateTravelCommentStatusQuery, [userIdx, travelIdx, commentIdx]);
+}
+
+async function selectIsCommentExist(connection, [travelIdx, commentIdx]) {
+    const selectIsCommentExistQuery = `
+        SELECT EXISTS(SELECT idx FROM TravelComment WHERE idx = ? AND travelIdx = ?) AS isCommentExist;
+    `;
+    const [selectIsCommentExistRow] = await connection.query(selectIsCommentExistQuery, [commentIdx, travelIdx]);
+    return selectIsCommentExistRow;
+}
+
+async function selectIsMyComment(connection, [userIdx, commentIdx]) {
+    const selectIsMyCommentQuery = `
+        SELECT EXISTS(SELECT userIdx FROM TravelComment WHERE userIdx = ? AND idx = ?) AS isMyCommentCheck;
+    `;
+    const [selectIsMyCommentRow] = await connection.query(selectIsMyCommentQuery, [userIdx, commentIdx]);
+    return selectIsMyCommentRow;
+}
+
+async function selectCommentStatus(connection, commentIdx) {
+    const selectCommentStatusQuery = `
+        SELECT status
+        FROM TravelComment
+        WHERE TravelComment.idx = ?;
+    `;
+    const [selectCommentStatusRow] = await connection.query(selectCommentStatusQuery, commentIdx);
+    return selectCommentStatusRow;
+}
+
+async function selectTravelComment(connection, commentIdx) {
+    const selectTravelCommentQuery = `
+        SELECT comment
+        FROM TravelComment
+        WHERE TravelComment.idx = ?;
+    `;
+    const [selectTravelCommentRow] = await connection.query(selectTravelCommentQuery, commentIdx);
+    return selectTravelCommentRow;
+}
+
+async function selectTravelCommentList(connection, travelIdx) {
+    const selectTravelCommentListQuery = `
+        SELECT C.idx AS commentIdx, C.userIdx,
+               nickName AS userNickname, profileImgUrl AS userProfileImage,
+               comment, C.isParent AS isParent, C.status AS commentStatus, T.count AS commentCount, C.createdAt
+        FROM TravelComment AS C
+                 INNER JOIN User AS U ON U.idx = C.userIdx AND U.isWithdraw != 'Y'
+    INNER JOIN Travel ON Travel.idx = C.travelIdx AND Travel.status != 'DELETED'
+            LEFT JOIN (
+            SELECT isParent, COUNT(isParent) AS count
+            FROM TravelComment
+            GROUP BY isParent
+            ) AS T ON C.idx = T.isParent
+        WHERE C.travelIdx = ? AND C.status != 'N'
+        ORDER BY IF(C.isParent = 0, commentIdx, C.isParent);    
+    `;
+    const [selectTravelCommentListRow] = await connection.query(selectTravelCommentListQuery, travelIdx);
+    return selectTravelCommentListRow;
+}
+
+async function selectTotalCommentCount(connection, travelIdx) {
+    const selectTotalCommentCountQuery = `
+        SELECT COUNT(idx) AS totalCount
+        FROM TravelComment;
+    `;
+    const [selectTotalCommentCountRow] = await connection.query(selectTotalCommentCountQuery, travelIdx);
+    return selectTotalCommentCountRow;
+}
+
 module.exports = {
     insertNewFeed,
     selectFeedIdxByAll,
@@ -232,5 +352,17 @@ module.exports = {
     selectIsScoreExist,
     updateTravelScore,
     selectFeedWriterIdx,
-    updateTravelStatus
+    updateTravelStatus,
+    selectIsParentCommentExist,
+    selectTravelCommentCount,
+    insertTravelComment,
+    selectTravelCommentIdx,
+    updateTravelComment,
+    selectIsCommentExist,
+    selectIsMyComment,
+    selectCommentStatus,
+    selectTravelComment,
+    updateTravelCommentStatus,
+    selectTravelCommentList,
+    selectTotalCommentCount
 };

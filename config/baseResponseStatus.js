@@ -28,6 +28,8 @@ module.exports = {
     TRAVEL_STATUS_TO_PUBLIC_SUCCESS : { "isSuccess": true, "code": 1023, "message":"해당 게시물을 공개 범위로 설정했습니다." },
     TRAVEL_STATUS_TO_PRIVATE_SUCCESS : { "isSuccess": true, "code": 1024, "message":"해당 게시물을 비공개 범위로 설정했습니다." },
     TRAVEL_UPLOAD_SUCCESS : { "isSuccess": true, "code": 1025, "message":"게시물을 업로드했습니다." },
+    TRAVEL_COMMENT_CREATE_SUCCESS : { "isSuccess": true, "code": 1026, "message":"게시물 댓글을 생성했습니다." },
+    TRAVEL_COMMENT_EDIT_SUCCESS : { "isSuccess": true, "code": 1027, "message":"게시물 댓글 수정에 성공했습니다." },
 
     // Common
     TOKEN_EMPTY : { "isSuccess": false, "code": 2000, "message":"JWT 토큰을 입력해주세요." },
@@ -75,6 +77,10 @@ module.exports = {
     MYPAGE_OPTION_ERROR_TYPE :{ "isSuccess": false, "code": 2036, "message":"마이페이지 조회 옵션은 좋아요 또는 내여행으로 입력해주세요." },
     AREA_LENGTH_ERROR : { "isSuccess": false, "code": 2037, "message":"키워드는 2글자 이상으로 입력해주세요." },
 
+    TRAVEL_COMMENT_EMPTY : { "isSuccess": false, "code": 2038, "message":"댓글을 입력해주세요." },
+    TRAVEL_COMMENT_LENGTH_ERROR : { "isSuccess": false, "code": 2039, "message":"댓글은 200자 이하로 입력해주세요." },
+    TRAVEL_COMMENT_IDX_EMPTY : { "isSuccess": false, "code": 2040, "message":"댓글 인덱스를 입력해주세요." },
+
     ACCESS_TOKEN_EMPTY : { "isSuccess": false, "code": 2050, "message": "accessToken을 입력해주세요." },
     ACCESS_TOKEN_INVALID : { "isSuccess": false, "code": 2051, "message": "유효하지 않은 accessToken 입니다." },
 
@@ -94,6 +100,13 @@ module.exports = {
     TRAVEL_STATUS_PRIVATE : { "isSuccess": false, "code": 3013, "message":"비공개 여행 게시물입니다." },
     TRAVEL_STATUS_DELETED : { "isSuccess": false, "code": 3014, "message":"삭제된 여행 게시물입니다." },
     TRAVEL_WRITER_WRONG : { "isSuccess": false, "code": 3015, "message":"여행 게시물 작성자와 다릅니다." },
+
+    TRAVEL_COMMENT_PARENT_NOT_EXIST : { "isSuccess": false, "code": 3016, "message": "존재하지 않는 부모 댓글입니다." },
+    TRAVEL_FIRST_COMMENT_MUST_PARENT : { "isSuccess": false, "code": 3017, "message": "첫 댓글은 무조건 부모 댓글이어야 합니다." },
+    TRAVEL_COMMENT_NOT_EXIST : { "isSuccess": false, "code": 3018, "message":"해당 게시물에 존재하지 않는 댓글입니다." },
+    TRAVEL_COMMENT_NOT_MINE : { "isSuccess": false, "code": 3019, "message":"본인의 댓글이 아닙니다." },
+    TRAVEL_COMMENT_DELETED : { "isSuccess": false, "code": 3020, "message":"삭제된 댓글입니다." },
+    TRAVEL_COMMENT_SAME_BEFORE : { "isSuccess": false, "code": 3021, "message":"이전 댓글과 동일한 댓글입니다." },
 
     //Connection, Transaction 등의 서버 오류
     DB_ERROR : { "isSuccess": false, "code": 4000, "message": "데이터 베이스 에러"},

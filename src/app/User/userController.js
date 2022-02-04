@@ -365,15 +365,12 @@ exports.autoLogin = async function (req, res) {
 exports.getMyPage = async function (req, res) {
     /**
      * Headers: x-access-token
-     * Query String: user, search
+     * Query String: search
      */
     const myIdx = req.verifiedToken.userIdx;
-    const userIdx = req.query.user;   // 마이페이지 조회할 사람의 인덱스
     const search_option = req.query.search;   // My Trip(내여행) 또는 좋아요
 
     // Validation
-    if (!userIdx)
-        return res.send(errResponse(baseResponse.USER_IDX_EMPTY));
     if (!search_option)
         return res.send(errResponse(baseResponse.MYPAGE_OPTION_EMPTY));
     if (search_option !== "내여행" && search_option !== "좋아요")
@@ -381,10 +378,9 @@ exports.getMyPage = async function (req, res) {
 
     // 사용자 status 체크
     const myStatusCheckRow = await userProvider.checkUserStatus(myIdx);
-    const userStatusCheckRow = await userProvider.checkUserStatus(userIdx);
-    if (userStatusCheckRow[0].isWithdraw === 'Y' || myStatusCheckRow[0].isWithdraw === 'Y')
+    if (myStatusCheckRow[0].isWithdraw === 'Y')
         return res.send(errResponse(baseResponse.USER_WITHDRAW));
 
-    const userMyPageResult = await userProvider.retrieveUserMyPage(myIdx, userIdx, search_option);
-    return res.send(userMyPageResult);
+    const userMyPageResult = await userProvider.retrieveUserMyPage(myIdx, search_option);
+    return res.send(response(baseResponse.SUCCESS, userMyPageResult));
 };
