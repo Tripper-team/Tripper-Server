@@ -27,19 +27,24 @@ exports.createNewFeed = async function (userIdx, startDate, endDate, traffic, ti
 
         for (let i=0; i<dayIdxArr.length; i++) {   // 5. day에 입력된 data들을 dayIdx를 가지고 DB에 insert
             let areaArr = day[i].area;
-            if (areaArr !== undefined && areaArr.length !== 0) {   // area(장소)를 입력했다면
-                for (let j=0; j<areaArr.length; j++) {
-                    await feedDao.insertDayArea(connection, [dayIdxArr[i].dayIdx, areaArr[j].category, areaArr[j].latitude, areaArr[j].longitude, areaArr[j].name, areaArr[j].address]);
-                    dayAreaIdx = (await feedDao.selectDayAreaIdx(connection, [dayIdxArr[i].dayIdx, areaArr[j].category, areaArr[j].latitude, areaArr[j].longitude, areaArr[j].name]))[0].dayAreaIdx;   // dayAreaIdx 가져오기
-                    if (areaArr[j].review !== undefined) {   // review도 입력했다면
-                        if (!areaArr[j].review.images) await feedDao.insertDayAreaReview(connection, [dayAreaIdx, areaArr[j].review.comment]);
-                        else if (!areaArr[j].review.comment) {
-                            for (let img of areaArr[j].review.images)
-                                await feedDao.insertDayAreaImage(connection, dayAreaIdx, img);
-                        } else {
-                            await feedDao.insertDayAreaReview(connection, [dayAreaIdx, areaArr[j].review.comment]);
-                            for (let img of areaArr[j].review.images)
-                                await feedDao.insertDayAreaImage(connection, dayAreaIdx, img);
+            if (areaArr !== undefined) {   // area(장소)를 입력했다면
+                {
+                    if (areaArr.length !== 0) {
+                        for (let j=0; j<areaArr.length; j++) {
+                            // console.log(areaArr[j].category);
+                            await feedDao.insertDayArea(connection, [dayIdxArr[i].dayIdx, areaArr[j].category, areaArr[j].latitude, areaArr[j].longitude, areaArr[j].name, areaArr[j].address]);
+                            dayAreaIdx = (await feedDao.selectDayAreaIdx(connection, [dayIdxArr[i].dayIdx, areaArr[j].category, areaArr[j].latitude, areaArr[j].longitude, areaArr[j].name]))[0].dayAreaIdx;   // dayAreaIdx 가져오기
+                            if (areaArr[j].review !== undefined) {   // review도 입력했다면
+                                if (!areaArr[j].review.images) await feedDao.insertDayAreaReview(connection, [dayAreaIdx, areaArr[j].review.comment]);
+                                else if (!areaArr[j].review.comment) {
+                                    for (let img of areaArr[j].review.images)
+                                        await feedDao.insertDayAreaImage(connection, dayAreaIdx, img);
+                                } else {
+                                    await feedDao.insertDayAreaReview(connection, [dayAreaIdx, areaArr[j].review.comment]);
+                                    for (let img of areaArr[j].review.images)
+                                        await feedDao.insertDayAreaImage(connection, dayAreaIdx, img);
+                                }
+                            }
                         }
                     }
                 }
@@ -47,25 +52,29 @@ exports.createNewFeed = async function (userIdx, startDate, endDate, traffic, ti
         }
 
         // 6. metadata
-        if (!(thumnails.length === 0 || !thumnails)) {   // 썸네일 사진이 있다면
-            for (let timg of thumnails)
-                await feedDao.insertThumnails(connection, [travelIdx, timg]);
+        if (thumnails !== undefined) {
+            if (thumnails.length !== 0) {
+                for (let timg of thumnails)
+                    await feedDao.insertThumnails(connection, [travelIdx, timg]);
+            }
         }
 
-        if (!(hashtagArr.length === 0) || !hashtagArr) {   // 해시태그가 있다면
-            // 전체 해시태그에 추가 (단, 중복 확인은 해야함)
-            for (let tag of hashtagArr) {
-                const checkTagResult = await feedDao.selectIsTagExist(connection, tag);
-                if (checkTagResult[0].isTagExist === 1) {   // 전체 해시태그 DB에 해당 태그가 존재하면?
-                    // 해당 태그 인덱스를 가져와서 TravelHashtag에 추가
-                    tagIdx = (await feedDao.selectTagIdx(connection, tag))[0].tagIdx;
-                    await feedDao.insertTravelHashtag(connection, [travelIdx, tagIdx]);
-                } else {   // 전체 해시태그 DB에 해당 태그가 존재하지 않으면?
-                    // 전체 해시태그에 추가
-                    // 이후 해당 태그 인덱스를 가져와서 TravelHashtag에 추가할 것
-                    await feedDao.insertHashtag(connection, tag);
-                    tagIdx = (await feedDao.selectTagIdx(connection, tag))[0].tagIdx;
-                    await feedDao.insertTravelHashtag(connection, [travelIdx, tagIdx]);
+        if (hashtagArr !== undefined) {
+            if (hashtagArr.length !== 0) {
+                // 전체 해시태그에 추가 (단, 중복 확인은 해야함)
+                for (let tag of hashtagArr) {
+                    const checkTagResult = await feedDao.selectIsTagExist(connection, tag);
+                    if (checkTagResult[0].isTagExist === 1) {   // 전체 해시태그 DB에 해당 태그가 존재하면?
+                        // 해당 태그 인덱스를 가져와서 TravelHashtag에 추가
+                        tagIdx = (await feedDao.selectTagIdx(connection, tag))[0].tagIdx;
+                        await feedDao.insertTravelHashtag(connection, [travelIdx, tagIdx]);
+                    } else {   // 전체 해시태그 DB에 해당 태그가 존재하지 않으면?
+                        // 전체 해시태그에 추가
+                        // 이후 해당 태그 인덱스를 가져와서 TravelHashtag에 추가할 것
+                        await feedDao.insertHashtag(connection, tag);
+                        tagIdx = (await feedDao.selectTagIdx(connection, tag))[0].tagIdx;
+                        await feedDao.insertTravelHashtag(connection, [travelIdx, tagIdx]);
+                    }
                 }
             }
         }
@@ -292,9 +301,79 @@ exports.changeTravelComment = async function (userIdx, travelIdx, commentIdx, co
     const connection = await pool.getConnection(async (conn) => conn);
 
     try {
+        // 실제로 있는 게시물인지 확인하기
+        const isFeedExist = (await feedDao.selectIsTravelExist(connection, travelIdx))[0].isTravelExist;
+        if (isFeedExist === 0)
+            return errResponse(baseResponse.TRAVEL_NOT_EXIST);
 
+        // 게시물 상태 확인하기 (숨김 또는 삭제됨)
+        const feedStatusCheckRow = (await feedDao.selectTravelStatus(connection, travelIdx))[0].travelStatus;
+        if (feedStatusCheckRow === "PRIVATE")
+            return errResponse(baseResponse.TRAVEL_STATUS_PRIVATE);
+        else if (feedStatusCheckRow === 'DELETED')
+            return errResponse(baseResponse.TRAVEL_STATUS_DELETED);
+
+        // 해당 게시물에 존재하는 댓글인지 확인하기
+        const isCommentExist = (await feedDao.selectIsCommentExist(connection, [travelIdx, commentIdx]))[0].isCommentExist;
+        if (isCommentExist === 0)
+            return errResponse(baseResponse.TRAVEL_COMMENT_NOT_EXIST);
+
+        // 본인의 댓글인지 확인하기
+        const isMyComment = (await feedDao.selectIsMyComment(connection, [userIdx, commentIdx]))[0].isMyCommentCheck;
+        if (isMyComment === 0)
+            return errResponse(baseResponse.TRAVEL_COMMENT_NOT_MINE);
+
+        // 댓글 status 체크하기 (삭제된 댓글인지)
+        const commentStatusCheckRow = (await feedDao.selectCommentStatus(connection, commentIdx))[0].status;
+        if (commentStatusCheckRow === 'N')
+            return errResponse(baseResponse.TRAVEL_COMMENT_DELETED);
+
+        // 이전 댓글과 동일한지 체크하기
+        const isSameCommentCheck = (await feedDao.selectTravelComment(connection, commentIdx))[0].comment;
+        if (isSameCommentCheck === comment)
+            return errResponse(baseResponse.TRAVEL_COMMENT_SAME_BEFORE);
+
+        await connection.beginTransaction();
+
+        await feedDao.updateTravelComment(connection, [userIdx, travelIdx, commentIdx, comment]);  // 댓글 수정
+        await feedDao.updateTravelCommentStatus(connection, [userIdx, travelIdx, commentIdx]);  // 댓글 상태 수정
+
+        await connection.commit();
+        return response(baseResponse.TRAVEL_COMMENT_EDIT_SUCCESS);
     } catch(err) {
         logger.error(`App - changeTravelComment Service error\n: ${err.message}`);
+        await connection.rollback();
+        return errResponse(baseResponse.DB_ERROR);
+    } finally {
+        connection.release();
+    }
+};
+
+exports.retrieveTravelComment = async function (travelIdx) {
+    const connection = await pool.getConnection(async (conn) => conn);
+
+    try {
+        // 실제로 있는 게시물인지 확인하기
+        const isFeedExist = (await feedDao.selectIsTravelExist(connection, travelIdx))[0].isTravelExist;
+        if (isFeedExist === 0)
+            return errResponse(baseResponse.TRAVEL_NOT_EXIST);
+
+        // 게시물 상태 확인하기 (숨김 또는 삭제됨)
+        const feedStatusCheckRow = (await feedDao.selectTravelStatus(connection, travelIdx))[0].travelStatus;
+        // if (feedStatusCheckRow === "PRIVATE")
+        //     return errResponse(baseResponse.TRAVEL_STATUS_PRIVATE);
+        if (feedStatusCheckRow === 'DELETED')
+            return errResponse(baseResponse.TRAVEL_STATUS_DELETED);
+
+        await connection.beginTransaction();
+
+        const totalCommentCount = (await feedDao.selectTotalCommentCount(connection, travelIdx))[0].totalCount;   // 총 댓글 갯수 조회
+        const travelCommentResult = await feedDao.selectTravelCommentList(connection, travelIdx);   // 댓글 목록 조회
+
+        await connection.commit();
+        return [totalCommentCount, travelCommentResult];
+    } catch(err) {
+        logger.error(`App - retrieveTravelComment Service error\n: ${err.message}`);
         await connection.rollback();
         return errResponse(baseResponse.DB_ERROR);
     } finally {

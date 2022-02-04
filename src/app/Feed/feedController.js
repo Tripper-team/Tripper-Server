@@ -63,7 +63,7 @@ exports.searchArea = async (req, res) => {
     const x = String(req.query.x);   // 본인의 X좌표 (경도)
     const y = String(req.query.y);   // 본인의 Y좌표 (위도)
     const page = parseInt(req.query.page);   // 결과 페이지 번호
-    const sort_method = "distance";   // 정확성 vs 거리순
+    const sort_method = "accuracy";   // 정확성 vs 거리순
     const size = 10;   // 한 페이지에서 보여지는 data의 갯수
 
 
@@ -81,7 +81,8 @@ exports.searchArea = async (req, res) => {
         return res.send(errResponse(baseResponse.PAGE_NUMBER_ERROR));
 
     let result;
-    let url = `https://dapi.kakao.com/v2/local/search/keyword.json?query=${area}&x=${x}&y=${y}&page=${page}&size=${size}&sort=${sort_method}`
+    // let url = `https://dapi.kakao.com/v2/local/search/keyword.json?query=${area}&x=${x}&y=${y}&page=${page}&size=${size}&sort=${sort_method}`
+    let url = `https://dapi.kakao.com/v2/local/search/keyword.json?query=${area}&page=${page}&size=${size}&sort=${sort_method}`
     try {
         result = await axios({
             method: 'GET',
@@ -358,4 +359,21 @@ exports.patchComment = async function (req, res) {
 
     const patchCommentResponse = await feedService.changeTravelComment(userIdx, travelIdx, commentIdx, comment);
     return res.send(patchCommentResponse);
+};
+
+
+/**
+ * API No. FD15
+ * API Name : 여행 게시물 댓글 조회하기 API
+ * [GET] /app/feeds/:feedIdx/comments-list
+ */
+exports.getFeedComment = async function (req, res) {
+    const travelIdx = req.params.feedIdx;
+
+    // validation
+    if (!travelIdx)
+        return res.send(errResponse(baseResponse.TRAVEL_IDX_EMPTY));
+
+    const getTravelCommentResponse = await feedService.retrieveTravelComment(travelIdx);
+    return res.send(response(baseResponse.SUCCESS, { 'totalCommentCount': getTravelCommentResponse[0], 'comments': getTravelCommentResponse[1] }));
 };

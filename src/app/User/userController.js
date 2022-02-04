@@ -43,7 +43,8 @@ exports.kakaoLogin = async function (req, res) {
     /**
      * Body: accessToken
      */
-    const { accessToken } = req.body;
+    const accessToken  = req.body.accessToken;
+    console.log(accessToken);
 
     if (!accessToken)   // 카카오 accessToken 입력 체크
         return res.send(errResponse(baseResponse.ACCESS_TOKEN_EMPTY));   // 2050: accessToken을 입력해주세요.
