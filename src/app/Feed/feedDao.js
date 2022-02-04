@@ -246,6 +246,60 @@ async function selectTravelCommentIdx(connection, [travelIdx, userIdx, comment, 
     return selectTravelCommentIdxRow;
 }
 
+async function updateTravelComment(connection, [userIdx, travelIdx, commentIdx, comment]) {
+    const updateTravelCommentQuery = `
+        UPDATE TravelComment
+        SET comment = ?
+        WHERE userIdx = ? AND travelIdx = ? AND TravelComment.idx = ?;
+    `;
+    return await connection.query(updateTravelCommentQuery, [comment, userIdx, travelIdx, commentIdx]);
+}
+
+async function updateTravelCommentStatus(connection, [userIdx, travelIdx, commentIdx]) {
+    const updateTravelCommentStatusQuery = `
+        UPDATE TravelComment
+        SET status = 'M'
+        WHERE userIdx = ? AND travelIdx = ? AND TravelComment.idx = ?;
+    `;
+    return await connection.query(updateTravelCommentStatusQuery, [userIdx, travelIdx, commentIdx]);
+}
+
+async function selectIsCommentExist(connection, [travelIdx, commentIdx]) {
+    const selectIsCommentExistQuery = `
+        SELECT EXISTS(SELECT idx FROM TravelComment WHERE idx = ? AND travelIdx = ?) AS isCommentExist;
+    `;
+    const [selectIsCommentExistRow] = await connection.query(selectIsCommentExistQuery, [commentIdx, travelIdx]);
+    return selectIsCommentExistRow;
+}
+
+async function selectIsMyComment(connection, [userIdx, commentIdx]) {
+    const selectIsMyCommentQuery = `
+        SELECT EXISTS(SELECT userIdx FROM TravelComment WHERE userIdx = ? AND idx = ?) AS isMyCommentCheck;
+    `;
+    const [selectIsMyCommentRow] = await connection.query(selectIsMyCommentQuery, [userIdx, commentIdx]);
+    return selectIsMyCommentRow;
+}
+
+async function selectCommentStatus(connection, commentIdx) {
+    const selectCommentStatusQuery = `
+        SELECT status
+        FROM TravelComment
+        WHERE TravelComment.idx = ?;
+    `;
+    const [selectCommentStatusRow] = await connection.query(selectCommentStatusQuery, commentIdx);
+    return selectCommentStatusRow;
+}
+
+async function selectTravelComment(connection, commentIdx) {
+    const selectTravelCommentQuery = `
+        SELECT comment
+        FROM TravelComment
+        WHERE TravelComment.idx = ?;
+    `;
+    const [selectTravelCommentRow] = await connection.query(selectTravelCommentQuery, commentIdx);
+    return selectTravelCommentRow;
+}
+
 module.exports = {
     insertNewFeed,
     selectFeedIdxByAll,
@@ -273,5 +327,11 @@ module.exports = {
     selectIsParentCommentExist,
     selectTravelCommentCount,
     insertTravelComment,
-    selectTravelCommentIdx
+    selectTravelCommentIdx,
+    updateTravelComment,
+    selectIsCommentExist,
+    selectIsMyComment,
+    selectCommentStatus,
+    selectTravelComment,
+    updateTravelCommentStatus
 };

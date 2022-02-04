@@ -70,5 +70,5 @@ module.exports = function(app) {
     app.post('/app/feeds/comments', jwtMiddleware, feed.postComment);
 
     // FD14. 여행 게시물 댓글 수정하기 API
-    app.patch('/app/feeds/:feedIdx/comments/commentIdx', jwtMiddleware, feed.patchComment);
+    app.patch('/app/feeds/:feedIdx/comments/:commentIdx', jwtMiddleware, feed.patchComment);
 };
