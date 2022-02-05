@@ -66,17 +66,28 @@ exports.retrieveUserIdxCheck = async function (userIdx) {
   return userIdxCheckResult;
 };
 
-exports.retrieveUserMyPage = async function (myIdx, search_option) {
+exports.retrieveUserMyPage = async function (myIdx, search_option, page, pageSize) {
   const connection = await pool.getConnection(async (conn) => conn);
 
-  const userInfoResult = await userDao.selectUserInfoInMyPage(connection, myIdx);
-  const userFeedResultByOption = await userDao.selectUserFeedInMyPageByOption(connection, [myIdx, search_option]);
-  // console.log(userInfoResult);
-  // console.log(userFeedResultByOption);
+  let start = 0;
 
-  connection.release();
-  return {
-    "userInfo": userInfoResult[0],
-    "feedResult": userFeedResultByOption
-  };
+  if (page <= 0) page = 1;
+  else start = (page - 1) * pageSize;
+
+  const totalResultCount = (await userDao.selectTotalUserFeedInMyPageByOption(connection, [myIdx, search_option]))[0].totalCount;
+
+  if (page > Math.round(totalResultCount / pageSize)) {
+    connection.release();
+    return -1;
+  }
+  else {
+    const userInfoResult = await userDao.selectUserInfoInMyPage(connection, myIdx);
+    const userFeedResultByOption = await userDao.selectUserFeedInMyPageByOption(connection, [myIdx, search_option, start, pageSize]);
+
+    connection.release();
+    return {
+      "userInfo": userInfoResult[0],
+      "feedResult": userFeedResultByOption
+    };
+  }
 };

@@ -178,9 +178,9 @@ exports.checkUserExist = async (userIdx) => {
 
 // 닉네임 변경
 exports.updateProfile = async function (userIdx, profileImgUrl, nickName) {
-    try {
-        const connection = await pool.getConnection(async (conn) => conn);
+    const connection = await pool.getConnection(async (conn) => conn);
 
+    try {
         // 이전 닉네임과 동일한지 확인하기
         let userNick = await userDao.selectUserNickname(connection, userIdx); userNick = userNick[0].nickName;
         if (userNick === nickName)
@@ -209,10 +209,12 @@ exports.updateProfile = async function (userIdx, profileImgUrl, nickName) {
         }
 
         await userDao.updateUserProfile(connection, [userIdx, profileImgUrl, nickName]);
-        connection.release();
         return response(baseResponse.PROFILE_EDIT_SUCCESS);
     } catch(err) {
         logger.error(`App - updateProfile Service error\n: ${err.message}`);
+        await connection.rollback();
         return errResponse(baseResponse.DB_ERROR);
+    } finally {
+        connection.release();
     }
 };

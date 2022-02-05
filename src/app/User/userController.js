@@ -199,8 +199,9 @@ exports.getProfile = async function (req, res) {
         return res.send(errResponse(baseResponse.USER_WITHDRAW));
 
     const userProfileResult = await userProvider.retrieveUserProfile(userIdx);
+    console.log("[프로필 설정화면 조회]");
     console.log(userProfileResult);
-    return res.send(response(baseResponse.PROFILE_INQUIRE_SUCCESS, userProfileResult));
+    return res.send(response(baseResponse.PROFILE_INQUIRE_SUCCESS, userProfileResult[0]));
 };
 
 /**
@@ -219,9 +220,6 @@ exports.editUserProfile = async function (req, res) {
 
     if (profileImage !== undefined)
         profileImage = profileImage.location;
-
-    console.log("API 실행");
-    console.log(profileImage);
 
     // console.log(profileImage);
     // console.log(nickName);
@@ -359,18 +357,22 @@ exports.autoLogin = async function (req, res) {
 
 /**
  * API No. P3
- * API Name : 마이페이지 조회 API
- * [GET] /app/users/profile?search=
+ * API Name : 자신의 마이페이지 조회 API
+ * [GET] /app/users/profile?search=&page=
  */
 exports.getMyPage = async function (req, res) {
     /**
      * Headers: x-access-token
-     * Query String: search
+     * Query String: search, page
      */
     const myIdx = req.verifiedToken.userIdx;
-    const search_option = req.query.search;   // My Trip(내여행) 또는 좋아요
+    const search_option = req.query.search;   // 내여행 또는 좋아요
+    let page = parseInt(req.query.page);
+    const pageSize = 2;
 
     // Validation
+    if (!page) page = 0;
+
     if (!search_option)
         return res.send(errResponse(baseResponse.MYPAGE_OPTION_EMPTY));
     if (search_option !== "내여행" && search_option !== "좋아요")
@@ -381,6 +383,8 @@ exports.getMyPage = async function (req, res) {
     if (myStatusCheckRow[0].isWithdraw === 'Y')
         return res.send(errResponse(baseResponse.USER_WITHDRAW));
 
-    const userMyPageResult = await userProvider.retrieveUserMyPage(myIdx, search_option);
-    return res.send(response(baseResponse.SUCCESS, userMyPageResult));
+    const userMyPageResult = await userProvider.retrieveUserMyPage(myIdx, search_option, page, pageSize);
+    if (userMyPageResult === -1)
+        return res.send(errResponse(baseResponse.USER_WITHDRAW));
+    else return res.send(response(baseResponse.SUCCESS, userMyPageResult));
 };

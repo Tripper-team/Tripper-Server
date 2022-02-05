@@ -108,6 +108,7 @@ module.exports = {
     TRAVEL_COMMENT_DELETED : { "isSuccess": false, "code": 3020, "message":"삭제된 댓글입니다." },
     TRAVEL_COMMENT_SAME_BEFORE : { "isSuccess": false, "code": 3021, "message":"이전 댓글과 동일한 댓글입니다." },
 
+
     //Connection, Transaction 등의 서버 오류
     DB_ERROR : { "isSuccess": false, "code": 4000, "message": "데이터 베이스 에러"},
     SERVER_ERROR : { "isSuccess": false, "code": 4001, "message": "서버 에러"},
