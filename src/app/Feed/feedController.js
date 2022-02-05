@@ -369,6 +369,7 @@ exports.patchComment = async function (req, res) {
  */
 exports.getFeedComment = async function (req, res) {
     const travelIdx = req.params.feedIdx;
+    console.log(travelIdx);
 
     // validation
     if (!travelIdx)
