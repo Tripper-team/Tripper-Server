@@ -94,7 +94,7 @@ async function selectMyFollow(connection, [userIdx, option]) {
       From Follow
         INNER JOIN User
         ON Follow.toIdx = User.idx
-      WHERE Follow.fromIdx = ? AND User.isWithdraw = 'N';
+      WHERE Follow.fromIdx = ? AND User.isWithdraw = 'N' AND Follow.status = 'Y';
     `;
     params = userIdx;
   } else {
@@ -126,38 +126,38 @@ async function selectOtherFollow(connection, [myIdx, userIdx, option]) {
 
   if (option === 'following') {
     selectOtherFollowQuery = `
-      SELECT Follow.toIdx, nickName, profileImgUrl,
+      SELECT F.toIdx, nickName, profileImgUrl,
              CASE
-               WHEN Follow.toIdx = ? THEN '자기 자신'
-               WHEN (A.status IS NULL) OR (A.status = 'N') THEN '팔로잉 비활성화중'
-               WHEN A.status = 'Y' THEN '팔로잉 활성화중'
+               WHEN F.toIdx = ? THEN '자기 자신'
+               WHEN (M.status IS NULL) OR (M.status = 'N') THEN '팔로잉 비활성화중'
+               WHEN M.status = 'Y' THEN '팔로잉 활성화중'
                END AS followStatus
-      FROM Follow
-             INNER JOIN User ON Follow.toIdx = User.idx
+      FROM Follow AS F
+             INNER JOIN User AS U ON F.toIdx = U.idx AND U.isWithdraw = 'N'
              LEFT JOIN (
         SELECT toIdx, status
         FROM Follow
         WHERE Follow.fromIdx = ?
-      ) AS A ON A.toIdx = Follow.toIdx
-      WHERE Follow.fromIdx = ? AND User.isWithdraw = 'N';
+      ) AS M ON M.toIdx = F.toIdx
+      WHERE F.fromIdx = ? AND F.status = 'Y'
     `;
     params = [myIdx, myIdx, userIdx];
   } else {
     selectOtherFollowQuery = `
       SELECT fromIdx, nickName, profileImgUrl,
              CASE
-               WHEN Follow.fromIdx = ? THEN '자기 자신'
-               WHEN (A.status IS NULL) OR (A.status = 'N') THEN '팔로잉 비활성화중'
-               WHEN A.status = 'Y' THEN '팔로잉 활성화중'
+               WHEN F.fromIdx = ? THEN '자기 자신'
+               WHEN (M.status IS NULL) OR (M.status = 'N') THEN '팔로잉 비활성화중'
+               WHEN M.status = 'Y' THEN '팔로잉 활성화중'
                END AS followStatus
-      FROM Follow
-             INNER JOIN User ON Follow.fromIdx = User.idx
+      FROM Follow AS F
+             INNER JOIN User AS U ON F.fromIdx = U.idx AND U.isWithdraw = 'N'
              LEFT JOIN (
         SELECT toIdx, status
         FROM Follow
         WHERE Follow.fromIdx = ?
-      ) AS A ON A.toIdx = Follow.fromIdx
-      WHERE Follow.toIdx = ? AND User.isWithdraw = 'N';
+      ) AS M ON M.toIdx = F.fromIdx
+      WHERE F.toIdx = ? AND F.status = 'Y';
     `;
 
     params = [myIdx, myIdx, userIdx];
