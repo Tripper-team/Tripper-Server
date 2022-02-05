@@ -200,7 +200,7 @@ exports.getProfile = async function (req, res) {
         return res.send(errResponse(baseResponse.USER_WITHDRAW));
 
     const userProfileResult = await userProvider.retrieveUserProfile(userIdx);
-    return res.send(response(baseResponse.PROFILE_INQUIRE_SUCCESS, userProfileResult));
+    return res.send(response(baseResponse.PROFILE_INQUIRE_SUCCESS, userProfileResult[0]));
 };
 
 /**
