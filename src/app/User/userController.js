@@ -356,18 +356,25 @@ exports.autoLogin = async function (req, res) {
 
 /**
  * API No. P3
- * API Name : 마이페이지 조회 API
- * [GET] /app/users/profile?search=
+ * API Name : 자신의 마이페이지 조회 API
+ * [GET] /app/users/profile?search=&page=
  */
 exports.getMyPage = async function (req, res) {
     /**
      * Headers: x-access-token
-     * Query String: search
+     * Query String: search, page
      */
     const myIdx = req.verifiedToken.userIdx;
-    const search_option = req.query.search;   // My Trip(내여행) 또는 좋아요
+    const search_option = req.query.search;   // 내여행 또는 좋아요
+    let page = parseInt(req.query.page);
+    const pageSize = 2;   // 한 페이지당 보여줄 데이터의 갯수
 
     // Validation
+    if (!page && page !== 0)
+        return res.send(errResponse(baseResponse.MYPAGE_PAGE_EMPTY));
+    if (page <= 0)
+        return res.send(errResponse(baseResponse.MYPAGE_PAGE_ERROR_TYPE));
+
     if (!search_option)
         return res.send(errResponse(baseResponse.MYPAGE_OPTION_EMPTY));
     if (search_option !== "내여행" && search_option !== "좋아요")
@@ -378,6 +385,11 @@ exports.getMyPage = async function (req, res) {
     if (myStatusCheckRow[0].isWithdraw === 'Y')
         return res.send(errResponse(baseResponse.USER_WITHDRAW));
 
-    const userMyPageResult = await userProvider.retrieveUserMyPage(myIdx, search_option);
-    return res.send(response(baseResponse.SUCCESS, userMyPageResult));
+    const userMyPageInfoResult = await userProvider.retrieveUserMyPageInfo(myIdx);   // 마이페이지 윗부분
+    const userMyPageFeedResult = await userProvider.retrieveUserMyPageFeed(myIdx, search_option, page, pageSize);   // 마이페이지 아랫부분 (게시물)
+
+    if (userMyPageFeedResult === -1)
+        return res.send(response(baseResponse.MYPAGE_PAGE_FINISH, { "userMyPageInfo": userMyPageInfoResult[0] }));
+    else
+        return res.send(response(baseResponse.MYPAGE_SEARCH_SUCCESS, { "userMyPageInfo": userMyPageInfoResult[0], "userMyPageFeedByOption": userMyPageFeedResult}));
 };

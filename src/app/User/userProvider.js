@@ -66,17 +66,26 @@ exports.retrieveUserIdxCheck = async function (userIdx) {
   return userIdxCheckResult;
 };
 
-exports.retrieveUserMyPage = async function (myIdx, search_option) {
+exports.retrieveUserMyPageInfo = async function (myIdx) {
   const connection = await pool.getConnection(async (conn) => conn);
-
-  const userInfoResult = await userDao.selectUserInfoInMyPage(connection, myIdx);
-  const userFeedResultByOption = await userDao.selectUserFeedInMyPageByOption(connection, [myIdx, search_option]);
-  // console.log(userInfoResult);
-  // console.log(userFeedResultByOption);
-
+  const userMyPageInfoResult = await userDao.selectUserInfoInMyPage(connection, myIdx);
   connection.release();
-  return {
-    "userInfo": userInfoResult[0],
-    "feedResult": userFeedResultByOption
-  };
+  return userMyPageInfoResult;
+};
+
+exports.retrieveUserMyPageFeed = async function (myIdx, search_option, page, pageSize) {
+  const connection = await pool.getConnection(async (conn) => conn);
+  let start = (page - 1) * pageSize;
+
+  const totalResultCount = (await userDao.selectTotalUserFeedInMyPageByOption(connection, [myIdx, search_option]))[0].totalCount;
+
+  if (page > Math.round(totalResultCount / pageSize)) {
+    connection.release();
+    return -1;
+  }
+  else {
+    const userFeedResultByOption = await userDao.selectUserFeedInMyPageByOption(connection, [myIdx, search_option, start, pageSize]);
+    connection.release();
+    return userFeedResultByOption;
+  }
 };

@@ -27,7 +27,7 @@ module.exports = function(app){
     // P2. 프로필 수정 API
     app.patch('/app/users/profile-edit', jwtMiddleware, s3Multer.single_upload.single('profileImage'), user.editUserProfile);
 
-    // P3. 마이페이지 조회 API
+    // P3. 자신의 마이페이지 조회 API
     app.get('/app/users/profile', jwtMiddleware, user.getMyPage);
 
     // FW1. 팔로우 API

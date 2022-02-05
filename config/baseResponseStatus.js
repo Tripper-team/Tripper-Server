@@ -30,6 +30,8 @@ module.exports = {
     TRAVEL_UPLOAD_SUCCESS : { "isSuccess": true, "code": 1025, "message":"게시물을 업로드했습니다." },
     TRAVEL_COMMENT_CREATE_SUCCESS : { "isSuccess": true, "code": 1026, "message":"게시물 댓글을 생성했습니다." },
     TRAVEL_COMMENT_EDIT_SUCCESS : { "isSuccess": true, "code": 1027, "message":"게시물 댓글 수정에 성공했습니다." },
+    MYPAGE_SEARCH_SUCCESS : { "isSuccess": true, "code": 1028, "message":"마이페이지 조회에 성공했습니다." },
+
 
     // Common
     TOKEN_EMPTY : { "isSuccess": false, "code": 2000, "message":"JWT 토큰을 입력해주세요." },
@@ -81,6 +83,9 @@ module.exports = {
     TRAVEL_COMMENT_LENGTH_ERROR : { "isSuccess": false, "code": 2039, "message":"댓글은 200자 이하로 입력해주세요." },
     TRAVEL_COMMENT_IDX_EMPTY : { "isSuccess": false, "code": 2040, "message":"댓글 인덱스를 입력해주세요." },
 
+    MYPAGE_PAGE_EMPTY : { "isSuccess": false, "code": 2041, "message":"마이페이지 조회할 페이지 번호를 입력해주세요." },
+    MYPAGE_PAGE_ERROR_TYPE : { "isSuccess": false, "code": 2042, "message":"마이페이지 조회 페이지 번호는 1 이상으로 입력해주세요." },
+
     ACCESS_TOKEN_EMPTY : { "isSuccess": false, "code": 2050, "message": "accessToken을 입력해주세요." },
     ACCESS_TOKEN_INVALID : { "isSuccess": false, "code": 2051, "message": "유효하지 않은 accessToken 입니다." },
 
@@ -107,6 +112,8 @@ module.exports = {
     TRAVEL_COMMENT_NOT_MINE : { "isSuccess": false, "code": 3019, "message":"본인의 댓글이 아닙니다." },
     TRAVEL_COMMENT_DELETED : { "isSuccess": false, "code": 3020, "message":"삭제된 댓글입니다." },
     TRAVEL_COMMENT_SAME_BEFORE : { "isSuccess": false, "code": 3021, "message":"이전 댓글과 동일한 댓글입니다." },
+
+    MYPAGE_PAGE_FINISH : { "isSuccess": false, "code": 3021, "message":"해당 옵션에 대한 마이페이지 조회 결과가 없습니다." },
 
     //Connection, Transaction 등의 서버 오류
     DB_ERROR : { "isSuccess": false, "code": 4000, "message": "데이터 베이스 에러"},
