@@ -14,36 +14,32 @@ exports.createNewFeed = async function (userIdx, startDate, endDate, traffic, ti
     let travelIdx, dayIdxArr, dayAreaIdx, tagIdx;
 
     try {
-        await connection.beginTransaction();
-
         await feedDao.insertNewFeed(connection, [userIdx, title, introduce, traffic, startDate, endDate]);   // 1. Travel 테이블에 값 넣어서 travelIdx 생성
 
         travelIdx = (await feedDao.selectFeedIdxByAll(connection, [userIdx, title, traffic, startDate, endDate]))[0].idx;   // 2. travelIdx 가져옴
-
         for (let i=1; i<=dateDiff; i++)   // 3. Day 테이블에 row 생성
             await feedDao.insertNewDay(connection, [travelIdx, i]);
 
         dayIdxArr = await feedDao.selectDayIdxOfTravel(connection, travelIdx);   // 4. dayIdx 가져오기
+        // console.log(dayIdxArr);
 
         for (let i=0; i<dayIdxArr.length; i++) {   // 5. day에 입력된 data들을 dayIdx를 가지고 DB에 insert
             let areaArr = day[i].area;
             if (areaArr !== undefined) {   // area(장소)를 입력했다면
-                {
-                    if (areaArr.length !== 0) {
-                        for (let j=0; j<areaArr.length; j++) {
-                            // console.log(areaArr[j].category);
-                            await feedDao.insertDayArea(connection, [dayIdxArr[i].dayIdx, areaArr[j].category, areaArr[j].latitude, areaArr[j].longitude, areaArr[j].name, areaArr[j].address]);
-                            dayAreaIdx = (await feedDao.selectDayAreaIdx(connection, [dayIdxArr[i].dayIdx, areaArr[j].category, areaArr[j].latitude, areaArr[j].longitude, areaArr[j].name]))[0].dayAreaIdx;   // dayAreaIdx 가져오기
-                            if (areaArr[j].review !== undefined) {   // review도 입력했다면
-                                if (!areaArr[j].review.images) await feedDao.insertDayAreaReview(connection, [dayAreaIdx, areaArr[j].review.comment]);
-                                else if (!areaArr[j].review.comment) {
-                                    for (let img of areaArr[j].review.images)
-                                        await feedDao.insertDayAreaImage(connection, dayAreaIdx, img);
-                                } else {
-                                    await feedDao.insertDayAreaReview(connection, [dayAreaIdx, areaArr[j].review.comment]);
-                                    for (let img of areaArr[j].review.images)
-                                        await feedDao.insertDayAreaImage(connection, dayAreaIdx, img);
-                                }
+                if (areaArr.length !== 0) {
+                    for (let j=0; j<areaArr.length; j++) {
+                        // console.log(areaArr[j].category);
+                        await feedDao.insertDayArea(connection, [dayIdxArr[i].dayIdx, areaArr[j].category, parseFloat(areaArr[j].latitude.toFixed(7)), parseFloat(areaArr[j].longitude.toFixed(7)), areaArr[j].name, areaArr[j].address]);
+                        dayAreaIdx = (await feedDao.selectDayAreaIdx(connection, [dayIdxArr[i].dayIdx, areaArr[j].category, parseFloat(areaArr[j].latitude.toFixed(7)), parseFloat(areaArr[j].longitude.toFixed(7)), areaArr[j].name]))[0].dayAreaIdx;   // dayAreaIdx 가져오기
+                        if (areaArr[j].review !== undefined) {   // review도 입력했다면
+                            if (!areaArr[j].review.images) await feedDao.insertDayAreaReview(connection, [dayAreaIdx, areaArr[j].review.comment]);
+                            else if (!areaArr[j].review.comment) {
+                                for (let img of areaArr[j].review.images)
+                                    await feedDao.insertDayAreaImage(connection, dayAreaIdx, img);
+                            } else {
+                                await feedDao.insertDayAreaReview(connection, [dayAreaIdx, areaArr[j].review.comment]);
+                                for (let img of areaArr[j].review.images)
+                                    await feedDao.insertDayAreaImage(connection, dayAreaIdx, img);
                             }
                         }
                     }
@@ -80,8 +76,8 @@ exports.createNewFeed = async function (userIdx, startDate, endDate, traffic, ti
         }
 
         // await connection.rollback();
-        await connection.commit();
-        return response(baseResponse.TRAVEL_UPLOAD_SUCCESS);
+        return response(travelIdx);
+        // return response(baseResponse.TRAVEL_UPLOAD_SUCCESS);
     } catch(err) {
         logger.error(`App - createNewFeed Service error\n: ${err.message}`);
         await connection.rollback();

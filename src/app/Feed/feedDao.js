@@ -8,7 +8,7 @@ async function insertNewFeed(connection, [travelIdx, title, introduce, traffic, 
 
 async function selectFeedIdxByAll(connection, [travelIdx, title, traffic, startDate, endDate]) {
     const selectFeedIdxByAllQuery = `
-        SELECT idx
+        SELECT MAX(idx) AS idx
         FROM Travel
         WHERE userIdx = ? AND title = ? AND traffic = ? AND startDate = ? AND endDate = ?;
     `;
@@ -44,7 +44,7 @@ async function insertDayArea(connection, [dayIdx, category, latitude, longitude,
 
 async function selectDayAreaIdx(connection, [dayIdx, category, latitude, longitude, name]) {
     const selectDayAreaIdxQuery = `
-        SELECT idx AS dayAreaIdx
+        SELECT MAX(idx) AS dayAreaIdx
         FROM DayArea
         WHERE dayIdx = ? AND areaCategory = ? AND areaName = ? AND areaLatitude = ? AND areaLongitude = ?;
     `;

@@ -204,7 +204,7 @@ exports.postFeed = async function (req, res) {
         userIdx, startDate, endDate, traffic, title,
         introduce, hashtagArr, thumnails, day, dateDiff
     );
-    return res.send(createFeedResult);
+    return res.send(response(baseResponse.TRAVEL_UPLOAD_SUCCESS, { 'travelIdx': createFeedResult }));
 };
 
 /**
