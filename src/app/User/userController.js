@@ -251,6 +251,18 @@ exports.getOtherProfile = async function (req, res) {
     const pageSize = 2;   // 한 페이지당 보여줄 데이터의 갯수
 
     // Validation
+    if (!userIdx)
+        return res.send(errResponse(baseResponse.USER_IDX_EMPTY));
+    if (!page && page !== 0)
+        return res.send(errResponse(baseResponse.MYPAGE_PAGE_EMPTY));
+    if (page <= 0)
+        return res.send(errResponse(baseResponse.MYPAGE_PAGE_ERROR_TYPE));
+
+    const userStatusCheckRow = await userProvider.checkUserStatus(userIdx);
+    const myStatusCheckRow = await userProvider.checkUserStatus(myIdx);
+    if (userStatusCheckRow[0].isWithdraw === 'Y' || myStatusCheckRow[0].isWithdraw === 'Y')
+        return errResponse(baseResponse.USER_WITHDRAW);
+
     const userProfileInfoResult = await userProvider.retrieveOtherProfileInfo(myIdx, userIdx);   // 상대방 프로필 윗부분
     const userProfileFeedResult = await userProvider.retrieveOtherProfileFeed(myIdx, userIdx, page, pageSize);   // 마이페이지 아랫부분 (게시물)
 
@@ -388,7 +400,7 @@ exports.getMyPage = async function (req, res) {
     const myIdx = req.verifiedToken.userIdx;
     const search_option = req.query.search;   // 내여행 또는 좋아요
     let page = parseInt(req.query.page);
-    const pageSize = 2;   // 한 페이지당 보여줄 데이터의 갯수
+    const pageSize = 3;   // 한 페이지당 보여줄 데이터의 갯수
 
     // Validation
     if (!page && page !== 0)

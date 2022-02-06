@@ -79,7 +79,7 @@ exports.retrieveUserMyPageFeed = async function (myIdx, search_option, page, pag
 
   const totalResultCount = (await userDao.selectTotalUserFeedInMyPageByOption(connection, [myIdx, search_option]))[0].totalCount;
 
-  if (page > Math.round(totalResultCount / pageSize)) {
+  if (page > Math.ceil(totalResultCount / pageSize)) {
     connection.release();
     return -1;
   }
@@ -103,7 +103,7 @@ exports.retrieveOtherProfileFeed = async function (myIdx, userIdx, page, pageSiz
 
   const totalUserFeedCount = (await userDao.selectTotalUserFeed(connection, userIdx))[0].totalCount;
 
-  if (page > Math.round(totalUserFeedCount / pageSize)) {
+  if (page > Math.ceil(totalUserFeedCount / pageSize)) {
     connection.release();
     return -1;
   }
