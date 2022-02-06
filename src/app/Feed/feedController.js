@@ -51,17 +51,14 @@ const deleteS3Object = async (params, key, res) => {
 /**
  * API No. 12
  * API Name : 장소 검색 API
- * [GET] /app/feed/area-search-keyword?area=&x=&y=&page=
+ * [GET] /app/feed/area-search-keyword?area=&page=
  */
 exports.searchArea = async (req, res) => {
     /**
-     * Headers: REST_API_KEY (KAKAO)
-     * Query String: area, x, y, page
+     * Query String: area, page
      */
     const rest_key = process.env.KAKAO_REST_KEY;
     const area = String(req.query.area);   // 검색어
-    const x = String(req.query.x);   // 본인의 X좌표 (경도)
-    const y = String(req.query.y);   // 본인의 Y좌표 (위도)
     const page = parseInt(req.query.page);   // 결과 페이지 번호
     const sort_method = "accuracy";   // 정확성 vs 거리순
     const size = 10;   // 한 페이지에서 보여지는 data의 갯수
@@ -71,13 +68,9 @@ exports.searchArea = async (req, res) => {
         return res.send(errResponse(baseResponse.AREA_EMPTY));
     if (area.length < 2)
         return res.send(errResponse(baseResponse.AREA_LENGTH_ERROR));
-    if (!x)
-        return res.send(errResponse(baseResponse.POINT_X_EMPTY));
-    if (!y)
-        return res.send(errResponse(baseResponse.POINT_Y_EMPTY));
-    if (!page)
+    if (!page && page !== 0)
         return res.send(errResponse(baseResponse.PAGE_EMPTY));
-    if (page < 1 || page > 6)
+    if (page < 1 || page >= 6 )
         return res.send(errResponse(baseResponse.PAGE_NUMBER_ERROR));
 
     let result;
