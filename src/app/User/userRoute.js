@@ -1,3 +1,5 @@
+const jwtMiddleware = require("../../../config/jwtMiddleware");
+const user = require("./userController");
 module.exports = function(app){
     const user = require('./userController');
     const jwtMiddleware = require('../../../config/jwtMiddleware');
@@ -29,6 +31,9 @@ module.exports = function(app){
 
     // P3. 자신의 마이페이지 조회 API
     app.get('/app/users/profile', jwtMiddleware, user.getMyPage);
+
+    // P4. 상대방 프로필 조회 API
+    app.get('/app/users/:userIdx/profile', jwtMiddleware, user.getOtherProfile);
 
     // FW1. 팔로우 API
     app.post('/app/users/following', jwtMiddleware, user.follow);

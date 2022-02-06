@@ -411,6 +411,83 @@ FROM (
   return selectTotalUserFeedInMyPageByOptionRow;
 }
 
+async function selectOtherInfoInProfile(connection, [myIdx, userIdx]) {
+  const selectOtherInfoInProfileQuery = `
+    SELECT profileImgUrl, nickName,
+           (SELECT COUNT(toIdx)
+            FROM Follow
+                   INNER JOIN User ON Follow.toIdx = User.idx AND Follow.fromIdx = ? AND User.isWithdraw = 'N' AND Follow.status = 'Y') AS followingCount,
+           (SELECT COUNT(fromIdx)
+            FROM Follow
+                   INNER JOIN User ON Follow.fromIdx = User.idx AND Follow.toIdx = ? AND User.isWithdraw = 'N' AND Follow.status = 'Y') AS followerCount,
+           (SELECT status
+            FROM Follow
+            WHERE fromIdx = ? AND toIdx = ?) AS followStatus
+    FROM User
+    WHERE User.idx = ? AND User.isWithdraw = 'N';
+  `;
+  const [selectOtherInfoInProfileRow] = await connection.query(selectOtherInfoInProfileQuery, [userIdx, userIdx, myIdx, userIdx, userIdx]);
+  return selectOtherInfoInProfileRow;
+}
+
+async function selectTotalUserFeed(connection, userIdx) {
+  const selectTotalUserFeedQuery = `
+    SELECT COUNT(idx) AS totalCount
+    FROM Travel
+    WHERE userIdx = ? AND status = 'PUBLIC';
+  `;
+  const [selectTotalUserFeedRow] = await connection.query(selectTotalUserFeedQuery, userIdx);
+  return selectTotalUserFeedRow;
+}
+
+async function selectOtherFeedInProfile(connection, [myIdx, userIdx, start, pageSize]) {
+  const selectOtherFeedInProfileQuery = `
+    SELECT travelIdx, travelTitle, travelIntroduce, travelHashtag, travelScore, likeStatus, thumImgUrl, createdAt
+    FROM (
+           SELECT T.idx AS travelIdx,
+                  T.title AS travelTitle, T.introduce AS travelIntroduce,
+                  GROUP_CONCAT(CONCAT('#', TH.content) SEPARATOR ' ') AS travelHashtag,
+                  CASE
+                    WHEN TS.score IS NULL THEN null
+                    WHEN TS.score < 2.0 THEN "별로에요"
+                    WHEN TS.score < 3.0 THEN "도움되지 않았어요"
+                    WHEN TS.score < 4.0 THEN "그저 그래요"
+                    WHEN TS.score < 4.5 THEN "도움되었어요!"
+                    ELSE "최고의 여행!"
+                    END AS travelScore, IF(likeStatus = 'Y', "좋아요 중", "좋아요 안하는중") AS likeStatus, thumImgUrl, T.createdAt AS createdAt
+           FROM Travel AS T
+                  LEFT JOIN (
+             SELECT TravelHashtag.travelIdx AS hashTravelIdx, content
+             FROM TravelHashtag
+                    INNER JOIN Hashtag ON Hashtag.idx = TravelHashtag.hashtagIdx
+             WHERE TravelHashtag.status = 'Y'
+           ) AS TH ON T.idx = TH.hashTravelIdx
+                  LEFT JOIN (
+             SELECT TravelScore.travelIdx, AVG(score) AS score
+             FROM TravelScore
+                    INNER JOIN User ON TravelScore.userIdx = User.idx AND User.isWithdraw = 'N'
+             GROUP BY TravelScore.travelIdx
+           ) AS TS ON TS.travelIdx = TH.hashTravelIdx
+                  LEFT JOIN (
+             SELECT TravelLike.travelIdx, status AS likeStatus
+             FROM TravelLike
+             WHERE userIdx = ?
+           ) AS TL ON TL.travelIdx = TS.travelIdx
+                  LEFT JOIN (
+             SELECT TravelThumnail.idx, travelIdx, thumImgUrl
+             FROM TravelThumnail
+             GROUP BY travelIdx HAVING MIN(TravelThumnail.idx)
+           ) AS TM ON TL.travelIdx = TM.travelIdx
+           WHERE T.userIdx = ? AND T.status = 'PUBLIC'
+           GROUP BY T.idx
+         ) AS A
+    ORDER BY A.createdAt DESC
+    LIMIT ?, ?;  
+  `;
+  const [selectOtherFeedInProfileRow] = await connection.query(selectOtherFeedInProfileQuery, [myIdx, userIdx, start, pageSize]);
+  return selectOtherFeedInProfileRow;
+}
+
 module.exports = {
   selectIsKakaoIdExist,
   selectUserInfoByKakaoId,
@@ -428,5 +505,8 @@ module.exports = {
   updateUserProfile,
   selectUserInfoInMyPage,
   selectUserFeedInMyPageByOption,
-  selectTotalUserFeedInMyPageByOption
+  selectTotalUserFeedInMyPageByOption,
+  selectOtherInfoInProfile,
+  selectTotalUserFeed,
+  selectOtherFeedInProfile
 };

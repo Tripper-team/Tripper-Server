@@ -89,3 +89,27 @@ exports.retrieveUserMyPageFeed = async function (myIdx, search_option, page, pag
     return userFeedResultByOption;
   }
 };
+
+exports.retrieveOtherProfileInfo = async function (myIdx, userIdx) {
+  const connection = await pool.getConnection(async (conn) => conn);
+  const otherProfileInfoResult = await userDao.selectOtherInfoInProfile(connection, [myIdx, userIdx]);
+  connection.release();
+  return otherProfileInfoResult;
+};
+
+exports.retrieveOtherProfileFeed = async function (myIdx, userIdx, page, pageSize) {
+  const connection = await pool.getConnection(async (conn) => conn);
+  let start = (page - 1) * pageSize;
+
+  const totalUserFeedCount = (await userDao.selectTotalUserFeed(connection, userIdx))[0].totalCount;
+
+  if (page > Math.round(totalUserFeedCount / pageSize)) {
+    connection.release();
+    return -1;
+  }
+  else {
+    const userProfileFeedResult = await userDao.selectOtherFeedInProfile(connection, [myIdx, userIdx, start, pageSize]);
+    connection.release();
+    return userProfileFeedResult;
+  }
+};
