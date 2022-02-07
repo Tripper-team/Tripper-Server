@@ -300,6 +300,23 @@ exports.patchFeedStatus = async function (req, res) {
     return res.send(patchFeedStatusResponse);
 };
 
+
+/**
+ * API No. FD11
+ * API Name : 특정 여행 게시물 조회하기 API
+ * [GET] /app/feeds/:feedIdx/travel?day=
+ */
+exports.getFeed = async function (req, res) {
+    const userIdx = req.verifiedToken.userIdx;
+    const travelIdx = req.params.feedIdx;
+    const day = req.query.day;
+
+    // Validation
+
+    const getFeedResponse = await feedProvider.retrieveFeedInfo(userIdx, travelIdx, day);
+    return res.send(getFeedResponse);
+};
+
 /**
  * API No. FD13
  * API Name : 여행 게시물 댓글 생성하기 API

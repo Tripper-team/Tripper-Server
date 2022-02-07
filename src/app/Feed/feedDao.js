@@ -329,6 +329,69 @@ async function selectTotalCommentCount(connection, travelIdx) {
     return selectTotalCommentCountRow;
 }
 
+async function selectFeedThumnail(connection, travelIdx) {
+    const selectFeedThumnailQuery = `
+        SELECT thumImgUrl
+        FROM TravelThumnail
+                 LEFT JOIN Travel ON Travel.idx = TravelThumnail.travelIdx AND Travel.status = "PUBLIC"
+        WHERE travelIdx = ?;
+    `;
+    const [selectFeedThumnailRow] = await connection.query(selectFeedThumnailQuery, travelIdx);
+    return selectFeedThumnailRow;
+}
+
+async function selectFeedInfo(connection, [travelIdx, userIdx]) {
+    const selectFeedInfoQuery = `
+        SELECT T.idx, T.userIdx, profileImgUrl, nickName, title, T.introduce,
+               GROUP_CONCAT(CONCAT('#', H.content) SEPARATOR ' ') AS travelHashtag,
+               CASE
+                   WHEN travelScore IS NULL THEN null
+                   WHEN travelScore < 2.0 THEN "별로에요"
+                   WHEN travelScore < 3.0 THEN "도움되지 않았어요"
+                   WHEN travelScore < 4.0 THEN "그저 그래요"
+                   WHEN travelScore < 4.5 THEN "도움되었어요!"
+                   ELSE "최고의 여행!"
+                   END AS travelScore,
+               CASE
+                   WHEN myScore IS NULL THEN null
+                   WHEN myScore < 2.0 THEN "별로에요"
+                   WHEN myScore < 3.0 THEN "도움되지 않았어요"
+                   WHEN myScore < 4.0 THEN "그저 그래요"
+                   WHEN myScore < 4.5 THEN "도움되었어요!"
+                   ELSE "최고의 여행!"
+                   END AS myScore, likeStatus, totalLikeCount,
+               (SELECT COUNT(idx) FROM TravelComment WHERE travelIdx = ? AND status = 'Y') AS totalCommentCount
+        FROM Travel AS T
+                 INNER JOIN User AS U ON T.userIdx = U.idx AND U.isWithdraw = 'N'
+                 LEFT JOIN (
+            SELECT TravelHashtag.travelIdx AS hashTravelIdx, content
+            FROM TravelHashtag
+                     INNER JOIN Hashtag ON Hashtag.idx = TravelHashtag.hashtagIdx
+            WHERE TravelHashtag.status = 'Y'
+        ) AS H ON T.idx = H.hashTravelIdx
+                 LEFT JOIN (
+            SELECT TravelScore.travelIdx AS scoreTravelIdx, AVG(score) AS travelScore
+            FROM TravelScore
+            WHERE travelIdx = ?
+        ) AS S ON T.idx = S.scoreTravelIdx
+                 LEFT JOIN (
+            SELECT travelIdx, userIdx, score AS myScore
+            FROM TravelScore
+            WHERE travelIdx = ?
+        ) AS MS ON T.userIdx = MS.userIdx
+                 LEFT JOIN (
+            SELECT travelIdx, COUNT(*) AS totalLikeCount,
+                   (SELECT status FROM TravelLike WHERE travelIdx = ? AND userIdx = ?) AS likeStatus
+            FROM TravelLike
+            WHERE TravelLike.travelIdx = ? AND TravelLike.status = 'Y'
+        ) AS ML ON T.idx = ML.travelIdx
+        WHERE T.idx = ? AND T.status = 'PUBLIC'
+        GROUP BY T.idx;
+    `;
+    const [selectFeedInfoRow] = await connection.query(selectFeedInfoQuery, [travelIdx, travelIdx, travelIdx, travelIdx, userIdx, travelIdx, travelIdx]);
+    return selectFeedInfoRow;
+}
+
 module.exports = {
     insertNewFeed,
     selectFeedIdxByAll,
@@ -364,5 +427,7 @@ module.exports = {
     selectTravelComment,
     updateTravelCommentStatus,
     selectTravelCommentList,
-    selectTotalCommentCount
+    selectTotalCommentCount,
+    selectFeedThumnail,
+    selectFeedInfo
 };
