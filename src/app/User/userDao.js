@@ -359,46 +359,45 @@ async function selectTotalUserFeed(connection, userIdx) {
 
 async function selectOtherFeedInProfile(connection, [myIdx, userIdx, start, pageSize]) {
   const selectOtherFeedInProfileQuery = `
-    SELECT travelIdx, travelTitle, travelIntroduce, travelHashtag, travelScore, likeStatus, thumImgUrl, createdAt
+    SELECT travelIdx, travelTitle, travelIntroduce, travelHashtag, travelScore, likeStatus, thumImgUrl
     FROM (
-           SELECT T.idx AS travelIdx,
-                  T.title AS travelTitle, T.introduce AS travelIntroduce,
-                  GROUP_CONCAT(CONCAT('#', TH.content) SEPARATOR ' ') AS travelHashtag,
+           SELECT T.idx AS travelIdx, T.title AS travelTitle,
+                  T.introduce AS travelIntroduce, GROUP_CONCAT(CONCAT('#', H.content) SEPARATOR ' ') AS travelHashtag,
                   CASE
-                    WHEN TS.score IS NULL THEN null
-                    WHEN TS.score < 2.0 THEN "별로에요"
-                    WHEN TS.score < 3.0 THEN "도움되지 않았어요"
-                    WHEN TS.score < 4.0 THEN "그저 그래요"
-                    WHEN TS.score < 4.5 THEN "도움되었어요!"
+                    WHEN S.score IS NULL THEN null
+                    WHEN S.score < 2.0 THEN "별로에요"
+                    WHEN S.score < 3.0 THEN "도움되지 않았어요"
+                    WHEN S.score < 4.0 THEN "그저 그래요"
+                    WHEN S.score < 4.5 THEN "도움되었어요!"
                     ELSE "최고의 여행!"
-                    END AS travelScore, IF(likeStatus = 'Y', "좋아요 중", "좋아요 안하는중") AS likeStatus, thumImgUrl, T.createdAt AS createdAt
+                    END AS travelScore, thumImgUrl, likeStatus, T.createdAt AS createdAt
            FROM Travel AS T
                   LEFT JOIN (
-             SELECT TravelHashtag.travelIdx AS hashTravelIdx, content
+             SELECT travelIdx, content
              FROM TravelHashtag
-                    INNER JOIN Hashtag ON Hashtag.idx = TravelHashtag.hashtagIdx
+                    INNER JOIN Hashtag ON TravelHashtag.hashtagIdx = Hashtag.idx
              WHERE TravelHashtag.status = 'Y'
-           ) AS TH ON T.idx = TH.hashTravelIdx
+           ) AS H ON T.idx = H.travelIdx
                   LEFT JOIN (
-             SELECT TravelScore.travelIdx, AVG(score) AS score
+             SELECT travelIdx, AVG(score) AS score
              FROM TravelScore
                     INNER JOIN User ON TravelScore.userIdx = User.idx AND User.isWithdraw = 'N'
-             GROUP BY TravelScore.travelIdx
-           ) AS TS ON TS.travelIdx = TH.hashTravelIdx
+             GROUP BY travelIdx
+           ) AS S ON T.idx = S.travelIdx
                   LEFT JOIN (
-             SELECT TravelLike.travelIdx, status AS likeStatus
+             SELECT idx, travelIdx, thumImgUrl
+             FROM TravelThumnail
+             GROUP BY travelIdx HAVING MIN(idx)
+           ) AS TH ON T.idx = TH.travelIdx
+                  LEFT JOIN (
+             SELECT travelIdx, userIdx, status AS likeStatus
              FROM TravelLike
              WHERE userIdx = ?
-           ) AS TL ON TL.travelIdx = TS.travelIdx
-                  LEFT JOIN (
-             SELECT TravelThumnail.idx, travelIdx, thumImgUrl
-             FROM TravelThumnail
-             GROUP BY travelIdx HAVING MIN(TravelThumnail.idx)
-           ) AS TM ON TL.travelIdx = TM.travelIdx
+           ) AS TL ON T.idx = TL.travelIdx
            WHERE T.userIdx = ? AND T.status = 'PUBLIC'
-           GROUP BY T.idx
+           GROUP BY travelIdx
          ) AS A
-    ORDER BY A.createdAt DESC
+    ORDER BY createdAt DESC
     LIMIT ?, ?;  
   `;
   const [selectOtherFeedInProfileRow] = await connection.query(selectOtherFeedInProfileQuery, [myIdx, userIdx, start, pageSize]);
