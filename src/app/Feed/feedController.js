@@ -213,7 +213,7 @@ exports.postFeed = async function (req, res) {
  * [DELETE] /app/feeds/timage-delete?dirname=
  */
 exports.deleteTempImage = async function (req, res) {
-    const image_key = req.headers.image_key;
+    const image_key = req.headers.imgkey;
     const dirname = req.query.dirname;
     const s3_dirname = `temp/${dirname}`;
 
