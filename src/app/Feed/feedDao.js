@@ -392,6 +392,17 @@ async function selectFeedInfo(connection, [travelIdx, userIdx]) {
     return selectFeedInfoRow;
 }
 
+async function selectFeedDay(connection, travelIdx) {
+    const selectFeedDayQuery = `
+        SELECT Day.idx
+        FROM Day
+                 INNER JOIN Travel ON Day.travelIdx = Travel.idx AND Travel.status = 'PUBLIC'
+        WHERE travelIdx = ?;
+    `;
+    const [selectFeedDayRow] = await connection.query(selectFeedDayQuery, travelIdx);
+    return selectFeedDayRow;
+}
+
 module.exports = {
     insertNewFeed,
     selectFeedIdxByAll,
@@ -429,5 +440,6 @@ module.exports = {
     selectTravelCommentList,
     selectTotalCommentCount,
     selectFeedThumnail,
-    selectFeedInfo
+    selectFeedInfo,
+    selectFeedDay
 };

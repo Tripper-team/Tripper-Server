@@ -230,42 +230,41 @@ async function selectUserFeedInMyPageByOption(connection, [userIdx, option, star
 
   if (option === "내여행") {
     selectUserFeedInMyPageByOptionQuery = `
-      SELECT travelIdx, travelTitle, travelIntroduce, travelStatus, travelHashtag, travelScore, thumImgUrl, temp.createdAt AS createdAt
+      SELECT travelIdx, travelTitle, travelIntroduce, travelStatus, travelHashtag, travelScore, thumImgUrl
       FROM (
-             SELECT T.idx AS travelIdx, T.title AS travelTitle, T.introduce AS travelIntroduce, T.createdAt,
-                    IF(T.status = 'PUBLIC', '공개', '비공개') AS travelStatus,
+             SELECT T.idx AS travelIdx, T.title AS travelTitle,
+                    T.introduce AS travelIntroduce, IF(T.status = 'PUBLIC', '공개', '비공개') AS travelStatus,
                     GROUP_CONCAT(CONCAT('#', H.content) SEPARATOR ' ') AS travelHashtag,
                     CASE
-                      WHEN S.score IS NULL THEN "점수 없음"
-                      WHEN S.score < 2.0 THEN "별로에요"
-                      WHEN S.score < 3.0 THEN "도움되지 않았어요"
-                      WHEN S.score < 4.0 THEN "그저 그래요"
-                      WHEN S.score < 4.5 THEN "도움되었어요!"
+                      WHEN score IS NULL THEN "점수 없음"
+                      WHEN score < 2.0 THEN "별로에요"
+                      WHEN score < 3.0 THEN "도움되지 않았어요"
+                      WHEN score < 4.0 THEN "그저 그래요"
+                      WHEN score < 4.5 THEN "도움되었어요!"
                       ELSE "최고의 여행!"
-                      END AS travelScore, thumImgUrl
+                      END AS travelScore, thumImgUrl, T.createdAt AS createdAt
              FROM Travel AS T
                     LEFT JOIN (
                SELECT travelIdx, content
                FROM TravelHashtag
-                      INNER JOIN Hashtag ON Hashtag.idx = TravelHashtag.hashtagIdx
+                      INNER JOIN Hashtag ON TravelHashtag.hashtagIdx = Hashtag.idx
                WHERE TravelHashtag.status = 'Y'
              ) AS H ON T.idx = H.travelIdx
                     LEFT JOIN (
-               SELECT TravelScore.travelIdx AS scoreTravelIdx, AVG(score) AS score
+               SELECT travelIdx, AVG(score) AS score
                FROM TravelScore
-                      LEFT JOIN Travel ON Travel.idx = TravelScore.travelIdx
-               GROUP BY TravelScore.travelIdx
-             ) AS S ON H.travelIdx = S.scoreTravelIdx
+                      INNER JOIN User ON TravelScore.userIdx = User.idx AND User.isWithdraw = 'N'
+               GROUP BY travelIdx
+             ) AS S ON T.idx = S.travelIdx
                     LEFT JOIN (
-               SELECT TravelThumnail.idx, TravelThumnail.travelIdx AS thumTravelIdx, thumImgUrl
+               SELECT idx, travelIdx, thumImgUrl
                FROM TravelThumnail
-                      LEFT JOIN Travel ON TravelThumnail.travelIdx = Travel.idx
-               GROUP BY TravelThumnail.travelIdx HAVING MIN(TravelThumnail.idx)
-             ) AS TH ON S.scoreTravelIdx = TH.thumTravelIdx
+               GROUP BY travelIdx HAVING MIN(idx)
+             ) AS TH ON T.idx = TH.travelIdx
              WHERE T.userIdx = ? AND T.status != 'DELETED'
              GROUP BY T.idx
-           ) AS temp
-      ORDER BY temp.createdAt DESC
+           ) AS A
+      ORDER BY A.createdAt DESC
       LIMIT ?, ?;
     `;
     const [selectUserFeedInMyPageByOptionRow] = await connection.query(selectUserFeedInMyPageByOptionQuery, [userIdx, start, pageSize]);
@@ -314,7 +313,7 @@ async function selectTotalUserFeedInMyPageByOption(connection, [userIdx, option]
     selectTotalUserFeedInMyPageByOptionQuery = `
       SELECT COUNT(idx) AS totalCount
       FROM Travel
-      WHERE userIdx = ? AND status = 'PUBLIC'
+      WHERE userIdx = ? AND status != 'DELETED'
     `;
   }
   else if (option === "좋아요") {
