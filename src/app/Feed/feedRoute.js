@@ -1,4 +1,3 @@
-const jwtMiddleware = require("../../../config/jwtMiddleware");
 module.exports = function(app) {
     const feed = require('./feedController');
     const jwtMiddleware = require('../../../config/jwtMiddleware');

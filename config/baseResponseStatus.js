@@ -90,6 +90,8 @@ module.exports = {
     ACCESS_TOKEN_EMPTY : { "isSuccess": false, "code": 2050, "message": "accessToken을 입력해주세요." },
     ACCESS_TOKEN_INVALID : { "isSuccess": false, "code": 2051, "message": "유효하지 않은 accessToken 입니다." },
 
+    TRAVEL_DAY_NOT_INCLUDED : { "isSuccess": false, "code": 2052, "message": "해당 게시물에 존재하지 않는 day의 인덱스입니다. 다시 입력해주세요." },
+
     // Response error
     REDUNDANT_NICKNAME : { "isSuccess": false, "code": 3001, "message":"중복된 닉네임입니다." },
     USER_ALREADY_SIGNUP : { "isSuccess": false, "code": 3002, "message":"이미 회원가입한 유저입니다." },

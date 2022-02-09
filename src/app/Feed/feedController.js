@@ -312,6 +312,19 @@ exports.getFeed = async function (req, res) {
     const day = req.query.day;
 
     // Validation
+    if (!travelIdx && travelIdx !== 0)
+        return res.send(errResponse(baseResponse.TRAVEL_IDX_EMPTY));
+
+    // 입력한 day가 travelIdx의 day에 포함이 되는지 확인하기
+    if (day !== undefined) {
+        const isDayIncluded = await feedProvider.checkIsDayIncluded(travelIdx, day);
+        if (isDayIncluded === 0)
+            return res.send(errResponse(baseResponse.TRAVEL_DAY_NOT_INCLUDED));
+    }
+
+    const userStatusCheckRow = await userProvider.checkUserStatus(userIdx);
+    if (userStatusCheckRow[0].isWithdraw === 'Y')
+        return res.send(errResponse(baseResponse.USER_WITHDRAW));
 
     const getFeedResponse = await feedProvider.retrieveFeedInfo(userIdx, travelIdx, day);
     return res.send(response(baseResponse.TRAVEL_SEARCH_SUCCESS, getFeedResponse));

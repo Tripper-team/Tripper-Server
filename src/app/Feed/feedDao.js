@@ -397,7 +397,8 @@ async function selectFeedDay(connection, travelIdx) {
         SELECT Day.idx
         FROM Day
                  INNER JOIN Travel ON Day.travelIdx = Travel.idx AND Travel.status = 'PUBLIC'
-        WHERE travelIdx = ?;
+        WHERE travelIdx = ?
+        ORDER BY dayNumber;
     `;
     const [selectFeedDayRow] = await connection.query(selectFeedDayQuery, travelIdx);
     return selectFeedDayRow;
@@ -443,6 +444,14 @@ async function selectFeedScore(connection, [userIdx, travelIdx]) {
     return selectFeedScoreRow;
 }
 
+async function selectIsDayExist(connection, [travelIdx, day]) {
+    const selectIsDayExistQuery = `
+        SELECT EXISTS(SELECT idx FROM Day WHERE travelIdx = ? AND idx = ?) AS isDayExist;
+    `;
+    const [selectIsDayExistRow] = await connection.query(selectIsDayExistQuery, [travelIdx, day]);
+    return selectIsDayExistRow;
+}
+
 module.exports = {
     insertNewFeed,
     selectFeedIdxByAll,
@@ -485,5 +494,6 @@ module.exports = {
     selectFeedAreaInfo,
     selectFeedReviewComment,
     selectFeedReviewImage,
-    selectFeedScore
+    selectFeedScore,
+    selectIsDayExist
 };
