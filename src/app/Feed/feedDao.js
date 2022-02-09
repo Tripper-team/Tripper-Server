@@ -433,6 +433,16 @@ async function selectFeedReviewImage(connection, areaIdx) {
     return selectFeedReviewImageRow;
 }
 
+async function selectFeedScore(connection, [userIdx, travelIdx]) {
+    const selectFeedScoreQuery = `
+        SELECT score
+        FROM TravelScore
+        WHERE userIdx = ? AND travelIdx = ?;
+    `;
+    const [selectFeedScoreRow] = await connection.query(selectFeedScoreQuery, [userIdx, travelIdx]);
+    return selectFeedScoreRow;
+}
+
 module.exports = {
     insertNewFeed,
     selectFeedIdxByAll,
@@ -474,5 +484,6 @@ module.exports = {
     selectFeedDay,
     selectFeedAreaInfo,
     selectFeedReviewComment,
-    selectFeedReviewImage
+    selectFeedReviewImage,
+    selectFeedScore
 };

@@ -110,7 +110,7 @@ exports.createFeedLike = async function (userIdx, travelIdx) {
 
         // 본인의 게시물인지 확인하기 (본인의 게시물에는 좋아요 못함)
         const feedWriterIdx = (await feedDao.selectFeedWriterIdx(connection, travelIdx))[0].userIdx;
-        if (userIdx !== feedWriterIdx)
+        if (userIdx === feedWriterIdx)
             return errResponse(baseResponse.TRAVEL_MYFEED_LIKE_ERROR);
 
         const travelUserLikeRow = await feedDao.selectTravelUserLike(connection, [userIdx, travelIdx]);
@@ -153,12 +153,23 @@ exports.createFeedScore = async function (userIdx, travelIdx, score) {
         else if (feedStatusCheckRow === 'DELETED')
             return errResponse(baseResponse.TRAVEL_STATUS_DELETED);
 
+        // 본인의 게시물인지 확인하기 (본인의 게시물에는 좋아요 못함)
+        const feedWriterIdx = (await feedDao.selectFeedWriterIdx(connection, travelIdx))[0].userIdx;
+        if (userIdx === feedWriterIdx)
+            return errResponse(baseResponse.TRAVEL_MYFEED_LIKE_ERROR);
+
         // 점수가 이미 업로드 되어있는지 확인하기
+        // 이전 점수랑 같으면 에러 발생
         // 이미 업로드 되어있으면 수정으로 넘어가기
         const scoreCheckRow = await feedDao.selectIsScoreExist(connection, [userIdx, travelIdx]);
         if (scoreCheckRow[0].isScoreExist === 1) {   // 이미 업로드가 되어있을 경우
-            await feedDao.updateTravelScore(connection, [userIdx, travelIdx, score]);
-            return response(baseResponse.TRAVEL_SCORE_EDIT_SUCCESS);
+            const beforeTravelScore = (await feedDao.selectFeedScore(connection, [userIdx, travelIdx]))[0].score;
+            if (beforeTravelScore === score)
+                return errResponse(baseResponse.TRAVEL_SCORE_BEFORE_EQUAL);
+            else {
+                await feedDao.updateTravelScore(connection, [userIdx, travelIdx, score]);
+                return response(baseResponse.TRAVEL_SCORE_EDIT_SUCCESS);
+            }
         }
         else {   // 처음 업로드하는 경우
             await feedDao.insertTravelScore(connection, [userIdx, travelIdx, score]);
