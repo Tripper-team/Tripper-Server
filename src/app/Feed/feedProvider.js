@@ -25,5 +25,25 @@ exports.retrieveFeedInfo = async function (userIdx, travelIdx, day) {
     })
     console.log(travelDayArr);
 
+    if (day === undefined) day = travelDayArr[0];
+
+    // day에 관한 정보 출력 (default는 day1)
+    const travelAreaInfoByDay = await feedDao.selectFeedAreaInfo(connection, day);
+    console.log(travelAreaInfoByDay);
+
+    connection.release();
+    return {
+        'travelInfo': travelInfo[0],
+        'day': travelDayArr,
+        'areaInfo': travelAreaInfoByDay
+    }
+};
+
+exports.retrieveFeedReview = async function (userIdx, travelIdx, dayIdx, areaIdx) {
+    const connection = await pool.getConnection(async (conn) => conn);
+
+    const feedReviewComment = await feedDao.selectFeedReviewComment(connection, areaIdx);
+    const feedReviewImage = await feedDao.selectFeedReviewImage(connection, areaIdx);
+
     connection.release();
 };

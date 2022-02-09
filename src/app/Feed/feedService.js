@@ -91,7 +91,7 @@ exports.createFeedLike = async function (userIdx, travelIdx) {
     const connection = await pool.getConnection(async (conn) => conn);
 
     try {
-        // user
+        // user status check
         const userStatusCheckRow = await userProvider.checkUserStatus(userIdx);
         if (userStatusCheckRow[0].isWithdraw === 'Y')
             return errResponse(baseResponse.USER_WITHDRAW);
@@ -107,6 +107,11 @@ exports.createFeedLike = async function (userIdx, travelIdx) {
             return errResponse(baseResponse.TRAVEL_STATUS_PRIVATE);
         else if (feedStatusCheckRow === 'DELETED')
             return errResponse(baseResponse.TRAVEL_STATUS_DELETED);
+
+        // 본인의 게시물인지 확인하기 (본인의 게시물에는 좋아요 못함)
+        const feedWriterIdx = (await feedDao.selectFeedWriterIdx(connection, travelIdx))[0].userIdx;
+        if (userIdx !== feedWriterIdx)
+            return errResponse(baseResponse.TRAVEL_MYFEED_LIKE_ERROR);
 
         const travelUserLikeRow = await feedDao.selectTravelUserLike(connection, [userIdx, travelIdx]);
         if (travelUserLikeRow.length === 0 || travelUserLikeRow[0].likeStatus === 'N') {   // 좋아요가 안눌린 상태라면?

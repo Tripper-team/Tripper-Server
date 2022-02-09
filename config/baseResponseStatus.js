@@ -32,6 +32,7 @@ module.exports = {
     TRAVEL_COMMENT_EDIT_SUCCESS : { "isSuccess": true, "code": 1027, "message":"게시물 댓글 수정에 성공했습니다." },
     MYPAGE_SEARCH_SUCCESS : { "isSuccess": true, "code": 1028, "message":"마이페이지 조회에 성공했습니다." },
     USER_PROFILE_SEARCH_SUCCESS : { "isSuccess": true, "code": 1029, "message":"사용자 프로필 조회에 성공했습니다." },
+    TRAVEL_SEARCH_SUCCESS : { "isSuccess": true, "code": 1030, "message":"특정 게시물 조회에 성공했습니다." },
 
     // Common
     TOKEN_EMPTY : { "isSuccess": false, "code": 2000, "message":"JWT 토큰을 입력해주세요." },
@@ -115,6 +116,8 @@ module.exports = {
 
     MYPAGE_PAGE_FINISH : { "isSuccess": false, "code": 3022, "message":"해당 옵션에 대한 마이페이지 조회 결과가 없습니다." },
     USER_PROFILE_FINISH : { "isSuccess": false, "code": 3023, "message":"해당 사용자의 프로필 조회 결과가 없습니다." },
+
+    TRAVEL_MYFEED_LIKE_ERROR : { "isSuccess": false, "code": 3024, "message":"본인의 게시물에는 좋아요를 누를 수 없습니다." },
 
     //Connection, Transaction 등의 서버 오류
     DB_ERROR : { "isSuccess": false, "code": 4000, "message": "데이터 베이스 에러"},

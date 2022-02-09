@@ -314,7 +314,24 @@ exports.getFeed = async function (req, res) {
     // Validation
 
     const getFeedResponse = await feedProvider.retrieveFeedInfo(userIdx, travelIdx, day);
-    return res.send(getFeedResponse);
+    return res.send(response(baseResponse.TRAVEL_SEARCH_SUCCESS, getFeedResponse));
+};
+
+/**
+ * API No. FD12
+ * API Name : 특정 여행 게시물의 장소 리뷰 조회하기 API
+ * [GET] /app/feeds/:feedIdx/search/review?day=&area=
+ */
+exports.getFeedReview = async function (req, res) {
+    const userIdx = req.verifiedToken.userIdx;
+    const travelIdx = req.params.feedIdx;
+    const dayIdx = req.params.day;
+    const areaIdx = req.params.area;
+
+    // Validation
+
+    const getFeedReviewResponse = await feedProvider.retrieveFeedReview(userIdx, travelIdx, dayIdx, areaIdx);
+    return res.send(getFeedReviewResponse);
 };
 
 /**

@@ -403,6 +403,36 @@ async function selectFeedDay(connection, travelIdx) {
     return selectFeedDayRow;
 }
 
+async function selectFeedAreaInfo(connection, dayIdx) {
+    const selectFeedAreaInfoQuery = `
+        SELECT idx AS dayAreaIdx, areaCategory, areaName, areaLatitude, areaLongitude
+        FROM DayArea
+        WHERE dayIdx = ?;
+    `;
+    const [selectFeedAreaInfoQueryRow] = await connection.query(selectFeedAreaInfoQuery, dayIdx);
+    return selectFeedAreaInfoQueryRow;
+}
+
+async function selectFeedReviewComment(connection, areaIdx) {
+    const selectFeedReviewCommentQuery = `
+        SELECT idx AS dayAreaIdx, areaCategory, areaName, areaLatitude, areaLongitude
+        FROM DayArea
+        WHERE dayIdx = ?;
+    `;
+    const [selectFeedReviewCommentRow] = await connection.query(selectFeedReviewCommentQuery, areaIdx);
+    return selectFeedReviewCommentRow;
+}
+
+async function selectFeedReviewImage(connection, areaIdx) {
+    const selectFeedReviewImageQuery = `
+        SELECT idx AS dayAreaIdx, areaCategory, areaName, areaLatitude, areaLongitude
+        FROM DayArea
+        WHERE dayIdx = ?;
+    `;
+    const [selectFeedReviewImageRow] = await connection.query(selectFeedReviewImageQuery, areaIdx);
+    return selectFeedReviewImageRow;
+}
+
 module.exports = {
     insertNewFeed,
     selectFeedIdxByAll,
@@ -441,5 +471,8 @@ module.exports = {
     selectTotalCommentCount,
     selectFeedThumnail,
     selectFeedInfo,
-    selectFeedDay
+    selectFeedDay,
+    selectFeedAreaInfo,
+    selectFeedReviewComment,
+    selectFeedReviewImage
 };

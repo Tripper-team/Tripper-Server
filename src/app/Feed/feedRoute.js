@@ -68,7 +68,10 @@ module.exports = function(app) {
     app.patch('/app/feeds/:feedIdx/change-status', jwtMiddleware, feed.patchFeedStatus);
 
     // FD11. 특정 여행 게시물 조회하기 API
-    app.get('/app/feeds/:feedIdx/travel', jwtMiddleware, feed.getFeed);
+    app.get('/app/feeds/:feedIdx/search', jwtMiddleware, feed.getFeed);
+
+    // FD12. 특정 여행 게시물의 장소 리뷰 조회하기 API
+    app.get('/app/feeds/:feedIdx/search/review', jwtMiddleware, feed.getFeedReview);
 
     // FD13. 여행 게시물 댓글 작성하기 API
     app.post('/app/feeds/comments', jwtMiddleware, feed.postComment);
