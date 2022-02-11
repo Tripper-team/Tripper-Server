@@ -329,13 +329,25 @@ async function selectTotalCommentCount(connection, travelIdx) {
     return selectTotalCommentCountRow;
 }
 
-async function selectFeedThumnail(connection, travelIdx) {
-    const selectFeedThumnailQuery = `
-        SELECT thumImgUrl
-        FROM TravelThumnail
-                 LEFT JOIN Travel ON Travel.idx = TravelThumnail.travelIdx AND Travel.status = "PUBLIC"
-        WHERE travelIdx = ?;
-    `;
+async function selectFeedThumnail(connection, travelIdx, isMine) {
+    let selectFeedThumnailQuery;
+
+    if (isMine === 1) {
+        selectFeedThumnailQuery = `
+            SELECT thumImgUrl
+            FROM TravelThumnail
+                 LEFT JOIN Travel ON Travel.idx = TravelThumnail.travelIdx AND Travel.status != 'DELETED'
+            WHERE travelIdx = ?;
+        `;
+    }
+    else {
+        selectFeedThumnailQuery = `
+            SELECT thumImgUrl
+            FROM TravelThumnail
+                 LEFT JOIN Travel ON Travel.idx = TravelThumnail.travelIdx AND Travel.status = 'PUBLIC'
+            WHERE travelIdx = ?;
+        `;
+    }
     const [selectFeedThumnailRow] = await connection.query(selectFeedThumnailQuery, travelIdx);
     return selectFeedThumnailRow;
 }
