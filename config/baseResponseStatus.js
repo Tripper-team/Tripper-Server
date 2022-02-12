@@ -34,6 +34,7 @@ module.exports = {
     USER_PROFILE_SEARCH_SUCCESS : { "isSuccess": true, "code": 1029, "message":"사용자 프로필 조회에 성공했습니다." },
     TRAVEL_SEARCH_SUCCESS : { "isSuccess": true, "code": 1030, "message":"특정 게시물 조회에 성공했습니다." },
     TRAVEL_COMMENT_SEARCH_SUCCESS : { "isSuccess": true, "code": 1031, "message":"특정 게시물 댓글 조회에 성공했습니다." },
+    MAINPAGE_SEARCH_SUCCESS : { "isSuccess": true, "code": 1032, "message":"메인페이지 조회에 성공했습니다." },
 
     // Common
     TOKEN_EMPTY : { "isSuccess": false, "code": 2000, "message":"JWT 토큰을 입력해주세요." },
@@ -96,6 +97,10 @@ module.exports = {
     COMMENT_PAGE_EMPTY : { "isSuccess": false, "code": 2053, "message":"댓글 조회할 페이지 번호를 입력해주세요." },
     COMMENT_PAGE_ERROR_TYPE : { "isSuccess": false, "code": 2054, "message":"댓글 조회 페이지 번호는 1 이상으로 입력해주세요." },
 
+    MAINPAGE_OPTION_ERROR : { "isSuccess": false, "code": 2055, "message":"메인페이지 조회 옵션은 최신순, 인기순, 팔로우 중 하나를 입력해주세요." },
+    MAINPAGE_EMPTY : { "isSuccess": false, "code": 2056, "message":"메인페이지 조회할 페이지 번호를 입력해주세요." },
+    MAINPAGE_PAGE_ERROR_TYPE : { "isSuccess": false, "code": 2057, "message":"메인페이지 조회 페이지 번호는 1 이상으로 입력해주세요." },
+
     // Response error
     REDUNDANT_NICKNAME : { "isSuccess": false, "code": 3001, "message":"중복된 닉네임입니다." },
     USER_ALREADY_SIGNUP : { "isSuccess": false, "code": 3002, "message":"이미 회원가입한 유저입니다." },
@@ -128,6 +133,7 @@ module.exports = {
     TRAVEL_SCORE_BEFORE_EQUAL : { "isSuccess": false, "code": 3026, "message":"이전 점수랑 동일합니다. 다른 점수를 입력해주세요." },
 
     TRAVEL_COMMENT_FINISH : { "isSuccess": false, "code": 3027, "message":"해당 게시물의 댓글 조회 결과가 없습니다." },
+    MAINPAGE_FINISH : { "isSuccess": false, "code": 3028, "message":"메인페이지 조회 결과가 없습니다." },
 
     //Connection, Transaction 등의 서버 오류
     DB_ERROR : { "isSuccess": false, "code": 4000, "message": "데이터 베이스 에러"},

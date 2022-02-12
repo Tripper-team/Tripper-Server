@@ -248,7 +248,7 @@ exports.getOtherProfile = async function (req, res) {
     const myIdx = req.verifiedToken.userIdx;
     const userIdx = req.params.userIdx;
     let page = parseInt(req.query.page);
-    const pageSize = 2;   // 한 페이지당 보여줄 데이터의 갯수
+    const pageSize = 3;   // 한 페이지당 보여줄 데이터의 갯수
 
     // Validation
     if (!userIdx)
