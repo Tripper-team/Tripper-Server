@@ -405,16 +405,26 @@ exports.patchComment = async function (req, res) {
 /**
  * API No. FD15
  * API Name : 여행 게시물 댓글 조회하기 API
- * [GET] /app/feeds/:feedIdx/comments-list
+ * [GET] /app/feeds/:feedIdx/comments-list?page=
  */
 exports.getFeedComment = async function (req, res) {
     const travelIdx = req.params.feedIdx;
+    let page = parseInt(req.query.page);
+    const pageSize = 10;
     // console.log(travelIdx);
 
     // validation
     if (!travelIdx)
         return res.send(errResponse(baseResponse.TRAVEL_IDX_EMPTY));
 
-    const getTravelCommentResponse = await feedService.retrieveTravelComment(travelIdx);
-    return res.send(response(baseResponse.SUCCESS, { 'totalCommentCount': getTravelCommentResponse[0], 'comments': getTravelCommentResponse[1] }));
+    if (!page && page !== 0)
+        return res.send(errResponse(baseResponse.MYPAGE_PAGE_EMPTY));
+    if (page <= 0)
+        return res.send(errResponse(baseResponse.MYPAGE_PAGE_ERROR_TYPE));
+
+    const getTravelCommentResponse = await feedService.retrieveTravelComment(travelIdx, page, pageSize);
+    if (getTravelCommentResponse[0] === -1)
+        return res.send(response(baseResponse.TRAVEL_COMMENT_FINISH, { 'totalCommentCount': getTravelCommentResponse[1] }));
+    else
+        return res.send(response(baseResponse.SUCCESS, { 'totalCommentCount': getTravelCommentResponse[0], 'comments': getTravelCommentResponse[1] }));
 };

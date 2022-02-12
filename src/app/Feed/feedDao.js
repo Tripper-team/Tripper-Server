@@ -300,7 +300,7 @@ async function selectTravelComment(connection, commentIdx) {
     return selectTravelCommentRow;
 }
 
-async function selectTravelCommentList(connection, travelIdx) {
+async function selectTravelCommentList(connection, [travelIdx, start, pageSize]) {
     const selectTravelCommentListQuery = `
         SELECT C.idx AS commentIdx, C.userIdx,
                nickName AS userNickname, profileImgUrl AS userProfileImage,
@@ -314,16 +314,18 @@ async function selectTravelCommentList(connection, travelIdx) {
             GROUP BY isParent
             ) AS T ON C.idx = T.isParent
         WHERE C.travelIdx = ? AND C.status != 'N'
-        ORDER BY IF(C.isParent = 0, commentIdx, C.isParent);    
+        ORDER BY IF(C.isParent = 0, commentIdx, C.isParent)
+    LIMIT ?, ?;    
     `;
-    const [selectTravelCommentListRow] = await connection.query(selectTravelCommentListQuery, travelIdx);
+    const [selectTravelCommentListRow] = await connection.query(selectTravelCommentListQuery, [travelIdx, start, pageSize]);
     return selectTravelCommentListRow;
 }
 
 async function selectTotalCommentCount(connection, travelIdx) {
     const selectTotalCommentCountQuery = `
         SELECT COUNT(idx) AS totalCount
-        FROM TravelComment;
+        FROM TravelComment
+        WHERE travelIdx = ?;
     `;
     const [selectTotalCommentCountRow] = await connection.query(selectTotalCommentCountQuery, travelIdx);
     return selectTotalCommentCountRow;

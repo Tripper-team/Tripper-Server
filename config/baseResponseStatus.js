@@ -123,6 +123,8 @@ module.exports = {
     TRAVEL_MYFEED_SCORE_ERROR : { "isSuccess": false, "code": 3025, "message":"본인의 게시물에는 점수를 부여할 수 없습니다." },
     TRAVEL_SCORE_BEFORE_EQUAL : { "isSuccess": false, "code": 3026, "message":"이전 점수랑 동일합니다. 다른 점수를 입력해주세요." },
 
+    TRAVEL_COMMENT_FINISH : { "isSuccess": false, "code": 3027, "message":"해당 게시물의 댓글 조회 결과가 없습니다." },
+
     //Connection, Transaction 등의 서버 오류
     DB_ERROR : { "isSuccess": false, "code": 4000, "message": "데이터 베이스 에러"},
     SERVER_ERROR : { "isSuccess": false, "code": 4001, "message": "서버 에러"},

@@ -370,7 +370,7 @@ exports.changeTravelComment = async function (userIdx, travelIdx, commentIdx, co
     }
 };
 
-exports.retrieveTravelComment = async function (travelIdx) {
+exports.retrieveTravelComment = async function (travelIdx, page, pageSize) {
     const connection = await pool.getConnection(async (conn) => conn);
 
     try {
@@ -386,13 +386,17 @@ exports.retrieveTravelComment = async function (travelIdx) {
         if (feedStatusCheckRow === 'DELETED')
             return errResponse(baseResponse.TRAVEL_STATUS_DELETED);
 
-        await connection.beginTransaction();
-
+        let start = (page - 1) * pageSize;
         const totalCommentCount = (await feedDao.selectTotalCommentCount(connection, travelIdx))[0].totalCount;   // 총 댓글 갯수 조회
-        const travelCommentResult = await feedDao.selectTravelCommentList(connection, travelIdx);   // 댓글 목록 조회
 
-        await connection.commit();
-        return [totalCommentCount, travelCommentResult];
+        if (page > Math.ceil(totalCommentCount / pageSize)) {
+            connection.release();
+            return [-1, totalCommentCount];
+        }
+        else {
+            const travelCommentResult = await feedDao.selectTravelCommentList(connection, [travelIdx, start, pageSize]);   // 댓글 목록 조회
+            return [totalCommentCount, travelCommentResult];
+        }
     } catch(err) {
         logger.error(`App - retrieveTravelComment Service error\n: ${err.message}`);
         await connection.rollback();
