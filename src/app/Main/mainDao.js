@@ -12,7 +12,7 @@ FROM (
        nickName, profileImgUrl,
        title, introduce,
        IF(TL.status = 'Y', '좋아요 하는중', '좋아요 안하는중') AS myLikeStatus,
-       GROUP_CONCAT(CONCAT('#', TH.content) SEPARATOR ' ') AS travelHashtag,
+       IF(TH.content = '', NULL, GROUP_CONCAT(CONCAT('#', TH.content) SEPARATOR ' ')) AS travelHashtag,
        CASE
         WHEN travelScore IS NULL THEN "점수 없음"
         WHEN travelScore < 2.0 THEN "별로에요"
@@ -78,7 +78,7 @@ FROM (
     SELECT T.idx AS travelIdx, F.toIdx AS userIdx, nickName,
        profileImgUrl, title, introduce,
        IF(TL.status = 'Y', '좋아요 하는중', '좋아요 안하는중') AS myLikeStatus,
-       GROUP_CONCAT(CONCAT('#', TH.content) SEPARATOR ' ') AS travelHashtag,
+       IF(TH.content = '', NULL, GROUP_CONCAT(CONCAT('#', TH.content) SEPARATOR ' ')) AS travelHashtag,
        CASE
         WHEN travelScore IS NULL THEN "점수 없음"
         WHEN travelScore < 2.0 THEN "별로에요"
@@ -156,7 +156,7 @@ async function selectMainPageResultCount(connection, [userIdx, option]) {
                                          nickName, profileImgUrl,
                                          title, introduce,
                                          IF(TL.status = 'Y', '좋아요 하는중', '좋아요 안하는중') AS myLikeStatus,
-                                         GROUP_CONCAT(CONCAT('#', TH.content) SEPARATOR ' ') AS travelHashtag,
+                                         IF(TH.content = '', NULL, GROUP_CONCAT(CONCAT('#', TH.content) SEPARATOR ' ')) AS travelHashtag,
                                          CASE
                                              WHEN travelScore IS NULL THEN "점수 없음"
                                              WHEN travelScore < 2.0 THEN "별로에요"
@@ -219,7 +219,7 @@ async function selectMainPageResultCount(connection, [userIdx, option]) {
                                   SELECT T.idx AS travelIdx, F.toIdx AS userIdx, nickName,
                                          profileImgUrl, title, introduce,
                                          IF(TL.status = 'Y', '좋아요 하는중', '좋아요 안하는중') AS myLikeStatus,
-                                         GROUP_CONCAT(CONCAT('#', TH.content) SEPARATOR ' ') AS travelHashtag,
+                                         IF(TH.content = '', NULL, GROUP_CONCAT(CONCAT('#', TH.content) SEPARATOR ' ')) AS travelHashtag,
                                          CASE
                                              WHEN travelScore IS NULL THEN "점수 없음"
                                              WHEN travelScore < 2.0 THEN "별로에요"
