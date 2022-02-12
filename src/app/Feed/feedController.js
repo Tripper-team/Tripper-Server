@@ -418,13 +418,22 @@ exports.getFeedComment = async function (req, res) {
         return res.send(errResponse(baseResponse.TRAVEL_IDX_EMPTY));
 
     if (!page && page !== 0)
-        return res.send(errResponse(baseResponse.MYPAGE_PAGE_EMPTY));
+        return res.send(errResponse(baseResponse.COMMENT_PAGE_EMPTY));
     if (page <= 0)
-        return res.send(errResponse(baseResponse.MYPAGE_PAGE_ERROR_TYPE));
+        return res.send(errResponse(baseResponse.COMMENT_PAGE_ERROR_TYPE));
 
     const getTravelCommentResponse = await feedService.retrieveTravelComment(travelIdx, page, pageSize);
-    if (getTravelCommentResponse[0] === -1)
-        return res.send(response(baseResponse.TRAVEL_COMMENT_FINISH, { 'totalCommentCount': getTravelCommentResponse[1] }));
-    else
-        return res.send(response(baseResponse.SUCCESS, { 'totalCommentCount': getTravelCommentResponse[0], 'comments': getTravelCommentResponse[1] }));
+
+    if (getTravelCommentResponse[0] === undefined)
+        return res.send(getTravelCommentResponse);
+    else {
+        if (getTravelCommentResponse[0] === -1)
+            return res.send(response(baseResponse.TRAVEL_COMMENT_FINISH, { 'totalCommentCount': getTravelCommentResponse[1] }));
+        else {
+            if (getTravelCommentResponse[0] === 0)
+                return res.send(errResponse(baseResponse.TRAVEL_COMMENT_FINISH));
+            else
+                return res.send(response(baseResponse.TRAVEL_COMMENT_SEARCH_SUCCESS, { 'totalCommentCount': getTravelCommentResponse[0], 'comments': getTravelCommentResponse[1] }));
+        }
+    }
 };

@@ -33,6 +33,7 @@ module.exports = {
     MYPAGE_SEARCH_SUCCESS : { "isSuccess": true, "code": 1028, "message":"마이페이지 조회에 성공했습니다." },
     USER_PROFILE_SEARCH_SUCCESS : { "isSuccess": true, "code": 1029, "message":"사용자 프로필 조회에 성공했습니다." },
     TRAVEL_SEARCH_SUCCESS : { "isSuccess": true, "code": 1030, "message":"특정 게시물 조회에 성공했습니다." },
+    TRAVEL_COMMENT_SEARCH_SUCCESS : { "isSuccess": true, "code": 1031, "message":"특정 게시물 댓글 조회에 성공했습니다." },
 
     // Common
     TOKEN_EMPTY : { "isSuccess": false, "code": 2000, "message":"JWT 토큰을 입력해주세요." },
@@ -91,6 +92,9 @@ module.exports = {
     ACCESS_TOKEN_INVALID : { "isSuccess": false, "code": 2051, "message": "유효하지 않은 accessToken 입니다." },
 
     TRAVEL_DAY_NOT_INCLUDED : { "isSuccess": false, "code": 2052, "message": "해당 게시물에 존재하지 않는 day의 인덱스입니다. 다시 입력해주세요." },
+
+    COMMENT_PAGE_EMPTY : { "isSuccess": false, "code": 2053, "message":"댓글 조회할 페이지 번호를 입력해주세요." },
+    COMMENT_PAGE_ERROR_TYPE : { "isSuccess": false, "code": 2054, "message":"댓글 조회 페이지 번호는 1 이상으로 입력해주세요." },
 
     // Response error
     REDUNDANT_NICKNAME : { "isSuccess": false, "code": 3001, "message":"중복된 닉네임입니다." },
