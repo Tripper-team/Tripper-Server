@@ -412,7 +412,7 @@ FROM Travel AS T
         SELECT travelIdx, COUNT(TravelComment.idx) AS totalCommentCount
         FROM TravelComment
             INNER JOIN User ON TravelComment.userIdx = User.idx AND User.isWithdraw = 'N'
-        WHERE travelIdx = ? AND status = 'Y'
+        WHERE travelIdx = ? AND status != 'N'
     ) AS TC ON TC.travelIdx = T.idx
     LEFT JOIN (
         SELECT travelIdx, userIdx, score AS myScore
@@ -480,7 +480,7 @@ async function selectMyTravelInfo(connection, [travelIdx, userIdx]) {
             SELECT travelIdx, COUNT(TravelComment.idx) AS totalCommentCount
             FROM TravelComment
                      INNER JOIN User ON TravelComment.userIdx = User.idx AND User.isWithdraw = 'N'
-            WHERE travelIdx = ? AND status = 'Y'
+            WHERE travelIdx = ? AND status != 'N'
         ) AS TC ON TC.travelIdx = T.idx
                  LEFT JOIN (
             SELECT travelIdx, COUNT(*) AS totalLikeCount
