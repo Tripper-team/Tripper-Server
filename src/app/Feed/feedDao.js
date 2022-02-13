@@ -331,89 +331,194 @@ async function selectTotalCommentCount(connection, travelIdx) {
     return selectTotalCommentCountRow;
 }
 
-async function selectFeedThumnail(connection, travelIdx, isMine) {
+async function selectFeedThumnail(connection, [travelIdx, isMine]) {
     let selectFeedThumnailQuery;
 
     if (isMine === 1) {
         selectFeedThumnailQuery = `
             SELECT thumImgUrl
             FROM TravelThumnail
-                 LEFT JOIN Travel ON Travel.idx = TravelThumnail.travelIdx AND Travel.status != 'DELETED'
-            WHERE travelIdx = ?;
+                 INNER JOIN Travel ON Travel.idx = TravelThumnail.travelIdx AND Travel.status != 'DELETED'
+            WHERE travelIdx = ?
+            ORDER BY TravelThumnail.createdAt;
         `;
     }
     else {
         selectFeedThumnailQuery = `
             SELECT thumImgUrl
             FROM TravelThumnail
-                 LEFT JOIN Travel ON Travel.idx = TravelThumnail.travelIdx AND Travel.status = 'PUBLIC'
-            WHERE travelIdx = ?;
+                 INNER JOIN Travel ON Travel.idx = TravelThumnail.travelIdx AND Travel.status = 'PUBLIC'
+            WHERE travelIdx = ?
+            ORDER BY TravelThumnail.createdAt;
         `;
     }
     const [selectFeedThumnailRow] = await connection.query(selectFeedThumnailQuery, travelIdx);
     return selectFeedThumnailRow;
 }
 
-async function selectFeedInfo(connection, [travelIdx, userIdx]) {
-    const selectFeedInfoQuery = `
-        SELECT T.idx, T.userIdx, profileImgUrl, nickName, title, T.introduce,
-               GROUP_CONCAT(CONCAT('#', H.content) SEPARATOR ' ') AS travelHashtag,
+async function selectOtherTravelInfo(connection, [travelIdx, userIdx, travelWriterIdx]) {
+    const selectOtherTravelInfoQuery = `
+        SELECT T.idx AS travelIdx, T.userIdx,
+       profileImgUrl, nickName,
+       title, introduce,
+       IF(TH.content = '', NULL, GROUP_CONCAT(CONCAT('#', TH.content) SEPARATOR ' ')) AS travelHashtag,
+       CASE
+        WHEN travelScore IS NULL THEN "점수 없음"
+        WHEN travelScore < 2.0 THEN "별로에요"
+        WHEN travelScore < 3.0 THEN "도움되지 않았어요"
+        WHEN travelScore < 4.0 THEN "그저 그래요"
+        WHEN travelScore < 4.5 THEN "도움되었어요!"
+        ELSE "최고의 여행!"
+        END AS travelScore,
+       IF(userScoreCount IS NULL, 0, userScoreCount) AS userScoreCount,
+       IF(totalCommentCount IS NULL, 0, totalCommentCount) AS totalCommentCount,
+       IF(totalLikeCount IS NULL, 0, totalLikeCount) AS totalLikeCount,
+       IF(myLikeStatus = 'Y', "좋아요 하는중", "좋아요 안하는중") AS myLikeStatus,
+       CASE
+        WHEN myScore IS NULL THEN "점수 없음"
+        WHEN myScore < 2.0 THEN "별로에요"
+        WHEN myScore < 3.0 THEN "도움되지 않았어요"
+        WHEN myScore < 4.0 THEN "그저 그래요"
+        WHEN myScore < 4.5 THEN "도움되었어요!"
+        ELSE "최고의 여행!"
+        END AS myScore,
+       CASE
+        WHEN TIMESTAMPDIFF(SECOND, T.createdAt, NOW()) <= 0 THEN CONCAT(TIMESTAMPDIFF(SECOND, T.createdAt, NOW()), '방금 전')
+        WHEN TIMESTAMPDIFF(SECOND, T.createdAt, NOW()) < 60 THEN CONCAT(TIMESTAMPDIFF(SECOND, T.createdAt, NOW()), '초 전')
+        WHEN TIMESTAMPDIFF(MINUTE, T.createdAt, NOW()) < 60 THEN CONCAT(TIMESTAMPDIFF(MINUTE, T.createdAt, NOW()), '분 전')
+        WHEN TIMESTAMPDIFF(HOUR, T.createdAt, NOW()) < 24 THEN CONCAT(TIMESTAMPDIFF(HOUR, T.createdAt, NOW()), '시간 전')
+        WHEN TIMESTAMPDIFF(DAY, T.createdAt, NOW()) < 30 THEN CONCAT(TIMESTAMPDIFF(DAY, T.createdAt, NOW()), '일 전')
+        WHEN TIMESTAMPDIFF(MONTH, T.createdAt, NOW()) < 12 THEN CONCAT(TIMESTAMPDIFF(MONTH, T.createdAt, NOW()), '달 전')
+        ELSE CONCAT(TIMESTAMPDIFF(YEAR, T.createdAt, NOW()), '년 전')
+        END AS createdAt
+FROM Travel AS T
+    INNER JOIN User
+        ON T.userIdx = User.idx AND User.isWithdraw = 'N' AND User.idx = ?
+    LEFT JOIN (
+        SELECT travelIdx, content
+        FROM TravelHashtag
+            INNER JOIN Hashtag
+            ON Hashtag.idx = TravelHashtag.hashtagIdx
+        WHERE TravelHashtag.status = 'Y'
+    ) AS TH ON T.idx = TH.travelIdx
+    LEFT JOIN (
+       SELECT travelIdx, AVG(score) AS travelScore, COUNT(userIdx) AS userScoreCount
+       FROM TravelScore
+        INNER JOIN User
+        ON TravelScore.userIdx = User.idx AND User.isWithdraw = 'N'
+       GROUP BY travelIdx
+    ) AS TS ON T.idx = TS.travelIdx
+    LEFT JOIN (
+        SELECT travelIdx, COUNT(TravelComment.idx) AS totalCommentCount
+        FROM TravelComment
+            INNER JOIN User ON TravelComment.userIdx = User.idx AND User.isWithdraw = 'N'
+        WHERE travelIdx = ? AND status = 'Y'
+    ) AS TC ON TC.travelIdx = T.idx
+    LEFT JOIN (
+        SELECT travelIdx, userIdx, score AS myScore
+        FROM TravelScore
+        WHERE travelIdx = ? AND userIdx = ?
+    ) AS MS ON MS.userIdx = T.userIdx
+    LEFT JOIN (
+        SELECT travelIdx, COUNT(*) AS totalLikeCount,
+               (SELECT status FROM TravelLike WHERE travelIdx = ? AND userIdx = ?) AS myLikeStatus
+        FROM TravelLike
+            INNER JOIN User ON TravelLike.userIdx = User.idx AND User.isWithdraw = 'N'
+        WHERE TravelLike.travelIdx = ? AND TravelLike.status = 'Y'
+    ) AS ML ON T.idx = ML.travelIdx
+WHERE T.idx = ? AND T.status = 'PUBLIC'
+GROUP BY T.idx;        
+    `;
+    const [selectOtherTravelInfoRow] = await connection.query(selectOtherTravelInfoQuery, [travelWriterIdx, travelIdx, travelIdx, userIdx, travelIdx, userIdx, travelIdx, travelIdx]);
+    return selectOtherTravelInfoRow;
+}
+
+async function selectMyTravelInfo(connection, [travelIdx, userIdx]) {
+    const selectMyTravelInfoQuery = `
+        SELECT T.idx AS travelIdx, T.userIdx,
+               profileImgUrl, nickName,
+               title, introduce,
+               IF(TH.content = '', NULL, GROUP_CONCAT(CONCAT('#', TH.content) SEPARATOR ' ')) AS travelHashtag,
                CASE
-                   WHEN travelScore IS NULL THEN null
+                   WHEN travelScore IS NULL THEN "점수 없음"
                    WHEN travelScore < 2.0 THEN "별로에요"
                    WHEN travelScore < 3.0 THEN "도움되지 않았어요"
                    WHEN travelScore < 4.0 THEN "그저 그래요"
                    WHEN travelScore < 4.5 THEN "도움되었어요!"
                    ELSE "최고의 여행!"
                    END AS travelScore,
+               IF(userScoreCount IS NULL, 0, userScoreCount) AS userScoreCount,
+               IF(totalCommentCount IS NULL, 0, totalCommentCount) AS totalCommentCount,
+               IF(totalLikeCount IS NULL, 0, totalLikeCount) AS totalLikeCount,
                CASE
-                   WHEN myScore IS NULL THEN null
-                   WHEN myScore < 2.0 THEN "별로에요"
-                   WHEN myScore < 3.0 THEN "도움되지 않았어요"
-                   WHEN myScore < 4.0 THEN "그저 그래요"
-                   WHEN myScore < 4.5 THEN "도움되었어요!"
-                   ELSE "최고의 여행!"
-                   END AS myScore, likeStatus, totalLikeCount,
-               (SELECT COUNT(idx) FROM TravelComment WHERE travelIdx = ? AND status = 'Y') AS totalCommentCount
+                   WHEN TIMESTAMPDIFF(SECOND, T.createdAt, NOW()) <= 0 THEN CONCAT(TIMESTAMPDIFF(SECOND, T.createdAt, NOW()), '방금 전')
+                   WHEN TIMESTAMPDIFF(SECOND, T.createdAt, NOW()) < 60 THEN CONCAT(TIMESTAMPDIFF(SECOND, T.createdAt, NOW()), '초 전')
+                   WHEN TIMESTAMPDIFF(MINUTE, T.createdAt, NOW()) < 60 THEN CONCAT(TIMESTAMPDIFF(MINUTE, T.createdAt, NOW()), '분 전')
+                   WHEN TIMESTAMPDIFF(HOUR, T.createdAt, NOW()) < 24 THEN CONCAT(TIMESTAMPDIFF(HOUR, T.createdAt, NOW()), '시간 전')
+                   WHEN TIMESTAMPDIFF(DAY, T.createdAt, NOW()) < 30 THEN CONCAT(TIMESTAMPDIFF(DAY, T.createdAt, NOW()), '일 전')
+                   WHEN TIMESTAMPDIFF(MONTH, T.createdAt, NOW()) < 12 THEN CONCAT(TIMESTAMPDIFF(MONTH, T.createdAt, NOW()), '달 전')
+                   ELSE CONCAT(TIMESTAMPDIFF(YEAR, T.createdAt, NOW()), '년 전')
+                   END AS createdAt
         FROM Travel AS T
-                 INNER JOIN User AS U ON T.userIdx = U.idx AND U.isWithdraw = 'N'
+                 INNER JOIN User
+                            ON T.userIdx = User.idx AND User.isWithdraw = 'N' AND User.idx = ?
                  LEFT JOIN (
-            SELECT TravelHashtag.travelIdx AS hashTravelIdx, content
+            SELECT travelIdx, content
             FROM TravelHashtag
-                     INNER JOIN Hashtag ON Hashtag.idx = TravelHashtag.hashtagIdx
+                     INNER JOIN Hashtag
+                                ON Hashtag.idx = TravelHashtag.hashtagIdx
             WHERE TravelHashtag.status = 'Y'
-        ) AS H ON T.idx = H.hashTravelIdx
+        ) AS TH ON T.idx = TH.travelIdx
                  LEFT JOIN (
-            SELECT TravelScore.travelIdx AS scoreTravelIdx, AVG(score) AS travelScore
+            SELECT travelIdx, AVG(score) AS travelScore, COUNT(userIdx) AS userScoreCount
             FROM TravelScore
-            WHERE travelIdx = ?
-        ) AS S ON T.idx = S.scoreTravelIdx
+                     INNER JOIN User
+                                ON TravelScore.userIdx = User.idx AND User.isWithdraw = 'N'
+            GROUP BY travelIdx
+        ) AS TS ON T.idx = TS.travelIdx
                  LEFT JOIN (
-            SELECT travelIdx, userIdx, score AS myScore
-            FROM TravelScore
-            WHERE travelIdx = ?
-        ) AS MS ON T.userIdx = MS.userIdx
+            SELECT travelIdx, COUNT(TravelComment.idx) AS totalCommentCount
+            FROM TravelComment
+                     INNER JOIN User ON TravelComment.userIdx = User.idx AND User.isWithdraw = 'N'
+            WHERE travelIdx = ? AND status = 'Y'
+        ) AS TC ON TC.travelIdx = T.idx
                  LEFT JOIN (
-            SELECT travelIdx, COUNT(*) AS totalLikeCount,
-                   (SELECT status FROM TravelLike WHERE travelIdx = ? AND userIdx = ?) AS likeStatus
+            SELECT travelIdx, COUNT(*) AS totalLikeCount
             FROM TravelLike
-            WHERE TravelLike.travelIdx = ? AND TravelLike.status = 'Y'
-        ) AS ML ON T.idx = ML.travelIdx
-        WHERE T.idx = ? AND T.status = 'PUBLIC'
-        GROUP BY T.idx;
+                     INNER JOIN User
+                                ON User.idx = TravelLike.userIdx AND User.isWithdraw = 'N'
+            WHERE travelIdx = ? AND TravelLike.status = 'Y'
+        ) AS TL ON TL.travelIdx = T.idx
+        WHERE T.idx = ? AND T.status != 'DELETED'
+        GROUP BY T.idx; 
     `;
-    const [selectFeedInfoRow] = await connection.query(selectFeedInfoQuery, [travelIdx, travelIdx, travelIdx, travelIdx, userIdx, travelIdx, travelIdx]);
-    return selectFeedInfoRow;
+    const [selectMyTravelInfoRow] = await connection.query(selectMyTravelInfoQuery, [userIdx, travelIdx, travelIdx, travelIdx]);
+    return selectMyTravelInfoRow;
 }
 
-async function selectFeedDay(connection, travelIdx) {
-    const selectFeedDayQuery = `
-        SELECT Day.idx
-        FROM Day
-                 INNER JOIN Travel ON Day.travelIdx = Travel.idx AND Travel.status = 'PUBLIC'
-        WHERE travelIdx = ?
-        ORDER BY dayNumber;
-    `;
+
+async function selectFeedDay(connection, [travelIdx, isMine]) {
+    let selectFeedDayQuery = '';
+
+    if (isMine === 0) {
+        selectFeedDayQuery = `
+            SELECT Day.idx
+            FROM Day
+                INNER JOIN Travel ON Day.travelIdx = Travel.idx AND Travel.status = 'PUBLIC'
+            WHERE travelIdx = ?
+            ORDER BY dayNumber;
+        `;
+    }
+    else {
+        selectFeedDayQuery = `
+            SELECT Day.idx
+            FROM Day
+                INNER JOIN Travel ON Day.travelIdx = Travel.idx AND Travel.status != 'DELETED'
+            WHERE travelIdx = ?
+            ORDER BY dayNumber;
+        `;
+    }
+
     const [selectFeedDayRow] = await connection.query(selectFeedDayQuery, travelIdx);
     return selectFeedDayRow;
 }
@@ -503,11 +608,12 @@ module.exports = {
     selectTravelCommentList,
     selectTotalCommentCount,
     selectFeedThumnail,
-    selectFeedInfo,
     selectFeedDay,
     selectFeedAreaInfo,
     selectFeedReviewComment,
     selectFeedReviewImage,
     selectFeedScore,
-    selectIsDayExist
+    selectIsDayExist,
+    selectOtherTravelInfo,
+    selectMyTravelInfo
 };

@@ -101,6 +101,8 @@ module.exports = {
     MAINPAGE_EMPTY : { "isSuccess": false, "code": 2056, "message":"메인페이지 조회할 페이지 번호를 입력해주세요." },
     MAINPAGE_PAGE_ERROR_TYPE : { "isSuccess": false, "code": 2057, "message":"메인페이지 조회 페이지 번호는 1 이상으로 입력해주세요." },
 
+    TRAVEL_WRITER_WITHDRAW : { "isSuccess": false, "code": 2058, "message": "탈퇴한 유저의 게시물입니다." },
+
     // Response error
     REDUNDANT_NICKNAME : { "isSuccess": false, "code": 3001, "message":"중복된 닉네임입니다." },
     USER_ALREADY_SIGNUP : { "isSuccess": false, "code": 3002, "message":"이미 회원가입한 유저입니다." },

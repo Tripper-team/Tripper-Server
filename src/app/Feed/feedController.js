@@ -310,6 +310,7 @@ exports.getFeed = async function (req, res) {
     const userIdx = req.verifiedToken.userIdx;
     const travelIdx = req.params.feedIdx;
     const day = req.query.day;
+    let isMine = 0;
 
     // Validation
     if (!travelIdx && travelIdx !== 0)
@@ -326,7 +327,29 @@ exports.getFeed = async function (req, res) {
     if (userStatusCheckRow[0].isWithdraw === 'Y')
         return res.send(errResponse(baseResponse.USER_WITHDRAW));
 
-    const getFeedResponse = await feedProvider.retrieveFeedInfo(userIdx, travelIdx, day);
+    const travelStatus = await feedProvider.retrieveTravelStatus(travelIdx);
+
+    // 클릭한 게시물이 본인의 게시물이 아닐 경우
+    // PRIVATE 상태이면 조회 불가능
+    const travelWriterIdx = await feedProvider.retrieveTravelWriter(travelIdx);
+
+    if (travelWriterIdx === userIdx) {   // 본인의 게시물일 경우
+        isMine = 1;
+        if (travelStatus === 'DELETED')
+            return res.send(errResponse(baseResponse.TRAVEL_STATUS_DELETED));
+    }
+    else {   // 다른 사람 게시물일 경우
+        if ((await userProvider.checkUserStatus(travelWriterIdx))[0].isWithdraw === 'Y')
+            return res.send(errResponse(baseResponse.TRAVEL_WRITER_WITHDRAW));
+        else {
+            if (travelStatus === 'DELETED')
+                return res.send(errResponse(baseResponse.TRAVEL_STATUS_DELETED));
+            else if (travelStatus === 'PRIVATE')
+                return res.send(errResponse(baseResponse.TRAVEL_STATUS_PRIVATE));
+        }
+    }
+
+    const getFeedResponse = await feedProvider.retrieveFeedInfo(userIdx, travelWriterIdx, travelIdx, day, isMine);
     return res.send(response(baseResponse.TRAVEL_SEARCH_SUCCESS, getFeedResponse));
 };
 
