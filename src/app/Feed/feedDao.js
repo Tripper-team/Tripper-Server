@@ -523,12 +523,30 @@ async function selectFeedDay(connection, [travelIdx, isMine]) {
     return selectFeedDayRow;
 }
 
-async function selectFeedAreaInfo(connection, dayIdx) {
-    const selectFeedAreaInfoQuery = `
-        SELECT idx AS dayAreaIdx, areaCategory, areaName, areaLatitude, areaLongitude
+async function selectFeedDayInfo(connection, dayIdx, isMine) {
+    let selectFeedAreaInfoQuery = '';
+
+    if (isMine) {   // 본인게시물
+        selectFeedAreaInfoQuery = `
+            SELECT DayArea.idx AS areaIdx, dayIdx, areaCategory, areaName, areaLatitude, areaLongitude
         FROM DayArea
-        WHERE dayIdx = ?;
-    `;
+                 INNER JOIN Day ON DayArea.dayIdx = Day.idx
+                 INNER JOIN Travel ON Day.travelIdx = Travel.idx AND Travel.status != 'DELETED'
+        WHERE dayIdx = ?
+        ORDER BY DayArea.createdAt;
+        `;
+    }
+    else {   // 상대게시물
+        selectFeedAreaInfoQuery = `
+            SELECT DayArea.idx AS areaIdx, dayIdx, areaCategory, areaName, areaLatitude, areaLongitude
+        FROM DayArea
+                 INNER JOIN Day ON DayArea.dayIdx = Day.idx
+                 INNER JOIN Travel ON Day.travelIdx = Travel.idx AND Travel.status = 'PUBLIC'
+        WHERE dayIdx = ?
+        ORDER BY DayArea.createdAt;
+        `;
+    }
+
     const [selectFeedAreaInfoQueryRow] = await connection.query(selectFeedAreaInfoQuery, dayIdx);
     return selectFeedAreaInfoQueryRow;
 }
@@ -609,7 +627,7 @@ module.exports = {
     selectTotalCommentCount,
     selectFeedThumnail,
     selectFeedDay,
-    selectFeedAreaInfo,
+    selectFeedDayInfo,
     selectFeedReviewComment,
     selectFeedReviewImage,
     selectFeedScore,

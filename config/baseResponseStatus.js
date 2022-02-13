@@ -35,6 +35,7 @@ module.exports = {
     TRAVEL_SEARCH_SUCCESS : { "isSuccess": true, "code": 1030, "message":"특정 게시물 조회에 성공했습니다." },
     TRAVEL_COMMENT_SEARCH_SUCCESS : { "isSuccess": true, "code": 1031, "message":"특정 게시물 댓글 조회에 성공했습니다." },
     MAINPAGE_SEARCH_SUCCESS : { "isSuccess": true, "code": 1032, "message":"메인페이지 조회에 성공했습니다." },
+    DAYINFO_SEARCH_SUCCESS : { "isSuccess": true, "code": 1033, "message":"해당 Day에 있는 정보들 출력에 성공했습니다." },
 
     // Common
     TOKEN_EMPTY : { "isSuccess": false, "code": 2000, "message":"JWT 토큰을 입력해주세요." },
@@ -102,6 +103,7 @@ module.exports = {
     MAINPAGE_PAGE_ERROR_TYPE : { "isSuccess": false, "code": 2057, "message":"메인페이지 조회 페이지 번호는 1 이상으로 입력해주세요." },
 
     TRAVEL_WRITER_WITHDRAW : { "isSuccess": false, "code": 2058, "message": "탈퇴한 유저의 게시물입니다." },
+    DAY_IDX_EMPTY : { "isSuccess": false, "code": 2059, "message": "Day 인덱스를 입력해주세요." },
 
     // Response error
     REDUNDANT_NICKNAME : { "isSuccess": false, "code": 3001, "message":"중복된 닉네임입니다." },
@@ -136,6 +138,8 @@ module.exports = {
 
     TRAVEL_COMMENT_FINISH : { "isSuccess": false, "code": 3027, "message":"해당 게시물의 댓글 조회 결과가 없습니다." },
     MAINPAGE_FINISH : { "isSuccess": false, "code": 3028, "message":"메인페이지 조회 결과가 없습니다." },
+
+    TRAVEL_DAY_RESULT_EMPTY : { "isSuccess": false, "code": 3029, "message":"해당 Day에 대한 정보 결과가 없습니다." },
 
     //Connection, Transaction 등의 서버 오류
     DB_ERROR : { "isSuccess": false, "code": 4000, "message": "데이터 베이스 에러"},

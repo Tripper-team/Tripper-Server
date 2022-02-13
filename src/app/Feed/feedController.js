@@ -347,19 +347,58 @@ exports.getFeed = async function (req, res) {
 
 /**
  * API No. FD12
- * API Name : 특정 여행 게시물의 장소 리뷰 조회하기 API
- * [GET] /app/feeds/:feedIdx/search/review?day=&area=
+ * API Name : 특정 여행 게시물 day 정보 조회 API
+ * [GET] /app/feeds/:feedIdx/search/review?day=
  */
 exports.getFeedReview = async function (req, res) {
     const userIdx = req.verifiedToken.userIdx;
     const travelIdx = req.params.feedIdx;
-    const dayIdx = req.params.day;
-    const areaIdx = req.params.area;
+    const dayIdx = req.query.day;
+    let isMine = 0;
 
     // Validation
+    if (!travelIdx && travelIdx !== 0)
+        return res.send(errResponse(baseResponse.TRAVEL_IDX_EMPTY));
 
-    const getFeedReviewResponse = await feedProvider.retrieveFeedReview(userIdx, travelIdx, dayIdx, areaIdx);
-    return res.send(getFeedReviewResponse);
+    const userStatusCheckRow = await userProvider.checkUserStatus(userIdx);
+    if (userStatusCheckRow[0].isWithdraw === 'Y')
+        return res.send(errResponse(baseResponse.USER_WITHDRAW));
+
+    const travelStatus = await feedProvider.retrieveTravelStatus(travelIdx);
+
+    // 클릭한 게시물이 본인의 게시물이 아닐 경우
+    // PRIVATE 상태이면 조회 불가능
+    const travelWriterIdx = await feedProvider.retrieveTravelWriter(travelIdx);
+
+    if (travelWriterIdx === userIdx) {   // 본인의 게시물일 경우
+        isMine = 1;
+        if (travelStatus === 'DELETED')
+            return res.send(errResponse(baseResponse.TRAVEL_STATUS_DELETED));
+    }
+    else {   // 다른 사람 게시물일 경우
+        if ((await userProvider.checkUserStatus(travelWriterIdx))[0].isWithdraw === 'Y')
+            return res.send(errResponse(baseResponse.TRAVEL_WRITER_WITHDRAW));
+        else {
+            if (travelStatus === 'DELETED')
+                return res.send(errResponse(baseResponse.TRAVEL_STATUS_DELETED));
+            else if (travelStatus === 'PRIVATE')
+                return res.send(errResponse(baseResponse.TRAVEL_STATUS_PRIVATE));
+        }
+    }
+
+    if (!dayIdx)
+        return res.send(errResponse(baseResponse.DAY_IDX_EMPTY));
+
+    // day가 해당 게시물에 포함이 되어있는지
+    const isDayIncluded = await feedProvider.checkIsDayIncluded(travelIdx, dayIdx);
+    if (isDayIncluded === 0)
+        return res.send(errResponse(baseResponse.TRAVEL_DAY_NOT_INCLUDED));
+
+    const getFeedDayInfo = await feedProvider.retrieveFeedDayInfo(userIdx, travelIdx, dayIdx, isMine);
+    if (getFeedDayInfo.length === 0)
+        return res.send(errResponse(baseResponse.TRAVEL_DAY_RESULT_EMPTY));
+    else
+        return res.send(response(baseResponse.DAYINFO_SEARCH_SUCCESS, getFeedDayInfo));
 };
 
 /**

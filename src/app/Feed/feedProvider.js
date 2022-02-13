@@ -63,13 +63,11 @@ exports.retrieveFeedInfo = async function (userIdx, travelWriterIdx, travelIdx, 
     }
 };
 
-exports.retrieveFeedReview = async function (userIdx, travelIdx, dayIdx, areaIdx) {
+exports.retrieveFeedDayInfo = async function (userIdx, travelIdx, dayIdx, isMine) {
     const connection = await pool.getConnection(async (conn) => conn);
-
-    const feedReviewComment = await feedDao.selectFeedReviewComment(connection, areaIdx);
-    const feedReviewImage = await feedDao.selectFeedReviewImage(connection, areaIdx);
-
+    const feedDayInfoResult = await feedDao.selectFeedDayInfo(connection, dayIdx, isMine);
     connection.release();
+    return feedDayInfoResult;
 };
 
 exports.checkIsDayIncluded = async function (travelIdx, day) {

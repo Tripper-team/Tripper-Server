@@ -69,7 +69,7 @@ module.exports = function(app) {
     // FD11. 특정 여행 게시물 조회하기 API
     app.get('/app/feeds/:feedIdx/search', jwtMiddleware, feed.getFeed);
 
-    // FD12. 특정 여행 게시물의 장소 리뷰 조회하기 API
+    // FD12. 특정 여행 게시물 day 정보 조회 API
     app.get('/app/feeds/:feedIdx/search/review', jwtMiddleware, feed.getFeedReview);
 
     // FD13. 여행 게시물 댓글 작성하기 API
