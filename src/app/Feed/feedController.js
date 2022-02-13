@@ -304,24 +304,16 @@ exports.patchFeedStatus = async function (req, res) {
 /**
  * API No. FD11
  * API Name : 특정 여행 게시물 조회하기 API
- * [GET] /app/feeds/:feedIdx/travel?day=
+ * [GET] /app/feeds/:feedIdx/travel
  */
 exports.getFeed = async function (req, res) {
     const userIdx = req.verifiedToken.userIdx;
     const travelIdx = req.params.feedIdx;
-    const day = req.query.day;
     let isMine = 0;
 
     // Validation
     if (!travelIdx && travelIdx !== 0)
         return res.send(errResponse(baseResponse.TRAVEL_IDX_EMPTY));
-
-    // 입력한 day가 travelIdx의 day에 포함이 되는지 확인하기
-    if (day !== undefined) {
-        const isDayIncluded = await feedProvider.checkIsDayIncluded(travelIdx, day);
-        if (isDayIncluded === 0)
-            return res.send(errResponse(baseResponse.TRAVEL_DAY_NOT_INCLUDED));
-    }
 
     const userStatusCheckRow = await userProvider.checkUserStatus(userIdx);
     if (userStatusCheckRow[0].isWithdraw === 'Y')
@@ -349,7 +341,7 @@ exports.getFeed = async function (req, res) {
         }
     }
 
-    const getFeedResponse = await feedProvider.retrieveFeedInfo(userIdx, travelWriterIdx, travelIdx, day, isMine);
+    const getFeedResponse = await feedProvider.retrieveFeedInfo(userIdx, travelWriterIdx, travelIdx, isMine);
     return res.send(response(baseResponse.TRAVEL_SEARCH_SUCCESS, getFeedResponse));
 };
 

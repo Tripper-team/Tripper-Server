@@ -16,7 +16,7 @@ exports.retrieveTravelStatus = async function (travelIdx) {
     return travelStatus;
 };
 
-exports.retrieveFeedInfo = async function (userIdx, travelWriterIdx, travelIdx, day, isMine) {
+exports.retrieveFeedInfo = async function (userIdx, travelWriterIdx, travelIdx, isMine) {
     const connection = await pool.getConnection(async (conn) => conn);
     let travelThumnailArr = [];
     let travelDayArr = [];
