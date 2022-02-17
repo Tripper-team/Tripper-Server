@@ -36,6 +36,7 @@ module.exports = {
     TRAVEL_COMMENT_SEARCH_SUCCESS : { "isSuccess": true, "code": 1031, "message":"특정 게시물 댓글 조회에 성공했습니다." },
     MAINPAGE_SEARCH_SUCCESS : { "isSuccess": true, "code": 1032, "message":"메인페이지 조회에 성공했습니다." },
     DAYINFO_SEARCH_SUCCESS : { "isSuccess": true, "code": 1033, "message":"해당 Day에 있는 정보들 출력에 성공했습니다." },
+    AREAINFO_SEARCH_SUCCESS : { "isSuccess": true, "code": 1034, "message":"해당 장소에 대한 리뷰 조회에 성공했습니다." },
 
     // Common
     TOKEN_EMPTY : { "isSuccess": false, "code": 2000, "message":"JWT 토큰을 입력해주세요." },

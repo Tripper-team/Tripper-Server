@@ -70,7 +70,7 @@ module.exports = function(app) {
     app.get('/app/feeds/:feedIdx/search', jwtMiddleware, feed.getFeed);
 
     // FD12. 특정 여행 게시물 day 정보 조회 API
-    app.get('/app/feeds/:feedIdx/search/review', jwtMiddleware, feed.getFeedReview);
+    app.get('/app/feeds/:feedIdx/search/dayinfo', jwtMiddleware, feed.getFeedDayInfo);
 
     // FD13. 여행 게시물 댓글 작성하기 API
     app.post('/app/feeds/comments', jwtMiddleware, feed.postComment);
@@ -80,4 +80,7 @@ module.exports = function(app) {
 
     // FD15. 여행 게시물 댓글 조회하기 API
     app.get('/app/feeds/:feedIdx/comments-list', feed.getFeedComment);
+
+    // FD17. 특정 여행 게시물 day 안의 장소 정보 조회 API
+    app.get('/app/feeds/:feedIdx/search/review', jwtMiddleware, feed.getFeedAreaInfo);
 };

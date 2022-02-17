@@ -418,7 +418,7 @@ FROM Travel AS T
         SELECT travelIdx, userIdx, score AS myScore
         FROM TravelScore
         WHERE travelIdx = ? AND userIdx = ?
-    ) AS MS ON MS.userIdx = T.userIdx
+    ) AS MS ON MS.travelIdx = T.idx
     LEFT JOIN (
         SELECT travelIdx, COUNT(*) AS totalLikeCount,
                (SELECT status FROM TravelLike WHERE travelIdx = ? AND userIdx = ?) AS myLikeStatus
@@ -551,23 +551,29 @@ async function selectFeedDayInfo(connection, dayIdx, isMine) {
     return selectFeedAreaInfoQueryRow;
 }
 
-async function selectFeedReviewComment(connection, areaIdx) {
+async function selectFeedReviewComment(connection, [travelIdx, day, area]) {
     const selectFeedReviewCommentQuery = `
-        SELECT idx AS dayAreaIdx, areaCategory, areaName, areaLatitude, areaLongitude
-        FROM DayArea
-        WHERE dayIdx = ?;
+        SELECT review
+        FROM DayAreaReview
+                 INNER JOIN DayArea ON DayArea.idx = DayAreaReview.dayAreaIdx
+                 INNER JOIN Day ON DayArea.dayIdx = Day.idx AND Day.idx = ?
+                 INNER JOIN Travel ON Day.travelIdx = Travel.idx AND Travel.status != 'DELETED' AND Travel.idx = ?
+        WHERE dayAreaIdx = ?;
     `;
-    const [selectFeedReviewCommentRow] = await connection.query(selectFeedReviewCommentQuery, areaIdx);
+    const [selectFeedReviewCommentRow] = await connection.query(selectFeedReviewCommentQuery, [day, travelIdx, area]);
     return selectFeedReviewCommentRow;
 }
 
-async function selectFeedReviewImage(connection, areaIdx) {
+async function selectFeedReviewImage(connection, [travelIdx, day, area]) {
     const selectFeedReviewImageQuery = `
-        SELECT idx AS dayAreaIdx, areaCategory, areaName, areaLatitude, areaLongitude
-        FROM DayArea
-        WHERE dayIdx = ?;
+        SELECT travelImageUrl
+        FROM DayAreaImage
+                 INNER JOIN DayArea ON DayArea.idx = DayAreaImage.dayAreaIdx
+                 INNER JOIN Day ON DayArea.dayIdx = Day.idx AND Day.idx = ?
+                 INNER JOIN Travel ON Day.travelIdx = Travel.idx AND Travel.status != 'DELETED' AND Travel.idx = ?
+        WHERE dayAreaIdx = ?;
     `;
-    const [selectFeedReviewImageRow] = await connection.query(selectFeedReviewImageQuery, areaIdx);
+    const [selectFeedReviewImageRow] = await connection.query(selectFeedReviewImageQuery, [day, travelIdx, area]);
     return selectFeedReviewImageRow;
 }
 

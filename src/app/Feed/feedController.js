@@ -311,6 +311,8 @@ exports.getFeed = async function (req, res) {
     const travelIdx = req.params.feedIdx;
     let isMine = 0;
 
+    console.log(userIdx);
+
     // Validation
     if (!travelIdx && travelIdx !== 0)
         return res.send(errResponse(baseResponse.TRAVEL_IDX_EMPTY));
@@ -348,9 +350,9 @@ exports.getFeed = async function (req, res) {
 /**
  * API No. FD12
  * API Name : 특정 여행 게시물 day 정보 조회 API
- * [GET] /app/feeds/:feedIdx/search/review?day=
+ * [GET] /app/feeds/:feedIdx/search/dayinfo?day=
  */
-exports.getFeedReview = async function (req, res) {
+exports.getFeedDayInfo = async function (req, res) {
     const userIdx = req.verifiedToken.userIdx;
     const travelIdx = req.params.feedIdx;
     const dayIdx = req.query.day;
@@ -490,4 +492,21 @@ exports.getFeedComment = async function (req, res) {
                 return res.send(response(baseResponse.TRAVEL_COMMENT_SEARCH_SUCCESS, { 'totalCommentCount': getTravelCommentResponse[0], 'comments': getTravelCommentResponse[1] }));
         }
     }
+};
+
+/**
+ * API No. FD17
+ * API Name : 특정 여행 게시물 day 안의 장소 정보 조회 API
+ * [GET] /app/feeds/:feedIdx/search/review?day=&area=
+ */
+exports.getFeedAreaInfo = async function (req, res) {
+    const travelIdx = req.params.feedIdx;
+    const day = req.query.day;
+    const area = req.query.area;
+    let isMine = 0;
+
+    // Validation
+
+    const getFeedAreaInfo = await feedProvider.retrieveFeedAreaInfo(travelIdx, day, area);
+    return res.send(response(baseResponse.AREAINFO_SEARCH_SUCCESS, getFeedAreaInfo));
 };
