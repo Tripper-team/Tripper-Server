@@ -230,12 +230,12 @@ async function selectUserFeedInMyPageByOption(connection, [userIdx, option, star
 
   if (option === "내여행") {
     selectUserFeedInMyPageByOptionQuery = `
-      SELECT travelIdx, userIdx, title, introduce,
+      SELECT travelIdx, userIdx, travelTitle, travelIntroduce,
              travelStatus, travelThumnail,
              travelScore, travelHashtag, travelCreatedAt
       FROM (
              SELECT Travel.idx AS travelIdx, userIdx,
-                    title, introduce,
+                    title AS travelTitle, introduce AS travelIntroduce,
                     CASE
                       WHEN Travel.status = 'PUBLIC' THEN '공개'
                       WHEN Travel.status = 'PRIVATE' THEN '비공개'
@@ -290,12 +290,12 @@ async function selectUserFeedInMyPageByOption(connection, [userIdx, option, star
   }
   else if (option === "좋아요") {
     selectUserFeedInMyPageByOptionQuery = `
-      SELECT travelIdx, userIdx, travelLikeStatus, title, introduce,
+      SELECT travelIdx, userIdx, travelLikeStatus, travelTitle, travelIntroduce,
              travelThumnail, travelScore, travelHashtag, travelCreatedAt
       FROM (
              SELECT TravelLike.travelIdx, T.userIdx,
-                    TravelLike.status AS travelLikeStatus, T.title,
-                    T.introduce, IF(TH.thumImgUrl IS NULL, '썸네일 없음', TH.thumImgUrl) AS travelThumnail,
+                    TravelLike.status AS travelLikeStatus, T.title AS travelTitle,
+                    T.introduce AS travelIntroduce, IF(TH.thumImgUrl IS NULL, '썸네일 없음', TH.thumImgUrl) AS travelThumnail,
                     CASE
                       WHEN TS.score IS NULL THEN "점수 없음"
                       WHEN TS.score < 2.0 THEN "별로에요"
