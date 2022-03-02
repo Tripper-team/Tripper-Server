@@ -73,6 +73,7 @@ exports.retrieveUserMyPageInfo = async function (myIdx) {
   return userMyPageInfoResult;
 };
 
+// 자신의 마이페이지 조회
 exports.retrieveUserMyPageFeed = async function (myIdx, search_option, page, pageSize) {
   const connection = await pool.getConnection(async (conn) => conn);
   let start = (page - 1) * pageSize;

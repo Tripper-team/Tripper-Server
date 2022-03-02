@@ -230,52 +230,18 @@ async function selectUserFeedInMyPageByOption(connection, [userIdx, option, star
 
   if (option === "내여행") {
     selectUserFeedInMyPageByOptionQuery = `
-      SELECT travelIdx, travelTitle, travelIntroduce, travelStatus, travelHashtag, travelScore, thumImgUrl
+      SELECT travelIdx, userIdx, title, introduce,
+             travelStatus, travelThumnail,
+             travelScore, travelHashtag, travelCreatedAt
       FROM (
-             SELECT T.idx AS travelIdx, T.title AS travelTitle,
-                    T.introduce AS travelIntroduce, IF(T.status = 'PUBLIC', '공개', '비공개') AS travelStatus,
-                    GROUP_CONCAT(CONCAT('#', H.content) SEPARATOR ' ') AS travelHashtag,
+             SELECT Travel.idx AS travelIdx, userIdx,
+                    title, introduce,
                     CASE
-                      WHEN score IS NULL THEN "점수 없음"
-                      WHEN score < 2.0 THEN "별로에요"
-                      WHEN score < 3.0 THEN "도움되지 않았어요"
-                      WHEN score < 4.0 THEN "그저 그래요"
-                      WHEN score < 4.5 THEN "도움되었어요!"
-                      ELSE "최고의 여행!"
-                      END AS travelScore, thumImgUrl, T.createdAt AS createdAt
-             FROM Travel AS T
-                    LEFT JOIN (
-               SELECT travelIdx, content
-               FROM TravelHashtag
-                      INNER JOIN Hashtag ON TravelHashtag.hashtagIdx = Hashtag.idx
-               WHERE TravelHashtag.status = 'Y'
-             ) AS H ON T.idx = H.travelIdx
-                    LEFT JOIN (
-               SELECT travelIdx, AVG(score) AS score
-               FROM TravelScore
-                      INNER JOIN User ON TravelScore.userIdx = User.idx AND User.isWithdraw = 'N'
-               GROUP BY travelIdx
-             ) AS S ON T.idx = S.travelIdx
-                    LEFT JOIN (
-               SELECT idx, travelIdx, thumImgUrl
-               FROM TravelThumnail
-               GROUP BY travelIdx HAVING MIN(idx)
-             ) AS TH ON T.idx = TH.travelIdx
-             WHERE T.userIdx = ? AND T.status != 'DELETED'
-             GROUP BY T.idx
-           ) AS A
-      ORDER BY A.createdAt DESC
-      LIMIT ?, ?;
-    `;
-    const [selectUserFeedInMyPageByOptionRow] = await connection.query(selectUserFeedInMyPageByOptionQuery, [userIdx, start, pageSize]);
-    return selectUserFeedInMyPageByOptionRow;
-  }
-  else if (option === "좋아요") {
-    selectUserFeedInMyPageByOptionQuery = `
-      SELECT travelIdx, userIdx, status, travelHashtag, score, thumImgUrl, likeCreatedAt
-      FROM (
-             SELECT TL.travelIdx, TL.userIdx, TL.status, TL.createdAt AS likeCreatedAt,
-                    GROUP_CONCAT(CONCAT('#', TH.content) SEPARATOR ' ') AS travelHashtag,
+                      WHEN Travel.status = 'PUBLIC' THEN '공개'
+                      WHEN Travel.status = 'PRIVATE' THEN '비공개'
+                      ELSE '삭제됨'
+                      END AS travelStatus,
+                    IF(TH.thumImgUrl IS NULL, '썸네일 없음', TH.thumImgUrl) AS travelThumnail,
                     CASE
                       WHEN TS.score IS NULL THEN "점수 없음"
                       WHEN TS.score < 2.0 THEN "별로에요"
@@ -283,28 +249,93 @@ async function selectUserFeedInMyPageByOption(connection, [userIdx, option, star
                       WHEN TS.score < 4.0 THEN "그저 그래요"
                       WHEN TS.score < 4.5 THEN "도움되었어요!"
                       ELSE "최고의 여행!"
-                      END AS score, thumImgUrl
-             FROM TravelLike AS TL
-                    INNER JOIN Travel AS T ON TL.travelIdx = T.idx AND T.status = 'PUBLIC'
-                    LEFT JOIN (
-               SELECT TravelHashtag.travelIdx AS hashTravelIdx, content
-               FROM TravelHashtag
-                      INNER JOIN Hashtag ON Hashtag.idx = TravelHashtag.hashtagIdx
-               WHERE TravelHashtag.status = 'Y'
-             ) AS TH ON T.idx = TH.hashTravelIdx
+                      END AS travelScore, IF(TG.content IS NULL, '해시태그 없음', GROUP_CONCAT(CONCAT('#', TG.content) SEPARATOR ' ')) AS travelHashtag,
+                    CASE
+                      WHEN TIMESTAMPDIFF(SECOND, Travel.createdAt, NOW()) <= 0 THEN CONCAT(TIMESTAMPDIFF(SECOND, Travel.createdAt, NOW()), '방금 전')
+                      WHEN TIMESTAMPDIFF(SECOND, Travel.createdAt, NOW()) < 60 THEN CONCAT(TIMESTAMPDIFF(SECOND, Travel.createdAt, NOW()), '초 전')
+                      WHEN TIMESTAMPDIFF(MINUTE, Travel.createdAt, NOW()) < 60 THEN CONCAT(TIMESTAMPDIFF(MINUTE, Travel.createdAt, NOW()), '분 전')
+                      WHEN TIMESTAMPDIFF(HOUR, Travel.createdAt, NOW()) < 24 THEN CONCAT(TIMESTAMPDIFF(HOUR, Travel.createdAt, NOW()), '시간 전')
+                      WHEN TIMESTAMPDIFF(DAY, Travel.createdAt, NOW()) < 30 THEN CONCAT(TIMESTAMPDIFF(DAY, Travel.createdAt, NOW()), '일 전')
+                      WHEN TIMESTAMPDIFF(MONTH, Travel.createdAt, NOW()) < 12 THEN CONCAT(TIMESTAMPDIFF(MONTH, Travel.createdAt, NOW()), '달 전')
+                      ELSE CONCAT(TIMESTAMPDIFF(YEAR, Travel.createdAt, NOW()), '년 전')
+                      END AS travelCreatedAt
+             FROM Travel
                     LEFT JOIN (
                SELECT TravelScore.travelIdx, AVG(score) AS score
                FROM TravelScore
-                      INNER JOIN User ON TravelScore.userIdx = User.idx AND User.isWithdraw = 'N'
+                      INNER JOIN Travel ON TravelScore.travelIdx = Travel.idx AND Travel.status != 'DELETED'
+            INNER JOIN User ON TravelScore.userIdx = User.idx AND User.isWithdraw = 'N'
                GROUP BY TravelScore.travelIdx
-             ) AS TS ON TS.travelIdx = TH.hashTravelIdx
+             ) AS TS ON TS.travelIdx = Travel.idx
                     LEFT JOIN (
-               SELECT TravelThumnail.idx, travelIdx, thumImgUrl
+               SELECT travelIdx, thumImgUrl
                FROM TravelThumnail
-               GROUP BY travelIdx HAVING MIN(TravelThumnail.idx)
-             ) AS TM ON TS.travelIdx = TM.travelIdx
-             WHERE TL.userIdx = ? AND TL.status = 'Y'
-             GROUP BY TL.travelIdx
+               GROUP BY TravelIdx
+               HAVING MIN(TravelThumnail.idx)
+             ) AS TH ON TH.travelIdx = Travel.idx
+                    LEFT JOIN (
+               SELECT travelIdx, hashtagIdx, content
+               FROM TravelHashtag
+                      INNER JOIN Hashtag ON TravelHashtag.hashtagIdx = Hashtag.idx
+               WHERE TravelHashtag.status = 'Y'
+             ) AS TG ON TG.travelIdx = Travel.idx
+             WHERE Travel.userIdx = ? AND Travel.status != 'DELETED'
+             GROUP BY Travel.idx
+           ) AS A
+      ORDER BY travelCreatedAt
+      LIMIT ?, ?;
+    `;
+    const [selectUserFeedInMyPageByOptionRow] = await connection.query(selectUserFeedInMyPageByOptionQuery, [userIdx, start, pageSize]);
+    return selectUserFeedInMyPageByOptionRow;
+  }
+  else if (option === "좋아요") {
+    selectUserFeedInMyPageByOptionQuery = `
+      SELECT travelIdx, userIdx, travelLikeStatus, title, introduce,
+             travelThumnail, travelScore, travelHashtag, travelCreatedAt
+      FROM (
+             SELECT TravelLike.travelIdx, T.userIdx,
+                    TravelLike.status AS travelLikeStatus, T.title,
+                    T.introduce, IF(TH.thumImgUrl IS NULL, '썸네일 없음', TH.thumImgUrl) AS travelThumnail,
+                    CASE
+                      WHEN TS.score IS NULL THEN "점수 없음"
+                      WHEN TS.score < 2.0 THEN "별로에요"
+                      WHEN TS.score < 3.0 THEN "도움되지 않았어요"
+                      WHEN TS.score < 4.0 THEN "그저 그래요"
+                      WHEN TS.score < 4.5 THEN "도움되었어요!"
+                      ELSE "최고의 여행!"
+                      END AS travelScore,  IF(TG.content IS NULL, '해시태그 없음', GROUP_CONCAT(CONCAT('#', TG.content) SEPARATOR ' ')) AS travelHashtag,
+                    CASE
+                      WHEN TIMESTAMPDIFF(SECOND, T.createdAt, NOW()) <= 0 THEN CONCAT(TIMESTAMPDIFF(SECOND, T.createdAt, NOW()), '방금 전')
+                      WHEN TIMESTAMPDIFF(SECOND, T.createdAt, NOW()) < 60 THEN CONCAT(TIMESTAMPDIFF(SECOND, T.createdAt, NOW()), '초 전')
+                      WHEN TIMESTAMPDIFF(MINUTE, T.createdAt, NOW()) < 60 THEN CONCAT(TIMESTAMPDIFF(MINUTE, T.createdAt, NOW()), '분 전')
+                      WHEN TIMESTAMPDIFF(HOUR, T.createdAt, NOW()) < 24 THEN CONCAT(TIMESTAMPDIFF(HOUR, T.createdAt, NOW()), '시간 전')
+                      WHEN TIMESTAMPDIFF(DAY, T.createdAt, NOW()) < 30 THEN CONCAT(TIMESTAMPDIFF(DAY, T.createdAt, NOW()), '일 전')
+                      WHEN TIMESTAMPDIFF(MONTH, T.createdAt, NOW()) < 12 THEN CONCAT(TIMESTAMPDIFF(MONTH, T.createdAt, NOW()), '달 전')
+                      ELSE CONCAT(TIMESTAMPDIFF(YEAR, T.createdAt, NOW()), '년 전')
+                      END AS travelCreatedAt, TravelLike.createdAt AS likeCreatedAt
+             FROM TravelLike
+                    INNER JOIN Travel AS T ON TravelLike.travelIdx = T.idx AND T.status = 'PUBLIC'
+                    LEFT JOIN (
+               SELECT TravelScore.travelIdx, AVG(score) AS score
+               FROM TravelScore
+                      INNER JOIN Travel ON TravelScore.travelIdx = Travel.idx AND Travel.status != 'DELETED'
+            INNER JOIN User ON TravelScore.userIdx = User.idx AND User.isWithdraw = 'N'
+               GROUP BY TravelScore.travelIdx
+             ) AS TS ON TS.travelIdx = TravelLike.travelIdx
+                    LEFT JOIN (
+               SELECT travelIdx, thumImgUrl
+               FROM TravelThumnail
+               GROUP BY TravelIdx
+               HAVING MIN(TravelThumnail.idx)
+             ) AS TH ON TH.travelIdx = TravelLike.travelIdx
+                    LEFT JOIN (
+               SELECT travelIdx, hashtagIdx, content
+               FROM TravelHashtag
+                      INNER JOIN Hashtag ON TravelHashtag.hashtagIdx = Hashtag.idx
+               WHERE TravelHashtag.status = 'Y'
+             ) AS TG ON TG.travelIdx = TravelLike.travelIdx
+             WHERE TravelLike.userIdx = ? AND TravelLike.status = 'Y'
+             GROUP BY TravelLike.travelIdx
            ) AS A
       ORDER BY likeCreatedAt
       LIMIT ?, ?;  

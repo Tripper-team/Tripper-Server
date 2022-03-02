@@ -421,7 +421,7 @@ exports.getMyPage = async function (req, res) {
     const userMyPageInfoResult = await userProvider.retrieveUserMyPageInfo(myIdx);   // 마이페이지 윗부분
     const userMyPageFeedResult = await userProvider.retrieveUserMyPageFeed(myIdx, search_option, page, pageSize);   // 마이페이지 아랫부분 (게시물)
 
-    if (userMyPageFeedResult === -1)
+    if (userMyPageFeedResult === -1 || userMyPageFeedResult.length === 0)
         return res.send(response(baseResponse.MYPAGE_PAGE_FINISH, { "userMyPageInfo": userMyPageInfoResult[0] }));
     else
         return res.send(response(baseResponse.MYPAGE_SEARCH_SUCCESS, { "userMyPageInfo": userMyPageInfoResult[0], "userMyPageFeedByOption": userMyPageFeedResult}));
