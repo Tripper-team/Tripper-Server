@@ -258,7 +258,7 @@ async function selectUserFeedInMyPageByOption(connection, [userIdx, option, star
                       WHEN TIMESTAMPDIFF(DAY, Travel.createdAt, NOW()) < 30 THEN CONCAT(TIMESTAMPDIFF(DAY, Travel.createdAt, NOW()), '일 전')
                       WHEN TIMESTAMPDIFF(MONTH, Travel.createdAt, NOW()) < 12 THEN CONCAT(TIMESTAMPDIFF(MONTH, Travel.createdAt, NOW()), '달 전')
                       ELSE CONCAT(TIMESTAMPDIFF(YEAR, Travel.createdAt, NOW()), '년 전')
-                      END AS travelCreatedAt
+                      END AS travelCreatedAt, Travel.createdAt AS tc
              FROM Travel
                     LEFT JOIN (
                SELECT TravelScore.travelIdx, AVG(score) AS score
@@ -282,7 +282,7 @@ async function selectUserFeedInMyPageByOption(connection, [userIdx, option, star
              WHERE Travel.userIdx = ? AND Travel.status != 'DELETED'
              GROUP BY Travel.idx
            ) AS A
-      ORDER BY travelCreatedAt
+      ORDER BY A.tc DESC
       LIMIT ?, ?;
     `;
     const [selectUserFeedInMyPageByOptionRow] = await connection.query(selectUserFeedInMyPageByOptionQuery, [userIdx, start, pageSize]);
@@ -337,7 +337,7 @@ async function selectUserFeedInMyPageByOption(connection, [userIdx, option, star
              WHERE TravelLike.userIdx = ? AND TravelLike.status = 'Y'
              GROUP BY TravelLike.travelIdx
            ) AS A
-      ORDER BY likeCreatedAt
+      ORDER BY A.likeCreatedAt DESC
       LIMIT ?, ?;  
       `;
     const [selectUserFeedInMyPageByOptionRow] = await connection.query(selectUserFeedInMyPageByOptionQuery, [userIdx, start, pageSize]);
