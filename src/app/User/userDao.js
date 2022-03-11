@@ -369,18 +369,22 @@ async function selectTotalUserFeedInMyPageByOption(connection, [userIdx, option]
 
 async function selectOtherInfoInProfile(connection, [myIdx, userIdx]) {
   const selectOtherInfoInProfileQuery = `
-    SELECT profileImgUrl, nickName,
-           (SELECT COUNT(toIdx)
-            FROM Follow
-                   INNER JOIN User ON Follow.toIdx = User.idx AND Follow.fromIdx = ? AND User.isWithdraw = 'N' AND Follow.status = 'Y') AS followingCount,
-           (SELECT COUNT(fromIdx)
-            FROM Follow
-                   INNER JOIN User ON Follow.fromIdx = User.idx AND Follow.toIdx = ? AND User.isWithdraw = 'N' AND Follow.status = 'Y') AS followerCount,
-           (SELECT status
-            FROM Follow
-            WHERE fromIdx = ? AND toIdx = ?) AS followStatus
-    FROM User
-    WHERE User.idx = ? AND User.isWithdraw = 'N';
+    SELECT profileImgUrl, nickName, followingCount, followerCount,
+           IF(followStatus = 'Y', '팔로우 하는중', '팔로우 안하는중') AS followStatus
+    FROM (
+           SELECT profileImgUrl, nickName,
+                  (SELECT COUNT(toIdx)
+                   FROM Follow
+                          INNER JOIN User ON Follow.toIdx = User.idx AND Follow.fromIdx = ? AND User.isWithdraw = 'N' AND Follow.status = 'Y') AS followingCount,
+                  (SELECT COUNT(fromIdx)
+                   FROM Follow
+                          INNER JOIN User ON Follow.fromIdx = User.idx AND Follow.toIdx = ? AND User.isWithdraw = 'N' AND Follow.status = 'Y') AS followerCount,
+                  (SELECT status
+                   FROM Follow
+                   WHERE fromIdx = ? AND toIdx = ?) AS followStatus
+           FROM User
+           WHERE User.idx = ? AND User.isWithdraw = 'N'
+         ) AS A;
   `;
   const [selectOtherInfoInProfileRow] = await connection.query(selectOtherInfoInProfileQuery, [userIdx, userIdx, myIdx, userIdx, userIdx]);
   return selectOtherInfoInProfileRow;
@@ -398,46 +402,64 @@ async function selectTotalUserFeed(connection, userIdx) {
 
 async function selectOtherFeedInProfile(connection, [myIdx, userIdx, start, pageSize]) {
   const selectOtherFeedInProfileQuery = `
-    SELECT travelIdx, travelTitle, travelIntroduce, travelHashtag, travelScore, likeStatus, thumImgUrl
+    SELECT travelIdx, userIdx, travelTitle,
+           travelIntroduce, travelHashtag, likeStatus,
+           thumImgUrl, travelScore,
+           CASE
+             WHEN TIMESTAMPDIFF(SECOND, createdAt, NOW()) <= 0 THEN CONCAT(TIMESTAMPDIFF(SECOND, createdAt, NOW()), '방금 전')
+             WHEN TIMESTAMPDIFF(SECOND, createdAt, NOW()) < 60 THEN CONCAT(TIMESTAMPDIFF(SECOND, createdAt, NOW()), '초 전')
+             WHEN TIMESTAMPDIFF(MINUTE, createdAt, NOW()) < 60 THEN CONCAT(TIMESTAMPDIFF(MINUTE, createdAt, NOW()), '분 전')
+             WHEN TIMESTAMPDIFF(HOUR, createdAt, NOW()) < 24 THEN CONCAT(TIMESTAMPDIFF(HOUR, createdAt, NOW()), '시간 전')
+             WHEN TIMESTAMPDIFF(DAY, createdAt, NOW()) < 30 THEN CONCAT(TIMESTAMPDIFF(DAY, createdAt, NOW()), '일 전')
+             WHEN TIMESTAMPDIFF(MONTH, createdAt, NOW()) < 12 THEN CONCAT(TIMESTAMPDIFF(MONTH, createdAt, NOW()), '달 전')
+             ELSE CONCAT(TIMESTAMPDIFF(YEAR, createdAt, NOW()), '년 전')
+             END AS travelCreatedAt
     FROM (
-           SELECT T.idx AS travelIdx, T.title AS travelTitle,
-                  T.introduce AS travelIntroduce, GROUP_CONCAT(CONCAT('#', H.content) SEPARATOR ' ') AS travelHashtag,
+           SELECT Travel.idx AS travelIdx, Travel.userIdx,
+                  title AS travelTitle, introduce AS travelIntroduce,
+                  IF(TG.content IS NULL, '해시태그 없음', GROUP_CONCAT(CONCAT('#', TG.content) SEPARATOR ' ')) AS travelHashtag,
+                  Travel.createdAt AS createdAt, IF(likeStatus = 'Y', '좋아요 하는중', '좋아요 안하는중') AS likeStatus,
+                  thumImgUrl,
                   CASE
-                    WHEN S.score IS NULL THEN "점수 없음"
-                    WHEN S.score < 2.0 THEN "별로에요"
-                    WHEN S.score < 3.0 THEN "도움되지 않았어요"
-                    WHEN S.score < 4.0 THEN "그저 그래요"
-                    WHEN S.score < 4.5 THEN "도움되었어요!"
+                    WHEN TS.score IS NULL THEN "점수 없음"
+                    WHEN TS.score < 2.0 THEN "별로에요"
+                    WHEN TS.score < 3.0 THEN "도움되지 않았어요"
+                    WHEN TS.score < 4.0 THEN "그저 그래요"
+                    WHEN TS.score < 4.5 THEN "도움되었어요!"
                     ELSE "최고의 여행!"
-                    END AS travelScore, thumImgUrl, IF(likeStatus = 'Y', '좋아요 하는중', '좋아요 안하는중') AS likeStatus, T.createdAt AS createdAt
-           FROM Travel AS T
+                    END AS travelScore
+           FROM Travel
                   LEFT JOIN (
-             SELECT travelIdx, content
+             SELECT travelIdx, hashtagIdx, content
              FROM TravelHashtag
                     INNER JOIN Hashtag ON TravelHashtag.hashtagIdx = Hashtag.idx
              WHERE TravelHashtag.status = 'Y'
-           ) AS H ON T.idx = H.travelIdx
+           ) AS TG ON TG.travelIdx = Travel.idx
                   LEFT JOIN (
-             SELECT travelIdx, AVG(score) AS score
-             FROM TravelScore
-                    INNER JOIN User ON TravelScore.userIdx = User.idx AND User.isWithdraw = 'N'
-             GROUP BY travelIdx
-           ) AS S ON T.idx = S.travelIdx
-                  LEFT JOIN (
-             SELECT idx, travelIdx, thumImgUrl
-             FROM TravelThumnail
-             GROUP BY travelIdx HAVING MIN(idx)
-           ) AS TH ON T.idx = TH.travelIdx
-                  LEFT JOIN (
-             SELECT travelIdx, userIdx, status AS likeStatus
+             SELECT travelIdx, TravelLike.userIdx, TravelLike.status AS likeStatus
              FROM TravelLike
-             WHERE userIdx = ?
-           ) AS TL ON T.idx = TL.travelIdx
-           WHERE T.userIdx = ? AND T.status = 'PUBLIC'
-           GROUP BY travelIdx
+                    INNER JOIN Travel ON Travel.idx = TravelLike.travelIdx AND Travel.status = 'PUBLIC'
+                    INNER JOIN User ON User.idx = TravelLike.userIdx AND User.isWithdraw = 'N'
+             WHERE TravelLike.userIdx = ?
+           ) AS TL ON Travel.idx = TL.travelIdx
+                  LEFT JOIN (
+             SELECT travelIdx, thumImgUrl
+             FROM TravelThumnail
+             GROUP BY TravelIdx
+             HAVING MIN(TravelThumnail.idx)
+           ) AS TH ON TH.travelIdx = Travel.idx
+                  LEFT JOIN (
+             SELECT TravelScore.travelIdx, AVG(score) AS score
+             FROM TravelScore
+                    INNER JOIN Travel ON TravelScore.travelIdx = Travel.idx AND Travel.status != 'DELETED'
+            INNER JOIN User ON TravelScore.userIdx = User.idx AND User.isWithdraw = 'N'
+             GROUP BY TravelScore.travelIdx
+           ) AS TS ON TS.travelIdx = Travel.idx
+           WHERE Travel.userIdx = ? AND Travel.status = 'PUBLIC'
+           GROUP BY Travel.idx
          ) AS A
-    ORDER BY createdAt DESC
-    LIMIT ?, ?;  
+    ORDER BY A.createdAt DESC
+    LIMIT ?, ?;
   `;
   const [selectOtherFeedInProfileRow] = await connection.query(selectOtherFeedInProfileQuery, [myIdx, userIdx, start, pageSize]);
   return selectOtherFeedInProfileRow;

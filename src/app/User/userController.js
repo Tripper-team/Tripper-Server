@@ -240,39 +240,6 @@ exports.editUserProfile = async function (req, res) {
 };
 
 /**
- * API No. P4
- * API Name : 상대방 프로필 조회 API
- * [GET] /app/users/:userIdx/profile?page=
- */
-exports.getOtherProfile = async function (req, res) {
-    const myIdx = req.verifiedToken.userIdx;
-    const userIdx = req.params.userIdx;
-    let page = parseInt(req.query.page);
-    const pageSize = 3;   // 한 페이지당 보여줄 데이터의 갯수
-
-    // Validation
-    if (!userIdx)
-        return res.send(errResponse(baseResponse.USER_IDX_EMPTY));
-    if (!page && page !== 0)
-        return res.send(errResponse(baseResponse.MYPAGE_PAGE_EMPTY));
-    if (page <= 0)
-        return res.send(errResponse(baseResponse.MYPAGE_PAGE_ERROR_TYPE));
-
-    const userStatusCheckRow = await userProvider.checkUserStatus(userIdx);
-    const myStatusCheckRow = await userProvider.checkUserStatus(myIdx);
-    if (userStatusCheckRow[0].isWithdraw === 'Y' || myStatusCheckRow[0].isWithdraw === 'Y')
-        return errResponse(baseResponse.USER_WITHDRAW);
-
-    const userProfileInfoResult = await userProvider.retrieveOtherProfileInfo(myIdx, userIdx);   // 상대방 프로필 윗부분
-    const userProfileFeedResult = await userProvider.retrieveOtherProfileFeed(myIdx, userIdx, page, pageSize);   // 마이페이지 아랫부분 (게시물)
-
-    if (userProfileFeedResult === -1)
-        return res.send(response(baseResponse.USER_PROFILE_FINISH, { 'otherProfileInfo': userProfileInfoResult[0]}));
-    else
-        return res.send(response(baseResponse.USER_PROFILE_SEARCH_SUCCESS, { 'otherProfileInfo': userProfileInfoResult[0], 'otherProfileFeed': userProfileFeedResult }));
-};
-
-/**
  * API No. 6
  * API Name : 팔로우 API
  * [POST] /app/users/follow
@@ -425,4 +392,37 @@ exports.getMyPage = async function (req, res) {
         return res.send(response(baseResponse.MYPAGE_PAGE_FINISH, { "userMyPageInfo": userMyPageInfoResult[0] }));
     else
         return res.send(response(baseResponse.MYPAGE_SEARCH_SUCCESS, { "userMyPageInfo": userMyPageInfoResult[0], "userMyPageFeedByOption": userMyPageFeedResult}));
+};
+
+/**
+ * API No. P4
+ * API Name : 상대방 프로필 조회 API
+ * [GET] /app/users/:userIdx/profile?page=
+ */
+exports.getOtherProfile = async function (req, res) {
+    const myIdx = req.verifiedToken.userIdx;
+    const userIdx = req.params.userIdx;
+    let page = parseInt(req.query.page);
+    const pageSize = 3;   // 한 페이지당 보여줄 데이터의 갯수
+
+    // Validation
+    if (!userIdx)
+        return res.send(errResponse(baseResponse.USER_IDX_EMPTY));
+    if (!page && page !== 0)
+        return res.send(errResponse(baseResponse.MYPAGE_PAGE_EMPTY));
+    if (page <= 0)
+        return res.send(errResponse(baseResponse.MYPAGE_PAGE_ERROR_TYPE));
+
+    const userStatusCheckRow = await userProvider.checkUserStatus(userIdx);
+    const myStatusCheckRow = await userProvider.checkUserStatus(myIdx);
+    if (userStatusCheckRow[0].isWithdraw === 'Y' || myStatusCheckRow[0].isWithdraw === 'Y')
+        return errResponse(baseResponse.USER_WITHDRAW);
+
+    const userProfileInfoResult = await userProvider.retrieveOtherProfileInfo(myIdx, userIdx);   // 상대방 프로필 윗부분
+    const userProfileFeedResult = await userProvider.retrieveOtherProfileFeed(myIdx, userIdx, page, pageSize);   // 마이페이지 아랫부분 (게시물)
+
+    if (userProfileFeedResult === -1 || userProfileFeedResult.length === 0)
+        return res.send(response(baseResponse.USER_PROFILE_FINISH, { 'otherProfileInfo': userProfileInfoResult[0]}));
+    else
+        return res.send(response(baseResponse.USER_PROFILE_SEARCH_SUCCESS, { 'otherProfileInfo': userProfileInfoResult[0], 'otherProfileFeed': userProfileFeedResult }));
 };
