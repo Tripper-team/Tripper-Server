@@ -360,6 +360,7 @@ async function selectTotalUserFeedInMyPageByOption(connection, [userIdx, option]
       SELECT COUNT(travelIdx) AS totalCount
       FROM TravelLike
              INNER JOIN Travel ON TravelLike.travelIdx = Travel.idx AND Travel.status = 'PUBLIC'
+             INNER JOIN User ON TravelLike.userIdx = User.idx AND User.isWithdraw = 'N'
       WHERE TravelLike.userIdx = ? AND TravelLike.status = 'Y';
     `;
   }
