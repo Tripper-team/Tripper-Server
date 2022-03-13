@@ -183,7 +183,7 @@ exports.postFeed = async function (req, res) {
         case '자전거 여행':
             traffic = 'B';
             break;
-        case '도보 여행':
+        case '도보로 여행':
             traffic = 'W';
             break;
         default:
