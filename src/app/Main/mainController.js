@@ -33,7 +33,7 @@ exports.getMainPage = async function (req, res) {
         return errResponse(baseResponse.USER_WITHDRAW);
 
     const mainPageResult = await mainProvider.retrieveMainPage(userIdx, option, page, pageSize);
-    if (mainPageResult === -1)
+    if (mainPageResult === -1 || mainPageResult.length === 0)
         return res.send(errResponse(baseResponse.MAINPAGE_FINISH));
     else
         return res.send(response(baseResponse.MAINPAGE_SEARCH_SUCCESS, mainPageResult));
