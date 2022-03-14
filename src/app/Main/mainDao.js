@@ -70,7 +70,7 @@ async function selectMainPageByOption(connection, [userIdx, option, start, pageS
             selectMainPageByOptionQuery = `
                 SELECT travelIdx, userIdx, nickName,
        profileImgUrl, title, introduce, travelScore,
-       thumImgUrl, myLikeStatus, TravelHashtag,
+       thumImgUrl, myLikeStatus, travelHashtag,
        CASE
          WHEN TIMESTAMPDIFF(SECOND, travelCreatedAt, NOW()) <= 0 THEN CONCAT(TIMESTAMPDIFF(SECOND, travelCreatedAt, NOW()), '방금 전')
          WHEN TIMESTAMPDIFF(SECOND, travelCreatedAt, NOW()) < 60 THEN CONCAT(TIMESTAMPDIFF(SECOND, travelCreatedAt, NOW()), '초 전')
@@ -140,7 +140,7 @@ LIMIT ?, ?;
             selectMainPageByOptionQuery = `
                 SELECT travelIdx, userIdx, nickName,
                        profileImgUrl, title, introduce, travelScore,
-                       thumImgUrl, myLikeStatus, TravelHashtag,
+                       thumImgUrl, myLikeStatus, travelHashtag,
                        CASE
                            WHEN TIMESTAMPDIFF(SECOND, travelCreatedAt, NOW()) <= 0 THEN CONCAT(TIMESTAMPDIFF(SECOND, travelCreatedAt, NOW()), '방금 전')
                            WHEN TIMESTAMPDIFF(SECOND, travelCreatedAt, NOW()) < 60 THEN CONCAT(TIMESTAMPDIFF(SECOND, travelCreatedAt, NOW()), '초 전')
@@ -281,7 +281,7 @@ async function selectMainPageResultCount(connection, [userIdx, option]) {
                 FROM (
                          SELECT travelIdx, userIdx, nickName,
                                 profileImgUrl, title, introduce, travelScore,
-                                thumImgUrl, myLikeStatus, TravelHashtag,
+                                thumImgUrl, myLikeStatus, travelHashtag,
                                 CASE
                                     WHEN TIMESTAMPDIFF(SECOND, travelCreatedAt, NOW()) <= 0 THEN CONCAT(TIMESTAMPDIFF(SECOND, travelCreatedAt, NOW()), '방금 전')
                                     WHEN TIMESTAMPDIFF(SECOND, travelCreatedAt, NOW()) < 60 THEN CONCAT(TIMESTAMPDIFF(SECOND, travelCreatedAt, NOW()), '초 전')
@@ -351,7 +351,7 @@ async function selectMainPageResultCount(connection, [userIdx, option]) {
             selectMainPageResultCountQuery = `
                 SELECT travelIdx, userIdx, nickName,
                        profileImgUrl, title, introduce, travelScore,
-                       thumImgUrl, myLikeStatus, TravelHashtag,
+                       thumImgUrl, myLikeStatus, travelHashtag,
                        CASE
                            WHEN TIMESTAMPDIFF(SECOND, travelCreatedAt, NOW()) <= 0 THEN CONCAT(TIMESTAMPDIFF(SECOND, travelCreatedAt, NOW()), '방금 전')
                            WHEN TIMESTAMPDIFF(SECOND, travelCreatedAt, NOW()) < 60 THEN CONCAT(TIMESTAMPDIFF(SECOND, travelCreatedAt, NOW()), '초 전')
