@@ -504,6 +504,7 @@ exports.getFeedAreaInfo = async function (req, res) {
     const dayIdx = req.query.day;
     const areaIdx = req.query.area;
     const myIdx = req.verifiedToken.userIdx;
+    const travelWriterIdx = await feedProvider.retrieveTravelWriter(travelIdx);
 
     // Validation
     if (!travelIdx && travelIdx !== 0)
@@ -517,6 +518,11 @@ exports.getFeedAreaInfo = async function (req, res) {
     const userStatusCheckRow = await userProvider.checkUserStatus(myIdx);
     if (userStatusCheckRow[0].isWithdraw === 'Y')
         return res.send(errResponse(baseResponse.USER_WITHDRAW));
+
+    // 게시물 작성자의 status 확인
+    const writerStatusCheckRow = await userProvider.checkUserStatus(travelWriterIdx);
+    if (writerStatusCheckRow[0].isWithdraw === 'Y')
+        return res.send(errResponse(baseResponse.TRAVEL_WRITER_WITHDRAW));
 
     // 실제 있는 dayIdx인지 확인하기
     const dayIdxCheckRow = await feedProvider.checkIsDayIncluded(travelIdx, dayIdx);
@@ -539,7 +545,6 @@ exports.getFeedAreaInfo = async function (req, res) {
         return res.send(errResponse(baseResponse.TRAVEL_STATUS_DELETED));
     else {
         if (travelStatusCheckRow === 'PRIVATE') {
-            const travelWriterIdx = await feedProvider.retrieveTravelWriter(travelIdx);
             if (travelWriterIdx !== myIdx)
                 return res.send(errResponse(baseResponse.TRAVEL_STATUS_PRIVATE));
         }
