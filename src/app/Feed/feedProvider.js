@@ -84,24 +84,6 @@ exports.checkIsAreaIncluded = async function (dayIdx, dayAreaIdx) {
     return isAreaIncludedResponse;
 };
 
-exports.retrieveFeedAreaInfo = async function (travelIdx, day, area) {
-    const connection = await pool.getConnection(async (conn) => conn);
-    let feedReviewImageArr = [];
-
-    const feedReviewComment = String((await feedDao.selectFeedReviewComment(connection, [travelIdx, day, area]))[0].review);
-    const feedReviewImage = await feedDao.selectFeedReviewImage(connection, [travelIdx, day, area]);
-
-    feedReviewImage.forEach((img) => {
-        feedReviewImageArr.push(img.travelImageUrl);
-    });
-
-    connection.release();
-    return {
-        'areaReviewComment': feedReviewComment,
-        'areaReviewImage': feedReviewImageArr
-    };
-};
-
 exports.checkTravelStatus = async (travelIdx) => {
     const connection = await pool.getConnection(async (conn) => conn);
     const travelStatusResponse = (await feedDao.selectTravelStatus(connection, travelIdx))[0].travelStatus;
