@@ -522,7 +522,7 @@ exports.getFeedAreaInfo = async function (req, res) {
     // 게시물 작성자의 status 확인
     const writerStatusCheckRow = await userProvider.checkUserStatus(travelWriterIdx);
     if (writerStatusCheckRow[0].isWithdraw === 'Y')
-        return res.send(errResponse(baseResponse.TRAVEL_WRITER_WITHDRAW));
+        return res.send(errResponse(baseResponse.TRAVEL_WRITER_WITHDRAW2));
 
     // 실제 있는 dayIdx인지 확인하기
     const dayIdxCheckRow = await feedProvider.checkIsDayIncluded(travelIdx, dayIdx);
@@ -550,6 +550,6 @@ exports.getFeedAreaInfo = async function (req, res) {
         }
 
         const areaReviewResponse = await feedProvider.retrieveAreaReview(travelIdx, dayIdx, areaIdx);
-        return res.send(response(baseResponse.SUCCESS, { 'travelAreaReviewImage': areaReviewResponse[0], 'travelAreaReviewComment': areaReviewResponse[1] }));
+        return res.send(response(baseResponse.AREAINFO_SEARCH_SUCCESS, { 'travelAreaReviewImage': areaReviewResponse[0], 'travelAreaReviewComment': areaReviewResponse[1] }));
     }
 };
