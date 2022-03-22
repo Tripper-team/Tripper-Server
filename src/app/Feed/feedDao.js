@@ -595,6 +595,14 @@ async function selectIsDayExist(connection, [travelIdx, day]) {
     return selectIsDayExistRow;
 }
 
+async function selectIsAreaExist(connection, [dayIdx, dayAreaIdx]) {
+    const selectIsAreaExistQuery = `
+        SELECT EXISTS(SELECT idx FROM DayArea WHERE dayIdx = ? AND idx = ?) AS isAreaExist;
+    `;
+    const [selectIsAreaExistRow] = await connection.query(selectIsAreaExistQuery, [dayIdx, dayAreaIdx]);
+    return selectIsAreaExistRow;
+}
+
 module.exports = {
     insertNewFeed,
     selectFeedIdxByAll,
@@ -639,5 +647,6 @@ module.exports = {
     selectFeedScore,
     selectIsDayExist,
     selectOtherTravelInfo,
-    selectMyTravelInfo
+    selectMyTravelInfo,
+    selectIsAreaExist
 };

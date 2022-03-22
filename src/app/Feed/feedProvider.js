@@ -77,6 +77,13 @@ exports.checkIsDayIncluded = async function (travelIdx, day) {
     return isDayIncludedResponse;
 };
 
+exports.checkIsAreaIncluded = async function (dayIdx, dayAreaIdx) {
+    const connection = await pool.getConnection(async (conn) => conn);
+    const isAreaIncludedResponse = (await feedDao.selectIsAreaExist(connection, [dayIdx, dayAreaIdx]))[0].isAreaExist;
+    connection.release();
+    return isAreaIncludedResponse;
+};
+
 exports.retrieveFeedAreaInfo = async function (travelIdx, day, area) {
     const connection = await pool.getConnection(async (conn) => conn);
     let feedReviewImageArr = [];
@@ -93,4 +100,36 @@ exports.retrieveFeedAreaInfo = async function (travelIdx, day, area) {
         'areaReviewComment': feedReviewComment,
         'areaReviewImage': feedReviewImageArr
     };
+};
+
+exports.checkTravelStatus = async (travelIdx) => {
+    const connection = await pool.getConnection(async (conn) => conn);
+    const travelStatusResponse = (await feedDao.selectTravelStatus(connection, travelIdx))[0].travelStatus;
+    connection.release();
+    return travelStatusResponse;
+};
+
+exports.retrieveAreaReview = async (travelIdx, dayIdx, dayAreaIdx) => {
+    const connection = await pool.getConnection(async (conn) => conn);
+    let areaReviewImageArr = [];
+
+    // 장소 사진
+    let areaReviewImage = await feedDao.selectFeedReviewImage(connection, [travelIdx, dayIdx, dayAreaIdx]);
+    if (areaReviewImage.length === 0)
+        areaReviewImage = null;
+    else {
+        areaReviewImage.forEach((img) => {
+            areaReviewImageArr.push(img.travelImageUrl);
+        });
+    }
+
+    // 장소 리뷰
+    let areaReviewComment = await feedDao.selectFeedReviewComment(connection, [travelIdx, dayIdx, dayAreaIdx]);
+    if (areaReviewComment.length === 0)
+        areaReviewComment = null;
+    else
+        areaReviewComment = areaReviewComment[0].review;
+
+    connection.release();
+    return [areaReviewImageArr, areaReviewComment];
 };

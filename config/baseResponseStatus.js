@@ -105,6 +105,8 @@ module.exports = {
 
     TRAVEL_WRITER_WITHDRAW : { "isSuccess": false, "code": 2058, "message": "탈퇴한 유저의 게시물입니다." },
     DAY_IDX_EMPTY : { "isSuccess": false, "code": 2059, "message": "Day 인덱스를 입력해주세요." },
+    AREA_IDX_EMPTY : { "isSuccess": false, "code": 2060, "message": "DayArea 인덱스를 입력해주세요." },
+    TRAVEL_DAYAREA_NOT_INCLUDED : { "isSuccess": false, "code": 2061, "message": "해당 day에 존재하지 않는 dayArea의 인덱스입니다. 다시 입력해주세요." },
 
     // Response error
     REDUNDANT_NICKNAME : { "isSuccess": false, "code": 3001, "message":"중복된 닉네임입니다." },

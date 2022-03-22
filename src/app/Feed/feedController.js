@@ -496,17 +496,55 @@ exports.getFeedComment = async function (req, res) {
 
 /**
  * API No. FD17
- * API Name : 특정 여행 게시물 day 안의 장소 정보 조회 API
+ * API Name : 특정 여행 게시물 장소 리뷰 조회 API
  * [GET] /app/feeds/:feedIdx/search/review?day=&area=
  */
 exports.getFeedAreaInfo = async function (req, res) {
     const travelIdx = req.params.feedIdx;
-    const day = req.query.day;
-    const area = req.query.area;
-    let isMine = 0;
+    const dayIdx = req.query.day;
+    const areaIdx = req.query.area;
+    const myIdx = req.verifiedToken.userIdx;
 
     // Validation
+    if (!travelIdx && travelIdx !== 0)
+        return res.send(errResponse(baseResponse.TRAVEL_IDX_EMPTY));
+    if (!dayIdx)
+        return res.send(errResponse(baseResponse.DAY_IDX_EMPTY));
+    if (!areaIdx)
+        return res.send(errResponse(baseResponse.AREA_IDX_EMPTY));
 
-    const getFeedAreaInfo = await feedProvider.retrieveFeedAreaInfo(travelIdx, day, area);
-    return res.send(response(baseResponse.AREAINFO_SEARCH_SUCCESS, getFeedAreaInfo));
+    // 사용자 status 확인
+    const userStatusCheckRow = await userProvider.checkUserStatus(myIdx);
+    if (userStatusCheckRow[0].isWithdraw === 'Y')
+        return res.send(errResponse(baseResponse.USER_WITHDRAW));
+
+    // 실제 있는 dayIdx인지 확인하기
+    const dayIdxCheckRow = await feedProvider.checkIsDayIncluded(travelIdx, dayIdx);
+    if (dayIdxCheckRow === 0)
+        return res.send(errResponse(baseResponse.TRAVEL_DAY_NOT_INCLUDED));
+
+    // 실제 있는 areaIdx인지 확인하기
+    const areaIdxCheckRow = await feedProvider.checkIsAreaIncluded(dayIdx, areaIdx);
+    if (areaIdxCheckRow === 0)
+        return res.send(errResponse(baseResponse.TRAVEL_DAYAREA_NOT_INCLUDED));
+
+    /*
+        게시물 status 확인
+        - DELETED면 errResponse return.
+        - PRIVATE면 개인 게시물이면 가능.
+     */
+    const travelStatusCheckRow = await feedProvider.checkTravelStatus(travelIdx);
+
+    if (travelStatusCheckRow === 'DELETED')
+        return res.send(errResponse(baseResponse.TRAVEL_STATUS_DELETED));
+    else {
+        if (travelStatusCheckRow === 'PRIVATE') {
+            const travelWriterIdx = await feedProvider.retrieveTravelWriter(travelIdx);
+            if (travelWriterIdx !== myIdx)
+                return res.send(errResponse(baseResponse.TRAVEL_STATUS_PRIVATE));
+        }
+
+        const areaReviewResponse = await feedProvider.retrieveAreaReview(travelIdx, dayIdx, areaIdx);
+        return res.send(response(baseResponse.SUCCESS, { 'travelAreaReviewImage': areaReviewResponse[0], 'travelAreaReviewComment': areaReviewResponse[1] }));
+    }
 };
