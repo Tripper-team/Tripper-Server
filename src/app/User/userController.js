@@ -9,26 +9,12 @@ const axios = require("axios");
 const secret_config = require("../../../config/secret");
 const jwt = require("jsonwebtoken");
 const s3Multer = require('../../../config/multer');
-const fs = require('fs');
-const userDao = require("./userDao");
-const fword_array = fs.readFileSync('config/fword_list.txt').toString().replace(/\r/gi, "").split("\n");
+const {checkNickFword} = require('../../../config/fword/fword');
+const regex_nickname = /^[가-힣a-zA-Z0-9]+$/;   // 닉네임 정규식
 require('dotenv').config();
 
-const regex_nickname = /^[가-힣a-zA-Z0-9]+$/;   // 닉네임 정규식
-
-const checkNickFword = (fword_array, nick) => {   // 닉네임에 부적절한 용어가 포함되어 있는지 체크
-    let find = 0;
-    fword_array.forEach((word) => {
-        if (nick.includes(word)) {
-            find = 1;
-            return false;
-        }
-    });
-    return find;
-};
-
 /**
- * API No. 1
+ * API No. U1
  * API Name : 카카오 로그인 API
  * [POST] /app/users/kakao-login
  */
@@ -45,12 +31,14 @@ exports.kakaoLogin = async function (req, res) {
      * Body: accessToken (프론트엔드에서 카카오 서버로부터 받아온 Access Token)
      */
     const accessToken = req.body.accessToken;
+    let user_kakao_profile;
 
+    /* Validation */
     if (!accessToken)   // 카카오 accessToken 입력 체크
         return res.send(errResponse(baseResponse.ACCESS_TOKEN_EMPTY));
 
-    let user_kakao_profile;
-    try {   // 프론트에서 받은 access token을 카카오 서버로 보내서 사용자 정보 가져옴
+    // 프론트에서 받은 access token을 카카오 서버로 보내서 사용자 정보 가져옴
+    try {
         user_kakao_profile = await axios({
             method: 'GET',
             url: 'https://kapi.kakao.com/v2/user/me',
@@ -58,7 +46,7 @@ exports.kakaoLogin = async function (req, res) {
                 Authorization: `Bearer ${accessToken}`
             }
         });
-    } catch(err) {
+    } catch(err) {   // 카카오 access token 만료 등?
         return res.send(errResponse(baseResponse.ACCESS_TOKEN_INVALID));
     }
 
@@ -130,7 +118,7 @@ exports.kakaoLogin = async function (req, res) {
 };
 
 /**
- * API No. 2
+ * API No. U2
  * API Name : 회원가입 API
  * [POST] /app/users/sign-up
  */
@@ -163,7 +151,7 @@ exports.signUp = async function (req, res) {
 };
 
 /**
- * API No. 3
+ * API No. U3
  * API Name : 닉네임 확인 API
  * [GET] /app/users/nickname-check
  */
@@ -173,11 +161,12 @@ exports.checkNickname = async function (req, res) {
      */
     const nickName = req.query.nickname;
 
-    if (!nickName)
+    /* Validation */
+    if (!nickName)   // 닉네임 입력 x
         return res.send(errResponse(baseResponse.NICKNAME_EMPTY));
-    if (!regex_nickname.test(nickName) || nickName.length > 10 || nickName.length < 2)
+    if (!regex_nickname.test(nickName) || nickName.length > 10 || nickName.length < 2)   // 닉네임 길이, 규칙 (한글,영어,숫자 포함 2자 이상 10자 이내)
         return res.send(errResponse(baseResponse.NICKNAME_ERROR_TYPE));
-    if (checkNickFword(fword_array, nickName))
+    if (checkNickFword(nickName))
         return res.send(errResponse(baseResponse.NICKNAME_BAD_WORD));
 
     const checkNicknameResponse = await userService.checkNickRedundant(nickName);
