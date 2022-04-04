@@ -1,4 +1,5 @@
 const { createLogger, format, transports } = require('winston');
+const winston = require('winston');
 require('winston-daily-rotate-file');
 const fs = require('fs');
 
@@ -19,6 +20,15 @@ const dailyRotateFileTransport = new transports.DailyRotateFile({
     maxSize: '20m',
     maxFiles: '14d'
 });
+
+const colors = {
+    error: 'red',
+    warn: 'yellow',
+    info: 'green',
+    http: 'magenta',
+    debug: 'blue'
+}
+winston.addColors(colors);
 
 const logger = createLogger({
     level: env === 'development' ? 'debug' : 'info',

@@ -21,6 +21,12 @@ module.exports = function(app){
     // U4. 자동 로그인 API
     app.get('/app/users/auto-login', jwtMiddleware, user.autoLogin);
 
+    // U5. 로그아웃 API
+    app.post('/app/users/kakao-logout', user.kakaoLogout);
+
+    // U6. 회원탈퇴 API
+    app.post('/app/users/unlink', user.unlink);
+
     // P1. 프로필 설정화면 조회 API
     app.get('/app/users/profile-setting', jwtMiddleware, user.getProfile);
 

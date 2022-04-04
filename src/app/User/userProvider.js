@@ -2,7 +2,7 @@ const { pool } = require("../../../config/database");
 const { logger } = require("../../../config/winston");
 const userDao = require("./userDao");
 
-// 이메일 체크
+// 카카오id 체크하기
 exports.retrieveKakaoIdCheck = async function (kakaoId) {
   const connection = await pool.getConnection(async (conn) => conn);
   const kakaoIdCheckResult = await userDao.selectIsKakaoIdExist(connection, kakaoId);
@@ -10,7 +10,7 @@ exports.retrieveKakaoIdCheck = async function (kakaoId) {
   return kakaoIdCheckResult;
 };
 
-// 사용자 정보 얻기
+// 카카오id로 사용자 정보 얻어오기
 exports.getUserInfoByKakaoId = async function (kakaoId) {
   const connection = await pool.getConnection(async (conn) => conn);
   const userInfoResult = await userDao.selectUserInfoByKakaoId(connection, kakaoId);
