@@ -138,7 +138,7 @@ exports.signUp = async function (req, res) {
         return res.send(errResponse(baseResponse.NICKNAME_EMPTY));
     if (!regex_nickname.test(nickName) || nickName.length > 10 || nickName.length < 2)
         return res.send(errResponse(baseResponse.NICKNAME_ERROR_TYPE));
-    if (checkNickFword(fword_array, nickName))
+    if (checkNickFword(nickName))
         return res.send(errResponse(baseResponse.NICKNAME_BAD_WORD));
 
     let signUpTokenResult = await userService.createUser(email, profileImgUrl, kakaoId, ageGroup, gender, nickName);   // 회원가입 진행
@@ -166,11 +166,12 @@ exports.checkNickname = async function (req, res) {
         return res.send(errResponse(baseResponse.NICKNAME_EMPTY));
     if (!regex_nickname.test(nickName) || nickName.length > 10 || nickName.length < 2)   // 닉네임 길이, 규칙 (한글,영어,숫자 포함 2자 이상 10자 이내)
         return res.send(errResponse(baseResponse.NICKNAME_ERROR_TYPE));
-    if (checkNickFword(nickName))
+    if (checkNickFword(nickName))   // 닉네임에 부적절한 내용 포함되어 있는지
         return res.send(errResponse(baseResponse.NICKNAME_BAD_WORD));
 
-    const checkNicknameResponse = await userService.checkNickRedundant(nickName);
-    return res.send(checkNicknameResponse);
+    const nickDuplicateCheckResult = await userProvider.retrieveUserNicknameCheck(nickName);   // 닉네임 중복 체크
+    if (nickDuplicateCheckResult[0].isNickResult === 1) return res.send(errResponse(baseResponse.REDUNDANT_NICKNAME));
+    else return res.send(response(baseResponse.NICKNAME_CHECK_SUCCESS));
 };
 
 /**
