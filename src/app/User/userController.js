@@ -11,6 +11,7 @@ const jwt = require("jsonwebtoken");
 const s3Multer = require('../../../config/multer');
 const {checkNickFword} = require('../../../config/fword/fword');
 const regex_nickname = /^[가-힣a-zA-Z0-9]+$/;   // 닉네임 정규식
+
 require('dotenv').config();
 
 /**
@@ -128,17 +129,18 @@ exports.signUp = async function (req, res) {
      */
     let { email, profileImgUrl, kakaoId, ageGroup, gender, nickName } = req.body;
 
-    if (!email)
+    /* Validation */
+    if (!email)   // 이메일이 없으면
         return res.send(errResponse(baseResponse.EMAIL_EMPTY));
-    if (!profileImgUrl)
+    if (!profileImgUrl)   // 프로필 사진 링크가 없으면
         return res.send(errResponse(baseResponse.PROFILE_IMG_EMPTY));
-    if (!kakaoId)
+    if (!kakaoId)   // 카카오id가 없으면
         return res.send(errResponse(baseResponse.KAKAO_ID_EMPTY));
-    if (!nickName)
+    if (!nickName)   // 닉네임이 없으면
         return res.send(errResponse(baseResponse.NICKNAME_EMPTY));
-    if (!regex_nickname.test(nickName) || nickName.length > 10 || nickName.length < 2)
+    if (!regex_nickname.test(nickName) || nickName.length > 10 || nickName.length < 2)   // 닉네임 정규식 체크 및 길이
         return res.send(errResponse(baseResponse.NICKNAME_ERROR_TYPE));
-    if (checkNickFword(nickName))
+    if (checkNickFword(nickName))   // 닉네임에 부적절한 단어가 포함되어 있는지
         return res.send(errResponse(baseResponse.NICKNAME_BAD_WORD));
 
     let signUpTokenResult = await userService.createUser(email, profileImgUrl, kakaoId, ageGroup, gender, nickName);   // 회원가입 진행
@@ -172,6 +174,20 @@ exports.checkNickname = async function (req, res) {
     const nickDuplicateCheckResult = await userProvider.retrieveUserNicknameCheck(nickName);   // 닉네임 중복 체크
     if (nickDuplicateCheckResult[0].isNickResult === 1) return res.send(errResponse(baseResponse.REDUNDANT_NICKNAME));
     else return res.send(response(baseResponse.NICKNAME_CHECK_SUCCESS));
+};
+
+/**
+ * API No. U4
+ * API Name : 자동 로그인 API
+ * [GET] /app/users/auto-login
+ */
+exports.autoLogin = async function (req, res) {
+    /**
+     * Headers: x-access-token
+     */
+    const userIdx = req.verifiedToken.userIdx;
+    logger.info(`[Auto-Login API] userIdx: ${userIdx}`);
+    return res.send(response(baseResponse.AUTO_LOGIN_SUCCESS));
 };
 
 /**
@@ -330,19 +346,6 @@ exports.getFollowList = async function (req, res) {
     }
 };
 
-/**
- * API No. 8
- * API Name : 자동 로그인 API
- * [GET] /app/users/auto-login
- */
-exports.autoLogin = async function (req, res) {
-    /**
-     * Headers: x-access-token
-     */
-    const userIdx = req.verifiedToken.userIdx;
-    console.log("[자동로그인] userIdx: " + userIdx);
-    return res.send(response(baseResponse.AUTO_LOGIN_SUCCESS));
-};
 
 /**
  * API No. P3
