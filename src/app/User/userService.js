@@ -96,7 +96,7 @@ exports.createUser = async function (email, profileImgUrl, kakaoId, ageGroup, ge
         );
 
         connection.release();
-
+        logger.info(`[Sign-Up API] New User! (userIdx: ${userIdx})`);
         return response(baseResponse.SIGN_UP_SUCCESS, { 'userIdx': userIdx, 'jwt': token });
     } catch (err) {
         logger.error(`App - createUser Service error\n: ${err.message}`);

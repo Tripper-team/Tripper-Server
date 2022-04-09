@@ -146,10 +146,12 @@ exports.signUp = async function (req, res) {
     let signUpTokenResult = await userService.createUser(email, profileImgUrl, kakaoId, ageGroup, gender, nickName);   // 회원가입 진행
     const signUpResult = await userProvider.getUserInfoByKakaoId(kakaoId);   // 회원가입 한 User 정보 출력
 
-    if (signUpTokenResult.code === 3002)
+    if (signUpTokenResult.code === 3002) {
+        logger.error(`[Sign-Up API] Already exist! (kakaoId: ${kakaoId})`);
         return res.send(signUpTokenResult);
-    else
-        return res.send(response(baseResponse.SIGN_UP_SUCCESS, { 'token': signUpTokenResult.result, 'userInfo': signUpResult }));
+    }
+    else return res.send(response(baseResponse.SIGN_UP_SUCCESS, { 'token': signUpTokenResult.result, 'userInfo': signUpResult }));
+
 };
 
 /**
