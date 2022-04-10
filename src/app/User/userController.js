@@ -193,6 +193,55 @@ exports.autoLogin = async function (req, res) {
 };
 
 /**
+ * API No. U5
+ * API Name : 로그아웃 API
+ * [POST] /app/users/kakao-logout
+ */
+exports.kakaoLogout = async (req, res) => {
+    const accessToken = req.body.accessToken;   // 카카오에서 나온 accessToken
+    const userIdx = req.verifiedToken.userIdx;   // JWT에 저장되어 있는 사용자 idx
+
+    /* Validation */
+    if (!accessToken)   // 카카오 accessToken을 입력하지 않을 경우
+        return res.send(errResponse(baseResponse.ACCESS_TOKEN_EMPTY));
+
+    // AccessToken의 kakaoId 가져오는 부분
+    let user_kakao_profile;
+    try {
+        user_kakao_profile = await axios({
+            method: 'GET',
+            url: 'https://kapi.kakao.com/v2/user/me',
+            headers: {
+                Authorization: `Bearer ${accessToken}`
+            }
+        });
+    } catch(err) {   // 카카오 access token 만료?
+        return res.send(errResponse(baseResponse.ACCESS_TOKEN_INVALID));
+    }
+
+    let user_kakaoId = String(user_kakao_profile.data.id);   // Body값에 입력한 accessToken에서 나온 kakaoId
+    const kakaoId = await userProvider.retrieveKakaoId(userIdx);   // userIdx에 해당하는 kakaoId DB에서 가져옴
+
+    if (user_kakaoId !== kakaoId)   // AccessToken으로 가져온 kakaoId와 DB에 저장된 kakaoId가 일치하지 않는 경우
+        return res.send(errResponse(baseResponse.KAKAOID_NOT_MATCH));
+
+    // 로그아웃 진행 (AccessToken 만료시키기)
+    try {
+        await axios({
+            method: 'POST',
+            url: 'https://kapi.kakao.com/v1/user/logout',
+            headers: {
+                Authorization: `Bearer ${accessToken}`
+            }
+        })
+    } catch(err) {
+        return res.send(errResponse(baseResponse.ACCESS_TOKEN_INVALID));
+    }
+
+    return res.send(response(baseResponse.KAKAO_LOGOUT_SUCCESS));
+};
+
+/**
  * API No. 4
  * API Name : 프로필 설정화면 조회 API
  * [GET] /app/users/profile-setting
@@ -422,28 +471,6 @@ exports.getOtherProfile = async function (req, res) {
         return res.send(response(baseResponse.USER_PROFILE_SEARCH_SUCCESS, { 'otherProfileInfo': userProfileInfoResult[0], 'otherProfileFeed': userProfileFeedResult }));
 };
 
-/**
- * API No. U5
- * API Name : 로그아웃 API
- * [POST] /app/users/kakao-logout
- */
-exports.kakaoLogout = async (req, res) => {
-    const accessToken = req.body.accessToken;   // 카카오에서 나온 accessToken
-
-    try {
-        await axios({
-            method: 'POST',
-            url: 'https://kapi.kakao.com/v1/user/logout',
-            headers: {
-                Authorization: `Bearer ${accessToken}`
-            }
-        })
-    } catch(err) {
-        return res.send(errResponse(baseResponse.ACCESS_TOKEN_INVALID));
-    }
-
-    return res.send(response(baseResponse.KAKAO_LOGOUT_SUCCESS));
-};
 
 /**
  * API No. U6

@@ -472,6 +472,16 @@ async function selectOtherFeedInProfile(connection, [myIdx, userIdx, start, page
   return selectOtherFeedInProfileRow;
 }
 
+async function selectUserKakaoId(connection, userIdx) {
+  const selectUserKakaoIdQuery = `
+    SELECT kakaoId
+    FROM User
+    WHERE User.idx = ?;
+  `;
+  const [selectUserKakaoIdRow] = await connection.query(selectUserKakaoIdQuery, userIdx);
+  return selectUserKakaoIdRow;
+}
+
 module.exports = {
   selectIsKakaoIdExist,
   selectUserInfoByKakaoId,
@@ -492,5 +502,6 @@ module.exports = {
   selectTotalUserFeedInMyPageByOption,
   selectOtherInfoInProfile,
   selectTotalUserFeed,
-  selectOtherFeedInProfile
+  selectOtherFeedInProfile,
+  selectUserKakaoId
 };

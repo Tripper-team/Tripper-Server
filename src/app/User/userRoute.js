@@ -22,7 +22,7 @@ module.exports = function(app){
     app.get('/app/users/auto-login', jwtMiddleware, user.autoLogin);
 
     // U5. 로그아웃 API
-    app.post('/app/users/kakao-logout', user.kakaoLogout);
+    app.post('/app/users/kakao-logout', jwtMiddleware, user.kakaoLogout);
 
     // U6. 회원탈퇴 API
     app.post('/app/users/unlink', user.unlink);

@@ -109,6 +109,9 @@ module.exports = {
     AREA_IDX_EMPTY : { "isSuccess": false, "code": 2060, "message": "DayArea 인덱스를 입력해주세요." },
     TRAVEL_DAYAREA_NOT_INCLUDED : { "isSuccess": false, "code": 2061, "message": "해당 day에 존재하지 않는 dayArea의 인덱스입니다. 다시 입력해주세요." },
 
+    KAKAOID_EMPTY : { "isSuccess": false, "code": 2062, "message": "카카오id를 입력해주세요." },
+    KAKAOID_NOT_MATCH : { "isSuccess": false, "code": 2063, "message": "사용자의 kakaoId와 입력하신 AccessToken의 kakaoId가 일치하지 않습니다. 다시 확인해주세요." },
+
     // Response error
     REDUNDANT_NICKNAME : { "isSuccess": false, "code": 3001, "message":"중복된 닉네임입니다." },
     USER_ALREADY_SIGNUP : { "isSuccess": false, "code": 3002, "message":"이미 회원가입한 유저입니다." },

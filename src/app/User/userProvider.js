@@ -114,3 +114,11 @@ exports.retrieveOtherProfileFeed = async function (myIdx, userIdx, page, pageSiz
     return userProfileFeedResult;
   }
 };
+
+// 카카오id 가져오기
+exports.retrieveKakaoId = async (userIdx) => {
+  const connection = await pool.getConnection(async (conn) => conn);
+  const kakaoIdResult = (await userDao.selectUserKakaoId(connection, userIdx))[0].kakaoId;
+  connection.release();
+  return kakaoIdResult;
+};
