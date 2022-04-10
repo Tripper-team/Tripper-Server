@@ -202,3 +202,16 @@ exports.updateProfile = async function (userIdx, profileImgUrl, nickName) {
         return errResponse(baseResponse.DB_ERROR);
     }
 };
+
+// 회원탈퇴 진행시 사용자 status 변경
+exports.updateUserWithdraw = async (userIdx) => {
+    try {
+        const connection = await pool.getConnection(async (conn) => conn);
+        await userDao.updateUserStatusToWithdraw(connection, userIdx);
+        connection.release();
+        return response(baseResponse.WITHDRAW_SUCCESS);
+    } catch(err) {
+        logger.error(`App - updateUserWithdraw Service error\n: ${err.message}`);
+        return errResponse(baseResponse.DB_ERROR);
+    }
+};

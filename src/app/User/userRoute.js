@@ -25,7 +25,7 @@ module.exports = function(app){
     app.post('/app/users/kakao-logout', jwtMiddleware, user.kakaoLogout);
 
     // U6. 회원탈퇴 API
-    app.post('/app/users/unlink', user.unlink);
+    app.patch('/app/users/withdraw', jwtMiddleware, user.kakaoUnlink);
 
     // P1. 프로필 설정화면 조회 API
     app.get('/app/users/profile-setting', jwtMiddleware, user.getProfile);

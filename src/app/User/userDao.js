@@ -482,6 +482,15 @@ async function selectUserKakaoId(connection, userIdx) {
   return selectUserKakaoIdRow;
 }
 
+async function updateUserStatusToWithdraw(connection, userIdx) {
+  const updateUserStatusToWithdrawQuery = `
+    UPDATE User
+    SET isWithdraw = 'Y'
+    WHERE User.idx = ?;
+  `;
+  await connection.query(updateUserStatusToWithdrawQuery, userIdx);
+}
+
 module.exports = {
   selectIsKakaoIdExist,
   selectUserInfoByKakaoId,
@@ -503,5 +512,6 @@ module.exports = {
   selectOtherInfoInProfile,
   selectTotalUserFeed,
   selectOtherFeedInProfile,
-  selectUserKakaoId
+  selectUserKakaoId,
+  updateUserStatusToWithdraw
 };

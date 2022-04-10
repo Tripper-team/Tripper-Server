@@ -225,6 +225,10 @@ exports.kakaoLogout = async (req, res) => {
     if (user_kakaoId !== kakaoId)   // AccessToken으로 가져온 kakaoId와 DB에 저장된 kakaoId가 일치하지 않는 경우
         return res.send(errResponse(baseResponse.KAKAOID_NOT_MATCH));
 
+    // 사용자 상태 확인 (회원탈퇴)
+    const myStatusCheckRow = await userProvider.checkUserStatus(userIdx);
+    if (myStatusCheckRow[0].isWithdraw === 'Y') return errResponse(baseResponse.USER_WITHDRAW);
+
     // 로그아웃 진행 (AccessToken 만료시키기)
     try {
         await axios({
@@ -240,6 +244,42 @@ exports.kakaoLogout = async (req, res) => {
 
     logger.info(`[Logout API] logout-user: ${userIdx}`);
     return res.send(response(baseResponse.KAKAO_LOGOUT_SUCCESS));
+};
+
+/**
+ * API No. U6
+ * API Name : 회원탈퇴 API
+ * [PATCH] /app/users/unlink?accessToken=
+ */
+exports.kakaoUnlink = async (req, res) => {
+    const userIdx = req.verifiedToken.userIdx;   // JWT에 저장되어있는 사용자의 idx
+    const accessToken = req.headers.accessToken;   // 카카오 AccessToken
+
+    /* Validation */
+    if (!accessToken)   // 카카오 accessToken이 없는지 확인
+        return;
+
+    const myStatusCheckRow = await userProvider.checkUserStatus(userIdx);   // 사용자 상태 확인 (회원탈퇴)
+    if (myStatusCheckRow[0].isWithdraw === 'Y') return errResponse(baseResponse.USER_WITHDRAW);
+
+    // 카카오와 연결끊기 진행
+    // 이후 우리도 JWT를 지워줘야 하는데? => 클라이언트에서 단순히 지워주는 것만으로도 괜찮?
+    try {
+        await axios({
+            method: 'POST',
+            url: 'https://kapi.kakao.com/v1/user/unlink',
+            headers: {
+                Authorization: `Bearer ${accessToken}`
+            }
+        })
+    } catch(err) {
+        return res.send(errResponse(baseResponse.ACCESS_TOKEN_INVALID));
+    }
+
+    // DB에서 status 바꿔주기
+    const updateUserWithdrawResult = await userService.updateUserWithdraw(userIdx);
+    logger.info(`[WITHDRAW API] Withdraw User: ${userIdx}`);
+    return res.send(updateUserWithdrawResult);
 };
 
 /**
@@ -470,29 +510,4 @@ exports.getOtherProfile = async function (req, res) {
         return res.send(response(baseResponse.USER_PROFILE_FINISH, { 'otherProfileInfo': userProfileInfoResult[0]}));
     else
         return res.send(response(baseResponse.USER_PROFILE_SEARCH_SUCCESS, { 'otherProfileInfo': userProfileInfoResult[0], 'otherProfileFeed': userProfileFeedResult }));
-};
-
-
-/**
- * API No. U6
- * API Name : 회원탈퇴 API
- * [POST] /app/users/unlink?accessToken=
- */
-exports.unlink = async (req, res) => {
-    const accessToken = req.body.accessToken;
-    let hello;
-
-    try {
-        hello = await axios({
-            method: 'POST',
-            url: "https://kapi.kakao.com/v1/user/unlink",
-            headers: {
-                Authorization: `Bearer ${accessToken}`
-            }
-        });
-    } catch(err) {
-        return res.send(errResponse(baseResponse.ACCESS_TOKEN_INVALID));
-    }
-
-    console.log(hello);
 };
