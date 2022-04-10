@@ -238,6 +238,7 @@ exports.kakaoLogout = async (req, res) => {
         return res.send(errResponse(baseResponse.ACCESS_TOKEN_INVALID));
     }
 
+    logger.info(`[Logout API] logout-user: ${userIdx}`);
     return res.send(response(baseResponse.KAKAO_LOGOUT_SUCCESS));
 };
 
