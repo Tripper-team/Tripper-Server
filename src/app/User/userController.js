@@ -249,7 +249,7 @@ exports.kakaoLogout = async (req, res) => {
 /**
  * API No. U6
  * API Name : 회원탈퇴 API
- * [PATCH] /app/users/unlink?accessToken=
+ * [PATCH] /app/users/withdraw
  */
 exports.kakaoUnlink = async (req, res) => {
     const userIdx = req.verifiedToken.userIdx;   // JWT에 저장되어있는 사용자의 idx
@@ -257,7 +257,7 @@ exports.kakaoUnlink = async (req, res) => {
 
     /* Validation */
     if (!accessToken)   // 카카오 accessToken이 없는지 확인
-        return;
+        return res.send(errResponse(baseResponse.ACCESS_TOKEN_EMPTY));
 
     const myStatusCheckRow = await userProvider.checkUserStatus(userIdx);   // 사용자 상태 확인 (회원탈퇴)
     if (myStatusCheckRow[0].isWithdraw === 'Y') return errResponse(baseResponse.USER_WITHDRAW);
