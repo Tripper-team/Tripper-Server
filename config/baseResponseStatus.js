@@ -150,6 +150,8 @@ module.exports = {
     TRAVEL_DAY_RESULT_EMPTY : { "isSuccess": false, "code": 3029, "message":"해당 Day에 대한 정보 결과가 없습니다." },
     TRAVEL_WRITER_WITHDRAW2 : { "isSuccess": false, "code": 3030, "message":"탈퇴한 유저의 게시물입니다." },
 
+    TRAVEL_WRITER_WITHDRAW : { "isSuccess": false, "code": 3031, "message":"게시물 작성자는 회원탈퇴 상태입니다." },
+
     //Connection, Transaction 등의 서버 오류
     DB_ERROR : { "isSuccess": false, "code": 4000, "message": "데이터 베이스 에러"},
     SERVER_ERROR : { "isSuccess": false, "code": 4001, "message": "서버 에러"},

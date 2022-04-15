@@ -370,32 +370,41 @@ exports.changeTravelComment = async function (userIdx, travelIdx, commentIdx, co
     }
 };
 
-exports.retrieveTravelComment = async function (travelIdx, page, pageSize) {
+// 게시물 댓글 조회
+exports.retrieveTravelComment = async function (travelIdx, check, page, pageSize) {
     const connection = await pool.getConnection(async (conn) => conn);
 
     try {
+        /* Validation */
         // 실제로 있는 게시물인지 확인하기
         const isFeedExist = (await feedDao.selectIsTravelExist(connection, travelIdx))[0].isTravelExist;
         if (isFeedExist === 0)
-            return errResponse(baseResponse.TRAVEL_NOT_EXIST);
+            return [-2, errResponse(baseResponse.TRAVEL_NOT_EXIST)]
 
         // 게시물 상태 확인하기 (숨김 또는 삭제됨)
         const feedStatusCheckRow = (await feedDao.selectTravelStatus(connection, travelIdx))[0].travelStatus;
-        // if (feedStatusCheckRow === "PRIVATE")
-        //     return errResponse(baseResponse.TRAVEL_STATUS_PRIVATE);
-        if (feedStatusCheckRow === 'DELETED')
-            return errResponse(baseResponse.TRAVEL_STATUS_DELETED);
+        if (check === 'M') {   // 본인 게시물일 경우
+            if (feedStatusCheckRow === 'DELETED')
+                return [-2, errResponse(baseResponse.TRAVEL_STATUS_DELETED)];
+        } else {   // 상대방 게시물일 경우
+            if (feedStatusCheckRow === 'PRIVATE')
+                return [-2, errResponse(baseResponse.TRAVEL_STATUS_PRIVATE)];
+            else if (feedStatusCheckRow === 'DELETED')
+                return [-2, errResponse(baseResponse.TRAVEL_STATUS_DELETED)];
+        }
 
         let start = (page - 1) * pageSize;
-        const totalCommentCount = (await feedDao.selectTotalCommentCount(connection, travelIdx))[0].totalCount;   // 총 댓글 갯수 조회
+        const totalHeadCommentCount = (await feedDao.selectTotalHeadCommentCount(connection, travelIdx))[0].totalHeadCommentCount;   // 총 부모 댓글 개수 조회
+        // console.log(totalHeadCommentCount);
+        // const totalCommentCount = (await feedDao.selectTotalCommentCount(connection, travelIdx))[0].totalCount;   // 총 댓글 갯수 조회
 
-        if (page > Math.ceil(totalCommentCount / pageSize)) {
+        if (page > Math.ceil(totalHeadCommentCount / pageSize)) {
             connection.release();
-            return [-1, totalCommentCount];
+            return [-1, totalHeadCommentCount];
         }
         else {
-            const travelCommentResult = await feedDao.selectTravelCommentList(connection, [travelIdx, start, pageSize]);   // 댓글 목록 조회
-            return [totalCommentCount, travelCommentResult];
+            const travelCommentResult = await feedDao.selectTravelCommentList(connection, [travelIdx, check, start, pageSize]);   // 댓글 목록 조회
+            return [totalHeadCommentCount, travelCommentResult];
         }
     } catch(err) {
         logger.error(`App - retrieveTravelComment Service error\n: ${err.message}`);

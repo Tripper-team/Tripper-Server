@@ -300,23 +300,63 @@ async function selectTravelComment(connection, commentIdx) {
     return selectTravelCommentRow;
 }
 
-async function selectTravelCommentList(connection, [travelIdx, start, pageSize]) {
-    const selectTravelCommentListQuery = `
-        SELECT C.idx AS commentIdx, C.userIdx,
-               nickName AS userNickname, profileImgUrl AS userProfileImage,
-               comment, C.isParent AS isParent, C.status AS commentStatus, T.count AS commentCount, C.createdAt
-        FROM TravelComment AS C
-                 INNER JOIN User AS U ON U.idx = C.userIdx AND U.isWithdraw != 'Y'
-    INNER JOIN Travel ON Travel.idx = C.travelIdx AND Travel.status != 'DELETED'
-            LEFT JOIN (
-            SELECT isParent, COUNT(isParent) AS count
-            FROM TravelComment
-            GROUP BY isParent
-            ) AS T ON C.idx = T.isParent
-        WHERE C.travelIdx = ? AND C.status != 'N'
-        ORDER BY IF(C.isParent = 0, commentIdx, C.isParent)
-    LIMIT ?, ?;    
-    `;
+async function selectTravelCommentList(connection, [travelIdx, check, start, pageSize]) {
+    let selectTravelCommentListQuery = '';
+    if (check === 'M') {
+        selectTravelCommentListQuery = `
+            SELECT C.idx AS commentIdx, C.userIdx, nickName,
+       profileImgUrl, comment, C.status AS commentStatus,
+       IFNULL(C2.secondCommentCount, 0) AS secondCommentCount,
+       CASE
+            WHEN TIMESTAMPDIFF(SECOND, C.createdAt, NOW()) <= 0 THEN CONCAT(TIMESTAMPDIFF(SECOND, C.createdAt, NOW()), '방금 전')
+            WHEN TIMESTAMPDIFF(SECOND, C.createdAt, NOW()) < 60 THEN CONCAT(TIMESTAMPDIFF(SECOND, C.createdAt, NOW()), '초')
+            WHEN TIMESTAMPDIFF(MINUTE, C.createdAt, NOW()) < 60 THEN CONCAT(TIMESTAMPDIFF(MINUTE, C.createdAt, NOW()), '분')
+            WHEN TIMESTAMPDIFF(HOUR, C.createdAt, NOW()) < 24 THEN CONCAT(TIMESTAMPDIFF(HOUR, C.createdAt, NOW()), '시간')
+            WHEN TIMESTAMPDIFF(DAY, C.createdAt, NOW()) < 7 THEN CONCAT(TIMESTAMPDIFF(DAY, C.createdAt, NOW()), '일')
+            ELSE CONCAT(TIMESTAMPDIFF(WEEK, C.createdAt, NOW()), '주')
+       END AS createdAt
+FROM TravelComment AS C
+    INNER JOIN User
+        ON User.idx = C.userIdx AND User.isWithdraw != 'Y'
+    INNER JOIN Travel
+        ON Travel.idx = C.travelIdx AND Travel.status != 'DELETED'
+    LEFT JOIN (
+        SELECT isParent, COUNT(isParent) AS secondCommentCount
+        FROM TravelComment
+        GROUP BY isParent
+    ) AS C2 ON C.idx = C2.isParent
+WHERE C.travelIdx = ? AND C.status != 'N' AND C.isParent = 0
+ORDER BY C.createdAt
+LIMIT ?, ?;    
+        `;
+    } else {
+        selectTravelCommentListQuery = `
+            SELECT C.idx AS commentIdx, C.userIdx, nickName,
+       profileImgUrl, comment, C.status AS commentStatus,
+       IFNULL(C2.secondCommentCount, 0) AS secondCommentCount,
+       CASE
+            WHEN TIMESTAMPDIFF(SECOND, C.createdAt, NOW()) <= 0 THEN CONCAT(TIMESTAMPDIFF(SECOND, C.createdAt, NOW()), '방금 전')
+            WHEN TIMESTAMPDIFF(SECOND, C.createdAt, NOW()) < 60 THEN CONCAT(TIMESTAMPDIFF(SECOND, C.createdAt, NOW()), '초')
+            WHEN TIMESTAMPDIFF(MINUTE, C.createdAt, NOW()) < 60 THEN CONCAT(TIMESTAMPDIFF(MINUTE, C.createdAt, NOW()), '분')
+            WHEN TIMESTAMPDIFF(HOUR, C.createdAt, NOW()) < 24 THEN CONCAT(TIMESTAMPDIFF(HOUR, C.createdAt, NOW()), '시간')
+            WHEN TIMESTAMPDIFF(DAY, C.createdAt, NOW()) < 7 THEN CONCAT(TIMESTAMPDIFF(DAY, C.createdAt, NOW()), '일')
+            ELSE CONCAT(TIMESTAMPDIFF(WEEK, C.createdAt, NOW()), '주')
+       END AS createdAt
+FROM TravelComment AS C
+    INNER JOIN User
+        ON User.idx = C.userIdx AND User.isWithdraw != 'Y'
+    INNER JOIN Travel
+        ON Travel.idx = C.travelIdx AND Travel.status = 'PUBLIC'
+    LEFT JOIN (
+        SELECT isParent, COUNT(isParent) AS secondCommentCount
+        FROM TravelComment
+        GROUP BY isParent
+    ) AS C2 ON C.idx = C2.isParent
+WHERE C.travelIdx = ? AND C.status != 'N' AND C.isParent = 0
+ORDER BY C.createdAt
+LIMIT ?, ?;
+        `;
+    }
     const [selectTravelCommentListRow] = await connection.query(selectTravelCommentListQuery, [travelIdx, start, pageSize]);
     return selectTravelCommentListRow;
 }
@@ -603,6 +643,17 @@ async function selectIsAreaExist(connection, [dayIdx, dayAreaIdx]) {
     return selectIsAreaExistRow;
 }
 
+async function selectTotalHeadCommentCount(connection, travelIdx) {
+    const selectTotalHeadCommentCountQuery = `
+        SELECT COUNT(idx) AS totalHeadCommentCount
+        FROM TravelComment
+        WHERE travelIdx = ? AND isParent = 0;
+    `;
+    const [selectTotalHeadCommentCountRow] = await connection.query(selectTotalHeadCommentCountQuery, travelIdx);
+    return selectTotalHeadCommentCountRow;
+
+}
+
 module.exports = {
     insertNewFeed,
     selectFeedIdxByAll,
@@ -648,5 +699,6 @@ module.exports = {
     selectIsDayExist,
     selectOtherTravelInfo,
     selectMyTravelInfo,
-    selectIsAreaExist
+    selectIsAreaExist,
+    selectTotalHeadCommentCount
 };

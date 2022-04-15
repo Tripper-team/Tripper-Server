@@ -72,15 +72,16 @@ module.exports = function(app) {
     // FD12. 특정 여행 게시물 day 정보 조회 API
     app.get('/app/feeds/:feedIdx/search/dayinfo', jwtMiddleware, feed.getFeedDayInfo);
 
-    // FD13. 여행 게시물 댓글 작성하기 API
-    app.post('/app/feeds/comments', jwtMiddleware, feed.postComment);
-
-    // FD14. 여행 게시물 댓글 수정하기 API
-    app.patch('/app/feeds/:feedIdx/comments/:commentIdx', jwtMiddleware, feed.patchComment);
+    /** 여행 게시물 댓글 관련 API **/
+    // // FD13. 여행 게시물 댓글 작성하기 API
+    // app.post('/app/feeds/comments', jwtMiddleware, feed.postComment);
+    //
+    // // FD14. 여행 게시물 댓글 수정하기 API
+    // app.patch('/app/feeds/:feedIdx/comments/:commentIdx', jwtMiddleware, feed.patchComment);
 
     // FD15. 여행 게시물 댓글 조회하기 API
-    app.get('/app/feeds/:feedIdx/comments-list', feed.getFeedComment);
+    app.get('/app/feeds/:feedIdx/comments-list', jwtMiddleware, feed.getFeedComment);
 
-    // FD17. 특정 여행 게시물 day 안의 장소 정보 조회 API
-    app.get('/app/feeds/:feedIdx/search/review', jwtMiddleware, feed.getFeedAreaInfo);
+    // // FD17. 특정 여행 게시물 day 안의 장소 정보 조회 API
+    // app.get('/app/feeds/:feedIdx/search/review', jwtMiddleware, feed.getFeedAreaInfo);
 };

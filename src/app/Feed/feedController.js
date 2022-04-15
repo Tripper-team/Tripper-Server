@@ -464,33 +464,40 @@ exports.patchComment = async function (req, res) {
  * [GET] /app/feeds/:feedIdx/comments-list?page=
  */
 exports.getFeedComment = async function (req, res) {
-    const travelIdx = req.params.feedIdx;
-    let page = parseInt(req.query.page);
-    const pageSize = 10;
-    // console.log(travelIdx);
+    const travelIdx = req.params.feedIdx;   // 댓글 조회할 여행 게시물 인덱스
+    const userIdx = req.verifiedToken.userIdx;   // 본인 인덱스
+    let page = parseInt(req.query.page);   // 페이지 넘버
+    const pageSize = 10;   // 각 페이지마다 item 개수
+    const userStatusCheckRow = await userProvider.checkUserStatus(userIdx);   // User 회원탈퇴 상태 확인
+    const travelWriterIdx = await feedProvider.retrieveTravelWriter(travelIdx);   // 게시물 작성자 인덱스
+    const writerStatusCheckRow = await userProvider.checkUserStatus(travelWriterIdx);   // 게시물 작성자 회원탈퇴 상태 확인
+    let check = '';
 
-    // validation
-    if (!travelIdx)
+    /* Validation */
+    if (!travelIdx)   // 여행 게시물 인덱스 입력x
         return res.send(errResponse(baseResponse.TRAVEL_IDX_EMPTY));
-
-    if (!page && page !== 0)
+    if (!page && page !== 0)   // 페이징 넘버 없을경우
         return res.send(errResponse(baseResponse.COMMENT_PAGE_EMPTY));
-    if (page <= 0)
+    if (page <= 0)   // 페이징 번호가 0이하일 경우
         return res.send(errResponse(baseResponse.COMMENT_PAGE_ERROR_TYPE));
+    if (userStatusCheckRow[0].isWithdraw === 'Y')   // 회원탈퇴 유저
+        return res.send(errResponse(baseResponse.USER_WITHDRAW));
+    if (writerStatusCheckRow[0].isWithdraw === 'Y')   // 게시물 작성자 회원탈퇴 상태일 때
+        return res.send(errResponse(baseResponse.TRAVEL_WRITER_WITHDRAW));
 
-    const getTravelCommentResponse = await feedService.retrieveTravelComment(travelIdx, page, pageSize);
+    if (travelWriterIdx === userIdx) check = 'M';   // 게시물 작성자와 본인 인덱스가 같을 경우
+    else check = 'O';   // 상대방의 게시물일 경우
 
-    if (getTravelCommentResponse[0] === undefined)
-        return res.send(getTravelCommentResponse);
-    else {
-        if (getTravelCommentResponse[0] === -1)
+    const getTravelCommentResponse = await feedService.retrieveTravelComment(travelIdx, check, page, pageSize);
+
+    switch(getTravelCommentResponse[0])
+    {
+        case -2:
+            return res.send(getTravelCommentResponse[1]);
+        case -1:
             return res.send(response(baseResponse.TRAVEL_COMMENT_FINISH, { 'totalCommentCount': getTravelCommentResponse[1] }));
-        else {
-            if (getTravelCommentResponse[0] === 0)
-                return res.send(errResponse(baseResponse.TRAVEL_COMMENT_FINISH));
-            else
-                return res.send(response(baseResponse.TRAVEL_COMMENT_SEARCH_SUCCESS, { 'totalCommentCount': getTravelCommentResponse[0], 'comments': getTravelCommentResponse[1] }));
-        }
+        default:
+            return res.send(response(baseResponse.TRAVEL_COMMENT_SEARCH_SUCCESS, { 'totalCommentCount': getTravelCommentResponse[0], 'comments': getTravelCommentResponse[1] }));
     }
 };
 
