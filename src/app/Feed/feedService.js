@@ -287,7 +287,7 @@ exports.createTravelComment = async function (userIdx, travelIdx, comment, isPar
             isParent가 그러면 실제로 존재하는 부모 댓글 idx인지 확인하기
          */
         if (isParent !== undefined) {
-            // 실제로 존재하는 부모 댓글인지 확인하기
+            // 해당 게시물에 실제로 존재하는 부모 댓글인지 확인하기
            const checkParentCommentExist = (await feedDao.selectIsParentCommentExist(connection, [isParent, travelIdx]))[0].isParentCommentExist;
            if (checkParentCommentExist === 0)
                return errResponse(baseResponse.TRAVEL_COMMENT_PARENT_NOT_EXIST);

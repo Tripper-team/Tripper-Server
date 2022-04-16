@@ -221,7 +221,7 @@ async function selectTravelCommentCount(connection, travelIdx) {
     const selectTravelCommentCountQuery = `
         SELECT COUNT(idx) AS commentCount
         FROM TravelComment
-        WHERE travelIdx = ?;
+        WHERE travelIdx = ? AND status != 'N';
     `;
     const [selectTravelCommentCountRow] = await connection.query(selectTravelCommentCountQuery, travelIdx);
     return selectTravelCommentCountRow;
