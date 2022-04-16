@@ -258,7 +258,8 @@ exports.patchFeedStatus = async function (userIdx, travelIdx) {
     }
 };
 
-exports.createTravelComment = async function (userIdx, travelIdx, comment, isParent) {
+// 댓글 작성하기
+exports.createTravelComment = async function (userIdx, travelIdx, comment, isParent, check) {
     const connection = await pool.getConnection(async (conn) => conn);
 
     try {

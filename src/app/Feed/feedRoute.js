@@ -73,11 +73,11 @@ module.exports = function(app) {
     app.get('/app/feeds/:feedIdx/search/dayinfo', jwtMiddleware, feed.getFeedDayInfo);
 
     /** 여행 게시물 댓글 관련 API **/
-    // // FD13. 여행 게시물 댓글 작성하기 API
-    // app.post('/app/feeds/comments', jwtMiddleware, feed.postComment);
-    //
-    // // FD14. 여행 게시물 댓글 수정하기 API
-    // app.patch('/app/feeds/:feedIdx/comments/:commentIdx', jwtMiddleware, feed.patchComment);
+    // FD13. 여행 게시물 댓글 작성하기 API
+    app.post('/app/feeds/comments', jwtMiddleware, feed.postComment);
+
+    // FD14. 여행 게시물 댓글 수정하기 API
+    app.patch('/app/feeds/:feedIdx/comments/:commentIdx', jwtMiddleware, feed.patchComment);
 
     // FD15. 여행 게시물 댓글 조회하기 API
     app.get('/app/feeds/:feedIdx/comments-list', jwtMiddleware, feed.getFeedComment);

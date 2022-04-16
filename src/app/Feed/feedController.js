@@ -409,22 +409,29 @@ exports.getFeedDayInfo = async function (req, res) {
  * [POST] /app/feeds/comment
  */
 exports.postComment = async function (req, res) {
-    const userIdx = req.verifiedToken.userIdx;
-    const { travelIdx, comment, isParent } = req.body;
+    const userIdx = req.verifiedToken.userIdx;   // JWT의 사용자 idx
+    const { travelIdx, comment, isParent } = req.body;   // 게시물 idx, 댓글 내용, 댓글 분류
+    const travelWriterIdx = await feedProvider.retrieveTravelWriter(travelIdx);   // 게시물 작성자 인덱스
+    const userStatusCheckRow = await userProvider.checkUserStatus(userIdx);   // 자기 상태
+    const writerStatusCheckRow = await userProvider.checkUserStatus(travelWriterIdx);   // 게시물 작성자 상태
+    let check = '';
 
-    // Validation
-    if (!travelIdx)
+    /* Validation */
+    if (!travelIdx)   // 게시물 idx가 없다면
         return res.send(errResponse(baseResponse.TRAVEL_IDX_EMPTY));
-    if (!comment)
+    if (!comment)   // 댓글 내용이 없다면
         return res.send(errResponse(baseResponse.TRAVEL_COMMENT_EMPTY));
-    if (comment.length > 200)
+    if (comment.length > 200)   // 댓글은 200자 까지
         return res.send(errResponse(baseResponse.TRAVEL_COMMENT_LENGTH_ERROR));
-
-    const userStatusCheckRow = await userProvider.checkUserStatus(userIdx);
     if (userStatusCheckRow[0].isWithdraw === 'Y')
         return res.send(errResponse(baseResponse.USER_WITHDRAW));
+    if (writerStatusCheckRow[0].isWithdraw === 'Y')
+        return res.send(errResponse(baseResponse.TRAVEL_WRITER_WITHDRAW));
 
-    const createCommentResponse = await feedService.createTravelComment(userIdx, travelIdx, comment, isParent);
+    if (travelWriterIdx === userIdx) check = 'M';   // 게시물 작성자와 본인 인덱스가 같을 경우
+    else check = 'O';   // 상대방의 게시물일 경우
+
+    const createCommentResponse = await feedService.createTravelComment(userIdx, travelIdx, comment, isParent, check);
     return res.send(createCommentResponse);
 };
 
