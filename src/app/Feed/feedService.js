@@ -270,15 +270,13 @@ exports.createTravelComment = async function (userIdx, travelIdx, comment, isPar
 
         // 게시물 상태 확인하기 (숨김 또는 삭제됨)
         // 본인 게시물에서는 숨김 상태에서도 작성 가능하게?
-        const writerIdx = (await feedDao.selectFeedWriterIdx(connection, travelIdx))[0].userIdx;
         const feedStatusCheckRow = (await feedDao.selectTravelStatus(connection, travelIdx))[0].travelStatus;
 
-        if (writerIdx === userIdx) {   // 본인의 게시물이면?
+        if (check === 'M') {   // 본인 게시물일 경우
             if (feedStatusCheckRow === 'DELETED')
                 return errResponse(baseResponse.TRAVEL_STATUS_DELETED);
-        }
-        else {
-            if (feedStatusCheckRow === "PRIVATE")
+        } else {   // 상대방 게시물일 경우
+            if (feedStatusCheckRow === 'PRIVATE')
                 return errResponse(baseResponse.TRAVEL_STATUS_PRIVATE);
             else if (feedStatusCheckRow === 'DELETED')
                 return errResponse(baseResponse.TRAVEL_STATUS_DELETED);
@@ -289,7 +287,8 @@ exports.createTravelComment = async function (userIdx, travelIdx, comment, isPar
             isParent가 그러면 실제로 존재하는 부모 댓글 idx인지 확인하기
          */
         if (isParent !== undefined) {
-           const checkParentCommentExist = (await feedDao.selectIsParentCommentExist(connection, isParent))[0].isParentCommentExist;
+            // 실제로 존재하는 부모 댓글인지 확인하기
+           const checkParentCommentExist = (await feedDao.selectIsParentCommentExist(connection, [isParent, travelIdx]))[0].isParentCommentExist;
            if (checkParentCommentExist === 0)
                return errResponse(baseResponse.TRAVEL_COMMENT_PARENT_NOT_EXIST);
         }
@@ -297,18 +296,17 @@ exports.createTravelComment = async function (userIdx, travelIdx, comment, isPar
         // 아무 댓글도 없는 게시물에 처음으로 대댓글을 다는지 확인하기
         const checkCommentCount = (await feedDao.selectTravelCommentCount(connection, travelIdx))[0].commentCount;
         if (checkCommentCount === 0) {
-            if (isParent != null)
+            if (!isParent) {
                 return errResponse(baseResponse.TRAVEL_FIRST_COMMENT_MUST_PARENT);
+            }
         }
 
-        if (!isParent) isParent = 0;
+        if (!isParent) isParent = 0;   // isParent가 undefined이면 부모 댓글로
 
-        await connection.beginTransaction();
+        await feedDao.insertTravelComment(connection, [travelIdx, userIdx, comment, isParent]);   // 댓글 작성하기
+        const newCommentIdx = (await feedDao.selectTravelCommentIdx(connection, [travelIdx, userIdx, comment, isParent]))[0].commentIdx;   // 새로운 댓글 idx
 
-        await feedDao.insertTravelComment(connection, [travelIdx, userIdx, comment, isParent]);
-        const newCommentIdx = (await feedDao.selectTravelCommentIdx(connection, [travelIdx, userIdx, comment, isParent]))[0].commentIdx;
-
-        await connection.commit();
+        logger.info(`[댓글 작성하기 API] travelIdx: ${travelIdx}, userIdx: ${userIdx}, New Comment Index: ${newCommentIdx}`);
         return response(baseResponse.TRAVEL_COMMENT_CREATE_SUCCESS, { 'commentIdx': newCommentIdx });
     } catch(err) {
         logger.error(`App - createFeedComment Service error\n: ${err.message}`);

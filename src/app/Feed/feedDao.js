@@ -209,11 +209,11 @@ async function updateTravelStatus(connection, [userIdx, travelIdx, status]) {
     return await connection.query(updateTravelStatusQuery, [status, userIdx, travelIdx]);
 }
 
-async function selectIsParentCommentExist(connection, isParent) {
+async function selectIsParentCommentExist(connection, [isParent, travelIdx]) {
     const selectIsParentCommentExistQuery = `
-        SELECT EXISTS(SELECT idx FROM TravelComment WHERE idx = ? AND isParent = 0) AS isParentCommentExist;
+        SELECT EXISTS(SELECT idx FROM TravelComment WHERE idx = ? AND isParent = 0 AND travelIdx = ?) AS isParentCommentExist;
     `;
-    const [selectIsParentCommentExistRow] = await connection.query(selectIsParentCommentExistQuery, isParent);
+    const [selectIsParentCommentExistRow] = await connection.query(selectIsParentCommentExistQuery, [isParent, travelIdx]);
     return selectIsParentCommentExistRow;
 }
 
