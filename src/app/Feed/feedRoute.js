@@ -77,10 +77,13 @@ module.exports = function(app) {
     app.post('/app/feeds/comments', jwtMiddleware, feed.postComment);
 
     // FD14. 여행 게시물 댓글 수정하기 API
-    app.patch('/app/feeds/:feedIdx/comments/:commentIdx', jwtMiddleware, feed.patchComment);
+    app.patch('/app/feeds/:feedIdx/comments/:commentIdx/change', jwtMiddleware, feed.patchComment);
 
     // FD15. 여행 게시물 댓글 조회하기 API
     app.get('/app/feeds/:feedIdx/comments-list', jwtMiddleware, feed.getFeedComment);
+
+    // FD16. 여행 게시물 댓글 삭제하기 API
+    app.patch('/app/feeds/:feedIdx/comments/:commentIdx/deletion', jwtMiddleware, feed.deleteComment);
 
     // // FD17. 특정 여행 게시물 day 안의 장소 정보 조회 API
     // app.get('/app/feeds/:feedIdx/search/review', jwtMiddleware, feed.getFeedAreaInfo);

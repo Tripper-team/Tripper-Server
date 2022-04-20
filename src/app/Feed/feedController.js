@@ -438,7 +438,7 @@ exports.postComment = async function (req, res) {
 /**
  * API No. FD14
  * API Name : 여행 게시물 댓글 수정하기 API
- * [PATCH] /app/feeds/:feedIdx/comments/:commentIdx
+ * [PATCH] /app/feeds/:feedIdx/comments/:commentIdx/change
  */
 exports.patchComment = async function (req, res) {
     const travelIdx = req.params.feedIdx;   // 게시물 idx
@@ -513,6 +513,15 @@ exports.getFeedComment = async function (req, res) {
         default:
             return res.send(response(baseResponse.TRAVEL_COMMENT_SEARCH_SUCCESS, { 'totalCommentCount': getTravelCommentResponse[0], 'comments': getTravelCommentResponse[1] }));
     }
+};
+
+/**
+ * API No. FD16
+ * API Name : 여행 게시물 댓글 삭제하기 API
+ * [PATCH] /app/feeds/:feedIdx/comments/:commentIdx/deletion
+ */
+exports.deleteComment = async (req, res) => {
+
 };
 
 /**
