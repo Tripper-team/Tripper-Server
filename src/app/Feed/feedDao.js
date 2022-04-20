@@ -249,7 +249,7 @@ async function selectTravelCommentIdx(connection, [travelIdx, userIdx, comment, 
 async function updateTravelComment(connection, [userIdx, travelIdx, commentIdx, comment]) {
     const updateTravelCommentQuery = `
         UPDATE TravelComment
-        SET comment = ? AND status = 'M'
+        SET comment = ?, status = 'M'
         WHERE userIdx = ? AND travelIdx = ? AND TravelComment.idx = ?;
     `;
     return await connection.query(updateTravelCommentQuery, [comment, userIdx, travelIdx, commentIdx]);
