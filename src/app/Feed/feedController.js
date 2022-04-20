@@ -441,12 +441,16 @@ exports.postComment = async function (req, res) {
  * [PATCH] /app/feeds/:feedIdx/comments/:commentIdx
  */
 exports.patchComment = async function (req, res) {
-    const travelIdx = req.params.feedIdx;
-    const commentIdx = req.params.commentIdx;
-    const comment = req.body.comment;
-    const userIdx = req.verifiedToken.userIdx;
+    const travelIdx = req.params.feedIdx;   // 게시물 idx
+    const commentIdx = req.params.commentIdx;   // 댓글 idx
+    const comment = req.body.comment;   // 수정할 댓글 내용
+    const userIdx = req.verifiedToken.userIdx;   // JWT의 사용자 idx
+    const travelWriterIdx = await feedProvider.retrieveTravelWriter(travelIdx);   // 게시물 작성자 인덱스
+    const userStatusCheckRow = await userProvider.checkUserStatus(userIdx);   // 자기 상태
+    const writerStatusCheckRow = await userProvider.checkUserStatus(travelWriterIdx);   // 게시물 작성자 상태
+    let check = '';
 
-    // Validation
+    /* Validation */
     if (!travelIdx)
         return res.send(errResponse(baseResponse.TRAVEL_IDX_EMPTY));
     if (!commentIdx)
@@ -455,12 +459,15 @@ exports.patchComment = async function (req, res) {
         return res.send(errResponse(baseResponse.TRAVEL_COMMENT_EMPTY));
     if (comment.length > 200)
         return res.send(errResponse(baseResponse.TRAVEL_COMMENT_LENGTH_ERROR));
-
-    const userStatusCheckRow = await userProvider.checkUserStatus(userIdx);
     if (userStatusCheckRow[0].isWithdraw === 'Y')
         return res.send(errResponse(baseResponse.USER_WITHDRAW));
+    if (writerStatusCheckRow[0].isWithdraw === 'Y')
+        return res.send(errResponse(baseResponse.TRAVEL_WRITER_WITHDRAW));
 
-    const patchCommentResponse = await feedService.changeTravelComment(userIdx, travelIdx, commentIdx, comment);
+    if (travelWriterIdx === userIdx) check = 'M';   // 게시물 작성자와 본인 인덱스가 같을 경우
+    else check = 'O';   // 상대방의 게시물일 경우
+
+    const patchCommentResponse = await feedService.changeTravelComment(userIdx, travelIdx, commentIdx, comment, check);
     return res.send(patchCommentResponse);
 };
 

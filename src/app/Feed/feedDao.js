@@ -249,7 +249,7 @@ async function selectTravelCommentIdx(connection, [travelIdx, userIdx, comment, 
 async function updateTravelComment(connection, [userIdx, travelIdx, commentIdx, comment]) {
     const updateTravelCommentQuery = `
         UPDATE TravelComment
-        SET comment = ?
+        SET comment = ? AND status = 'M'
         WHERE userIdx = ? AND travelIdx = ? AND TravelComment.idx = ?;
     `;
     return await connection.query(updateTravelCommentQuery, [comment, userIdx, travelIdx, commentIdx]);
@@ -266,7 +266,7 @@ async function updateTravelCommentStatus(connection, [userIdx, travelIdx, commen
 
 async function selectIsCommentExist(connection, [travelIdx, commentIdx]) {
     const selectIsCommentExistQuery = `
-        SELECT EXISTS(SELECT idx FROM TravelComment WHERE idx = ? AND travelIdx = ?) AS isCommentExist;
+        SELECT EXISTS(SELECT idx FROM TravelComment WHERE idx = ? AND travelIdx = ? AND status != 'N') AS isCommentExist;
     `;
     const [selectIsCommentExistRow] = await connection.query(selectIsCommentExistQuery, [commentIdx, travelIdx]);
     return selectIsCommentExistRow;

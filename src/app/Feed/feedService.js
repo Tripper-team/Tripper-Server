@@ -317,7 +317,8 @@ exports.createTravelComment = async function (userIdx, travelIdx, comment, isPar
     }
 };
 
-exports.changeTravelComment = async function (userIdx, travelIdx, commentIdx, comment) {
+// 게시물 댓글 수정
+exports.changeTravelComment = async function (userIdx, travelIdx, commentIdx, comment, check) {
     const connection = await pool.getConnection(async (conn) => conn);
 
     try {
@@ -327,11 +328,18 @@ exports.changeTravelComment = async function (userIdx, travelIdx, commentIdx, co
             return errResponse(baseResponse.TRAVEL_NOT_EXIST);
 
         // 게시물 상태 확인하기 (숨김 또는 삭제됨)
+        // 본인 게시물에서는 숨김 상태에서도 작성 가능하게?
         const feedStatusCheckRow = (await feedDao.selectTravelStatus(connection, travelIdx))[0].travelStatus;
-        if (feedStatusCheckRow === "PRIVATE")
-            return errResponse(baseResponse.TRAVEL_STATUS_PRIVATE);
-        else if (feedStatusCheckRow === 'DELETED')
-            return errResponse(baseResponse.TRAVEL_STATUS_DELETED);
+
+        if (check === 'M') {   // 본인 게시물일 경우
+            if (feedStatusCheckRow === 'DELETED')
+                return errResponse(baseResponse.TRAVEL_STATUS_DELETED);
+        } else {   // 상대방 게시물일 경우
+            if (feedStatusCheckRow === 'PRIVATE')
+                return errResponse(baseResponse.TRAVEL_STATUS_PRIVATE);
+            else if (feedStatusCheckRow === 'DELETED')
+                return errResponse(baseResponse.TRAVEL_STATUS_DELETED);
+        }
 
         // 해당 게시물에 존재하는 댓글인지 확인하기
         const isCommentExist = (await feedDao.selectIsCommentExist(connection, [travelIdx, commentIdx]))[0].isCommentExist;
@@ -353,16 +361,11 @@ exports.changeTravelComment = async function (userIdx, travelIdx, commentIdx, co
         if (isSameCommentCheck === comment)
             return errResponse(baseResponse.TRAVEL_COMMENT_SAME_BEFORE);
 
-        await connection.beginTransaction();
-
         await feedDao.updateTravelComment(connection, [userIdx, travelIdx, commentIdx, comment]);  // 댓글 수정
-        await feedDao.updateTravelCommentStatus(connection, [userIdx, travelIdx, commentIdx]);  // 댓글 상태 수정
-
-        await connection.commit();
+        logger.info(`[댓글 수정하기 API] 수정된 댓글 idx: ${commentIdx}`);
         return response(baseResponse.TRAVEL_COMMENT_EDIT_SUCCESS);
     } catch(err) {
         logger.error(`App - changeTravelComment Service error\n: ${err.message}`);
-        await connection.rollback();
         return errResponse(baseResponse.DB_ERROR);
     } finally {
         connection.release();
