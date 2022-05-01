@@ -253,7 +253,7 @@ exports.kakaoLogout = async (req, res) => {
  */
 exports.kakaoUnlink = async (req, res) => {
     const userIdx = req.verifiedToken.userIdx;   // JWT에 저장되어있는 사용자의 idx
-    const accessToken = req.headers.accessToken;   // 카카오 AccessToken
+    const accessToken = req.headers.accesstoken;   // 카카오 AccessToken
 
     /* Validation */
     if (!accessToken)   // 카카오 accessToken이 없는지 확인
