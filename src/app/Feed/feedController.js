@@ -521,7 +521,29 @@ exports.getFeedComment = async function (req, res) {
  * [PATCH] /app/feeds/:feedIdx/comments/:commentIdx/deletion
  */
 exports.deleteComment = async (req, res) => {
+    const myIdx = req.verifiedToken.userIdx;   // 본인 idx
+    const travelIdx = req.params.feedIdx;
+    const commentIdx = req.params.commentIdx;
+    const travelWriterIdx = await feedProvider.retrieveTravelWriter(travelIdx);   // 게시물 작성자 인덱스
+    const userStatusCheckRow = await userProvider.checkUserStatus(myIdx);   // 자기 상태
+    const writerStatusCheckRow = await userProvider.checkUserStatus(travelWriterIdx);   // 게시물 작성자 상태
+    let check = '';
 
+    /* Validation */
+    if (!travelIdx)
+        return res.send(errResponse(baseResponse.TRAVEL_IDX_EMPTY));
+    if (!commentIdx)
+        return res.send(errResponse(baseResponse.TRAVEL_COMMENT_IDX_EMPTY));
+    if (userStatusCheckRow[0].isWithdraw === 'Y')
+        return res.send(errResponse(baseResponse.USER_WITHDRAW));
+    if (writerStatusCheckRow[0].isWithdraw === 'Y')
+        return res.send(errResponse(baseResponse.TRAVEL_WRITER_WITHDRAW));
+
+    if (travelWriterIdx === myIdx) check = 'M';   // 게시물 작성자와 본인 인덱스가 같을 경우
+    else check = 'O';   // 상대방의 게시물일 경우
+
+    const deleteCommentResponse = await feedService.deleteTravelComment(myIdx, travelIdx, commentIdx, check);
+    return res.send(deleteCommentResponse);
 };
 
 /**

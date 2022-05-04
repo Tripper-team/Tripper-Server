@@ -79,7 +79,7 @@ module.exports = function(app) {
     // FD14. 여행 게시물 댓글 수정하기 API
     app.patch('/app/feeds/:feedIdx/comments/:commentIdx/change', jwtMiddleware, feed.patchComment);
 
-    // FD15. 여행 게시물 댓글 조회하기 API
+    // FD15. 여행 게시물 부모 댓글 조회하기 API
     app.get('/app/feeds/:feedIdx/comments-list', jwtMiddleware, feed.getFeedComment);
 
     // FD16. 여행 게시물 댓글 삭제하기 API

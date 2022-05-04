@@ -416,3 +416,54 @@ exports.retrieveTravelComment = async function (travelIdx, check, page, pageSize
         connection.release();
     }
 };
+
+// 게시물 댓글 삭제
+exports.deleteTravelComment = async (myIdx, travelIdx, commentIdx, check) => {
+    const connection = await pool.getConnection(async (conn) => conn);
+
+    try {
+        // 실제로 있는 게시물인지 확인하기
+        const isFeedExist = (await feedDao.selectIsTravelExist(connection, travelIdx))[0].isTravelExist;
+        if (isFeedExist === 0)
+            return errResponse(baseResponse.TRAVEL_NOT_EXIST);
+
+        // 게시물 상태 확인하기 (숨김 또는 삭제됨)
+        // 본인 게시물에서는 숨김 상태에서도 삭제 가능하게?
+        const feedStatusCheckRow = (await feedDao.selectTravelStatus(connection, travelIdx))[0].travelStatus;
+
+        if (check === 'M') {   // 본인 게시물일 경우
+            if (feedStatusCheckRow === 'DELETED')
+                return errResponse(baseResponse.TRAVEL_STATUS_DELETED);
+        } else {   // 상대방 게시물일 경우
+            if (feedStatusCheckRow === 'PRIVATE')
+                return errResponse(baseResponse.TRAVEL_STATUS_PRIVATE);
+            else if (feedStatusCheckRow === 'DELETED')
+                return errResponse(baseResponse.TRAVEL_STATUS_DELETED);
+        }
+
+        // 해당 게시물에 존재하는 댓글인지 확인하기
+        const isCommentExist = (await feedDao.selectIsCommentExist(connection, [travelIdx, commentIdx]))[0].isCommentExist;
+        if (isCommentExist === 0)
+            return errResponse(baseResponse.TRAVEL_COMMENT_NOT_EXIST);
+
+        // 본인의 댓글인지 확인하기
+        const isMyComment = (await feedDao.selectIsMyComment(connection, [myIdx, commentIdx]))[0].isMyCommentCheck;
+        if (isMyComment === 0)
+            return errResponse(baseResponse.TRAVEL_COMMENT_NOT_MINE);
+
+        // 댓글 status 체크하기 (삭제된 댓글인지)
+        const commentStatusCheckRow = (await feedDao.selectCommentStatus(connection, commentIdx))[0].status;
+        if (commentStatusCheckRow === 'N')
+            return errResponse(baseResponse.TRAVEL_COMMENT_DELETED);
+
+        await feedDao.deleteFeedComment(connection, [myIdx, travelIdx, commentIdx]);  // 댓글 수정
+        logger.info(`[댓글 삭제하기 API] 삭제된 댓글 idx: ${commentIdx}`);
+        return response(baseResponse.TRAVEL_COMMENT_DELETE_SUCCESS);
+    } catch(err) {
+        logger.error(`App - deleteTravelComment Service error\n: ${err.message}`);
+        await connection.rollback();
+        return errResponse(baseResponse.DB_ERROR);
+    } finally {
+        connection.release();
+    }
+};

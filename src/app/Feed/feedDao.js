@@ -266,7 +266,7 @@ async function updateTravelCommentStatus(connection, [userIdx, travelIdx, commen
 
 async function selectIsCommentExist(connection, [travelIdx, commentIdx]) {
     const selectIsCommentExistQuery = `
-        SELECT EXISTS(SELECT idx FROM TravelComment WHERE idx = ? AND travelIdx = ? AND status != 'N') AS isCommentExist;
+        SELECT EXISTS(SELECT idx FROM TravelComment WHERE idx = ? AND travelIdx = ?) AS isCommentExist;
     `;
     const [selectIsCommentExistRow] = await connection.query(selectIsCommentExistQuery, [commentIdx, travelIdx]);
     return selectIsCommentExistRow;
@@ -647,11 +647,29 @@ async function selectTotalHeadCommentCount(connection, travelIdx) {
     const selectTotalHeadCommentCountQuery = `
         SELECT COUNT(idx) AS totalHeadCommentCount
         FROM TravelComment
-        WHERE travelIdx = ? AND isParent = 0;
+        WHERE travelIdx = ? AND isParent = 0 AND status != 'N';
     `;
     const [selectTotalHeadCommentCountRow] = await connection.query(selectTotalHeadCommentCountQuery, travelIdx);
     return selectTotalHeadCommentCountRow;
 
+}
+
+async function deleteFeedComment(connection, [myIdx, travelIdx, commentIdx]) {
+    const deleteFeedCommentQuery = `
+        UPDATE TravelComment
+        SET status = 'N'
+        WHERE userIdx = ? AND travelIdx = ? AND TravelComment.idx = ?;
+    `;
+    return await connection.query(deleteFeedCommentQuery, [myIdx, travelIdx, commentIdx]);
+}
+
+async function updateTravelComment(connection, [userIdx, travelIdx, commentIdx, comment]) {
+    const updateTravelCommentQuery = `
+        UPDATE TravelComment
+        SET comment = ?, status = 'M'
+        WHERE userIdx = ? AND travelIdx = ? AND TravelComment.idx = ?;
+    `;
+    return await connection.query(updateTravelCommentQuery, [comment, userIdx, travelIdx, commentIdx]);
 }
 
 module.exports = {
@@ -700,5 +718,6 @@ module.exports = {
     selectOtherTravelInfo,
     selectMyTravelInfo,
     selectIsAreaExist,
-    selectTotalHeadCommentCount
+    selectTotalHeadCommentCount,
+    deleteFeedComment
 };

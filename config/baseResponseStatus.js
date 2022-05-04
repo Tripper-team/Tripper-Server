@@ -39,6 +39,7 @@ module.exports = {
     AREAINFO_SEARCH_SUCCESS : { "isSuccess": true, "code": 1034, "message":"해당 장소에 대한 리뷰 조회에 성공했습니다." },
     KAKAO_LOGOUT_SUCCESS : { "isSuccess": true, "code": 1035, "message":"로그아웃에 성공했습니다." },
     WITHDRAW_SUCCESS : { "isSuccess": true, "code": 1036, "message":"회원탈퇴에 성공했습니다." },
+    TRAVEL_COMMENT_DELETE_SUCCESS : { "isSuccess": true, "code": 1037, "message":"게시물 댓글 삭제에 성공했습니다." },
 
     // Common
     TOKEN_EMPTY : { "isSuccess": false, "code": 2000, "message":"JWT 토큰을 입력해주세요." },
