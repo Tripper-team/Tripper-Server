@@ -474,7 +474,7 @@ exports.patchComment = async function (req, res) {
 
 /**
  * API No. FD15
- * API Name : 여행 게시물 댓글 조회하기 API
+ * API Name : 여행 게시물 부모 댓글 조회하기 API
  * [GET] /app/feeds/:feedIdx/comments-list?page=
  */
 exports.getFeedComment = async function (req, res) {
@@ -604,4 +604,35 @@ exports.getFeedAreaInfo = async function (req, res) {
         const areaReviewResponse = await feedProvider.retrieveAreaReview(travelIdx, dayIdx, areaIdx);
         return res.send(response(baseResponse.AREAINFO_SEARCH_SUCCESS, { 'travelAreaReviewImage': areaReviewResponse[0], 'travelAreaReviewComment': areaReviewResponse[1] }));
     }
+};
+
+/**
+ * API No. FD18
+ * API Name : 여행 게시물 대댓글 조회 API
+ * [GET] /app/feeds/:feedIdx/:commentIdx/child-comments?page=
+ */
+exports.getFeedChildComment = async (req, res) => {
+    const myIdx = req.verifiedToken.userIdx;
+    const travelIdx = req.params.feedIdx;
+    let page = parseInt(req.query.page);
+    const pageSize = 10;   // 각 페이지마다 item 개수
+    const userStatusCheckRow = await userProvider.checkUserStatus(myIdx);   // User 회원탈퇴 상태 확인
+    const travelWriterIdx = await feedProvider.retrieveTravelWriter(travelIdx);   // 게시물 작성자 인덱스
+    const writerStatusCheckRow = await userProvider.checkUserStatus(travelWriterIdx);   // 게시물 작성자 회원탈퇴 상태 확인
+
+    /* Validation */
+    if (!travelIdx)   // 여행 게시물 인덱스 입력x
+        return res.send(errResponse(baseResponse.TRAVEL_IDX_EMPTY));
+    if (!page && page !== 0)   // 페이징 넘버 없을경우
+        return res.send(errResponse(baseResponse.COMMENT_PAGE_EMPTY));
+    if (page <= 0)   // 페이징 번호가 0이하일 경우
+        return res.send(errResponse(baseResponse.COMMENT_PAGE_ERROR_TYPE));
+    if (!commentIdx)
+        return;
+    if (1)   // commentIdx가 부모 댓글인지 확인하기
+        return;
+    if (userStatusCheckRow[0].isWithdraw === 'Y')   // 회원탈퇴 유저
+        return res.send(errResponse(baseResponse.USER_WITHDRAW));
+    if (writerStatusCheckRow[0].isWithdraw === 'Y')   // 게시물 작성자 회원탈퇴 상태일 때
+        return res.send(errResponse(baseResponse.TRAVEL_WRITER_WITHDRAW));
 };
