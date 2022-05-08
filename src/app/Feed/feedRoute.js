@@ -85,8 +85,8 @@ module.exports = function(app) {
     // FD16. 여행 게시물 댓글 삭제하기 API
     app.patch('/app/feeds/:feedIdx/comments/:commentIdx/deletion', jwtMiddleware, feed.deleteComment);
 
-    // // FD17. 특정 여행 게시물 day 안의 장소 정보 조회 API
-    // app.get('/app/feeds/:feedIdx/search/review', jwtMiddleware, feed.getFeedAreaInfo);
+    // FD17. 특정 여행 게시물 day 안의 장소 정보 조회 API
+    app.get('/app/feeds/:feedIdx/search/review', jwtMiddleware, feed.getFeedAreaInfo);
 
     // FD18. 여행 게시물 대댓글 조회하기 API
     app.get('/app/feeds/:feedIdx/:commentIdx/child-comments', jwtMiddleware, feed.getFeedChildComment);
