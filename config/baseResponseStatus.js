@@ -113,6 +113,7 @@ module.exports = {
 
     KAKAOID_EMPTY : { "isSuccess": false, "code": 2062, "message": "카카오id를 입력해주세요." },
     KAKAOID_NOT_MATCH : { "isSuccess": false, "code": 2063, "message": "사용자의 kakaoId와 입력하신 AccessToken의 kakaoId가 일치하지 않습니다. 다시 확인해주세요." },
+    COMMENT_NOT_PARENT : { "isSuccess": false, "code": 2064, "message": "부모 댓글이 아닙니다." },
 
     // Response error
     REDUNDANT_NICKNAME : { "isSuccess": false, "code": 3001, "message":"중복된 닉네임입니다." },

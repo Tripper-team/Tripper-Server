@@ -5,6 +5,7 @@ const baseResponse = require("../../../config/baseResponseStatus");
 const {response, errResponse} = require("../../../config/response");
 const axios = require("axios");
 const s3 = require('../../../config/s3');
+const feedDao = require("./feedDao");
 require('dotenv').config();
 
 const regex_date = /^(19|20)\d{2}-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[0-1])$/;
@@ -610,29 +611,36 @@ exports.getFeedAreaInfo = async function (req, res) {
  * API No. FD18
  * API Name : 여행 게시물 대댓글 조회 API
  * [GET] /app/feeds/:feedIdx/:commentIdx/child-comments?page=
+ * 부모 댓글을 입력하면 그거에 해당하는 자식 댓글들 조회
  */
 exports.getFeedChildComment = async (req, res) => {
-    const myIdx = req.verifiedToken.userIdx;
+    const myIdx =  req.verifiedToken.userIdx;
     const travelIdx = req.params.feedIdx;
-    let page = parseInt(req.query.page);
-    const pageSize = 10;   // 각 페이지마다 item 개수
+    const commentIdx = req.params.commentIdx;
     const userStatusCheckRow = await userProvider.checkUserStatus(myIdx);   // User 회원탈퇴 상태 확인
     const travelWriterIdx = await feedProvider.retrieveTravelWriter(travelIdx);   // 게시물 작성자 인덱스
     const writerStatusCheckRow = await userProvider.checkUserStatus(travelWriterIdx);   // 게시물 작성자 회원탈퇴 상태 확인
 
+    let page = parseInt(req.query.page);   // 페이지 넘버
+    const pageSize = 10;   // 각 페이지마다 item 개수
+    let check = '';
+
     /* Validation */
     if (!travelIdx)   // 여행 게시물 인덱스 입력x
         return res.send(errResponse(baseResponse.TRAVEL_IDX_EMPTY));
+    if (!commentIdx)   // 댓글 인덱스 입력x
+        return res.send(errResponse(baseResponse.TRAVEL_COMMENT_IDX_EMPTY));
     if (!page && page !== 0)   // 페이징 넘버 없을경우
         return res.send(errResponse(baseResponse.COMMENT_PAGE_EMPTY));
     if (page <= 0)   // 페이징 번호가 0이하일 경우
         return res.send(errResponse(baseResponse.COMMENT_PAGE_ERROR_TYPE));
-    if (!commentIdx)
-        return;
-    if (1)   // commentIdx가 부모 댓글인지 확인하기
-        return;
     if (userStatusCheckRow[0].isWithdraw === 'Y')   // 회원탈퇴 유저
         return res.send(errResponse(baseResponse.USER_WITHDRAW));
     if (writerStatusCheckRow[0].isWithdraw === 'Y')   // 게시물 작성자 회원탈퇴 상태일 때
         return res.send(errResponse(baseResponse.TRAVEL_WRITER_WITHDRAW));
+
+    if (travelWriterIdx === myIdx) check = 'M';   // 게시물 작성자와 본인 인덱스가 같을 경우
+    else check = 'O';   // 상대방의 게시물일 경우
+
+    const getTravelChildCommentResponse = await feedService.retrieveTravelChildComment(travelIdx, commentIdx, check, page, pageSize);
 };

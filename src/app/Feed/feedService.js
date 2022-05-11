@@ -467,3 +467,41 @@ exports.deleteTravelComment = async (myIdx, travelIdx, commentIdx, check) => {
         connection.release();
     }
 };
+
+exports.retrieveTravelChildComment = async (travelIdx, commentIdx, check, page, pageSize) => {
+    const connection = await pool.getConnection(async (conn) => conn);
+
+    try {
+        /* Validation */
+        // 실제로 있는 게시물인지 확인하기
+        const isFeedExist = (await feedDao.selectIsTravelExist(connection, travelIdx))[0].isTravelExist;
+        if (isFeedExist === 0)
+            return [-2, errResponse(baseResponse.TRAVEL_NOT_EXIST)];
+
+        // 해당 게시물에 존재하는 comment인지 확인하기
+        // commentIdx가 부모 댓글인지 확인하기
+        // commentIdx가 삭제된 댓글인지 확인하기
+
+        // 게시물 상태 확인하기 (숨김 또는 삭제됨)
+        const feedStatusCheckRow = (await feedDao.selectTravelStatus(connection, travelIdx))[0].travelStatus;
+        if (check === 'M') {   // 본인 게시물일 경우
+            if (feedStatusCheckRow === 'DELETED')
+                return [-2, errResponse(baseResponse.TRAVEL_STATUS_DELETED)];
+        } else {   // 상대방 게시물일 경우
+            if (feedStatusCheckRow === 'PRIVATE')
+                return [-2, errResponse(baseResponse.TRAVEL_STATUS_PRIVATE)];
+            else if (feedStatusCheckRow === 'DELETED')
+                return [-2, errResponse(baseResponse.TRAVEL_STATUS_DELETED)];
+        }
+
+        const travelChildCommentResult = await feedDao.selectTravelChildCommentList(connection, [travelIdx, check, start, pageSize]);   // 댓글 목록 조회
+
+
+    } catch(err) {
+        logger.error(`App - retrieveTravelChildComment Service error\n: ${err.message}`);
+        await connection.rollback();
+        return errResponse(baseResponse.DB_ERROR);
+    } finally {
+        connection.release();
+    }
+};

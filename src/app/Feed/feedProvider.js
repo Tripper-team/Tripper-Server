@@ -115,3 +115,31 @@ exports.retrieveAreaReview = async (travelIdx, dayIdx, dayAreaIdx) => {
     connection.release();
     return [areaReviewImageArr, areaReviewComment];
 };
+
+exports.checkIsCommentParent = async (travelIdx, commentIdx) => {
+    const connection = await pool.getConnection(async (conn) => conn);
+    const checkCommentResult = (await feedDao.selectIsParentCommentExist(connection, [travelIdx, commentIdx]))[0].isParentCommentExist;
+    connection.release();
+    return checkCommentResult;
+};
+
+exports.retrieveCommentStatus = async (commentIdx) => {
+    const connection = await pool.getConnection(async (conn) => conn);
+    const commentStatusResult = (await feedDao.selectCommentStatus(connection, commentIdx))[0].status;
+    connection.release();
+    return commentStatusResult;
+};
+
+exports.checkIsCommentExist = async (travelIdx, commentIdx) => {
+    const connection = await pool.getConnection(async (conn) => conn);
+    const commentExistResult = (await feedDao.selectIsCommentExist(connection, [travelIdx, commentIdx]))[0].isCommentExist;
+    connection.release();
+    return commentExistResult;
+};
+
+exports.checkFeedStatus = async (travelIdx) => {
+    const connection = await pool.getConnection(async (conn) => conn);
+    const feedStatusResult = (await feedDao.selectTravelStatus(connection, travelIdx))[0].travelStatus;
+    connection.release();
+    return feedStatusResult;
+};

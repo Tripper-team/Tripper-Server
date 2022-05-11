@@ -209,11 +209,11 @@ async function updateTravelStatus(connection, [userIdx, travelIdx, status]) {
     return await connection.query(updateTravelStatusQuery, [status, userIdx, travelIdx]);
 }
 
-async function selectIsParentCommentExist(connection, [isParent, travelIdx]) {
+async function selectIsParentCommentExist(connection, [travelIdx, commentIdx]) {
     const selectIsParentCommentExistQuery = `
-        SELECT EXISTS(SELECT idx FROM TravelComment WHERE idx = ? AND isParent = 0 AND travelIdx = ?) AS isParentCommentExist;
+        SELECT EXISTS(SELECT idx FROM TravelComment WHERE idx = ? AND isParent = 0 AND travelIdx = ? AND status != 'N') AS isParentCommentExist;
     `;
-    const [selectIsParentCommentExistRow] = await connection.query(selectIsParentCommentExistQuery, [isParent, travelIdx]);
+    const [selectIsParentCommentExistRow] = await connection.query(selectIsParentCommentExistQuery, [commentIdx, travelIdx]);
     return selectIsParentCommentExistRow;
 }
 
@@ -672,6 +672,15 @@ async function updateTravelComment(connection, [userIdx, travelIdx, commentIdx, 
     return await connection.query(updateTravelCommentQuery, [comment, userIdx, travelIdx, commentIdx]);
 }
 
+async function selectTravelChildCommentList(connection, []) {
+    const selectTravelChildCommentListQuery = `
+        
+    `;
+    const [selectTravelChildCommentListQueryRow] = await connection.query(selectTravelChildCommentListQuery, []);
+    return selectTravelChildCommentListQueryRow;
+}
+
+
 module.exports = {
     insertNewFeed,
     selectFeedIdxByAll,
@@ -719,5 +728,6 @@ module.exports = {
     selectMyTravelInfo,
     selectIsAreaExist,
     selectTotalHeadCommentCount,
-    deleteFeedComment
+    deleteFeedComment,
+    selectTravelChildCommentList
 };

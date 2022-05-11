@@ -485,7 +485,7 @@ async function selectUserKakaoId(connection, userIdx) {
 async function updateUserStatusToWithdraw(connection, userIdx) {
   const updateUserStatusToWithdrawQuery = `
     UPDATE User
-    SET isWithdraw = 'Y'
+    SET isWithdraw = 'Y', kakaoId = 0
     WHERE User.idx = ?;
   `;
   await connection.query(updateUserStatusToWithdrawQuery, userIdx);
