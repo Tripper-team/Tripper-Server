@@ -283,25 +283,25 @@ exports.createTravelComment = async function (userIdx, travelIdx, comment, isPar
         }
 
         /*
-            isParent가 null이 아니면 -> 대댓글 (부모 댓글의 idx)
+            isParent가 null 아니면 -> 대댓글 (부모 댓글의 idx)
             isParent가 그러면 실제로 존재하는 부모 댓글 idx인지 확인하기
          */
         if (isParent !== undefined) {
             // 해당 게시물에 실제로 존재하는 부모 댓글인지 확인하기
-           const checkParentCommentExist = (await feedDao.selectIsParentCommentExist(connection, [isParent, travelIdx]))[0].isParentCommentExist;
-           if (checkParentCommentExist === 0)
-               return errResponse(baseResponse.TRAVEL_COMMENT_PARENT_NOT_EXIST);
+            const checkParentCommentExist = (await feedDao.selectIsParentCommentExist(connection, [isParent, travelIdx]))[0].isParentCommentExist;
+            if (checkParentCommentExist === 0)
+                return errResponse(baseResponse.TRAVEL_COMMENT_PARENT_NOT_EXIST);
         }
+
+        if (!isParent) isParent = 0;   // isParent가 undefined이면 부모 댓글로
 
         // 아무 댓글도 없는 게시물에 처음으로 대댓글을 다는지 확인하기
         const checkCommentCount = (await feedDao.selectTravelCommentCount(connection, travelIdx))[0].commentCount;
         if (checkCommentCount === 0) {
-            if (!isParent) {
+            if (isParent !== 0) {
                 return errResponse(baseResponse.TRAVEL_FIRST_COMMENT_MUST_PARENT);
             }
         }
-
-        if (!isParent) isParent = 0;   // isParent가 undefined이면 부모 댓글로
 
         await feedDao.insertTravelComment(connection, [travelIdx, userIdx, comment, isParent]);   // 댓글 작성하기
         const newCommentIdx = (await feedDao.selectTravelCommentIdx(connection, [travelIdx, userIdx, comment, isParent]))[0].commentIdx;   // 새로운 댓글 idx
