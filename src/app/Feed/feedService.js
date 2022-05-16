@@ -296,6 +296,7 @@ exports.createTravelComment = async function (userIdx, travelIdx, comment, isPar
         if (!isParent) isParent = 0;   // isParent가 undefined이면 부모 댓글로
 
         // 아무 댓글도 없는 게시물에 처음으로 대댓글을 다는지 확인하기
+        // 대댓글 조회 vs 부모 댓글 조회
         const checkCommentCount = (await feedDao.selectTravelCommentCount(connection, travelIdx))[0].commentCount;
         if (checkCommentCount === 0) {
             if (isParent !== 0) {
