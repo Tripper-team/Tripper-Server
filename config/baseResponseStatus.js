@@ -40,6 +40,7 @@ module.exports = {
     KAKAO_LOGOUT_SUCCESS : { "isSuccess": true, "code": 1035, "message":"로그아웃에 성공했습니다." },
     WITHDRAW_SUCCESS : { "isSuccess": true, "code": 1036, "message":"회원탈퇴에 성공했습니다." },
     TRAVEL_COMMENT_DELETE_SUCCESS : { "isSuccess": true, "code": 1037, "message":"게시물 댓글 삭제에 성공했습니다." },
+    TRAVEL_CHILD_COMMENT_SUCCESS : { "isSuccess": true, "code": 1038, "message":"대댓글 조회 성공" },
 
     // Common
     TOKEN_EMPTY : { "isSuccess": false, "code": 2000, "message":"JWT 토큰을 입력해주세요." },
@@ -115,6 +116,7 @@ module.exports = {
     KAKAOID_NOT_MATCH : { "isSuccess": false, "code": 2063, "message": "사용자의 kakaoId와 입력하신 AccessToken의 kakaoId가 일치하지 않습니다. 다시 확인해주세요." },
     COMMENT_NOT_PARENT : { "isSuccess": false, "code": 2064, "message": "부모 댓글이 아닙니다." },
 
+    PAGE_FINISH : { "isSuccess": false, "code": 2065, "message": "해당 페이지에 조회할 내용이 없습니다." },
     // Response error
     REDUNDANT_NICKNAME : { "isSuccess": false, "code": 3001, "message":"중복된 닉네임입니다." },
     USER_ALREADY_SIGNUP : { "isSuccess": false, "code": 3002, "message":"이미 회원가입한 유저입니다." },

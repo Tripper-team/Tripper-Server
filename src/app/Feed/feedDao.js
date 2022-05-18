@@ -651,7 +651,16 @@ async function selectTotalHeadCommentCount(connection, travelIdx) {
     `;
     const [selectTotalHeadCommentCountRow] = await connection.query(selectTotalHeadCommentCountQuery, travelIdx);
     return selectTotalHeadCommentCountRow;
+}
 
+async function selectTotalChildCommentCount(connection, [travelIdx, commentIdx]) {
+    const selectTotalChildCommentCountQuery = `
+        SELECT COUNT(idx) AS totalChildCommentCount
+        FROM TravelComment
+        WHERE travelIdx = ? AND isParent = ? AND status != 'N';
+    `;
+    const [selectTotalChildCommentCountRow] = await connection.query(selectTotalChildCommentCountQuery, [travelIdx, commentIdx]);
+    return selectTotalChildCommentCountRow;
 }
 
 async function deleteFeedComment(connection, [myIdx, travelIdx, commentIdx]) {
@@ -672,11 +681,28 @@ async function updateTravelComment(connection, [userIdx, travelIdx, commentIdx, 
     return await connection.query(updateTravelCommentQuery, [comment, userIdx, travelIdx, commentIdx]);
 }
 
-async function selectTravelChildCommentList(connection, []) {
+async function selectTravelChildCommentList(connection, [travelIdx, commentIdx, start, pageSize]) {
     const selectTravelChildCommentListQuery = `
-        
+        SELECT C.idx AS commentIdx, C.userIdx, nickName,
+               profileImgUrl, comment,
+               CASE
+                   WHEN TIMESTAMPDIFF(SECOND, C.createdAt, NOW()) <= 0 THEN CONCAT(TIMESTAMPDIFF(SECOND, C.createdAt, NOW()), '방금 전')
+                   WHEN TIMESTAMPDIFF(SECOND, C.createdAt, NOW()) < 60 THEN CONCAT(TIMESTAMPDIFF(SECOND, C.createdAt, NOW()), '초')
+                   WHEN TIMESTAMPDIFF(MINUTE, C.createdAt, NOW()) < 60 THEN CONCAT(TIMESTAMPDIFF(MINUTE, C.createdAt, NOW()), '분')
+                   WHEN TIMESTAMPDIFF(HOUR, C.createdAt, NOW()) < 24 THEN CONCAT(TIMESTAMPDIFF(HOUR, C.createdAt, NOW()), '시간')
+                   WHEN TIMESTAMPDIFF(DAY, C.createdAt, NOW()) < 7 THEN CONCAT(TIMESTAMPDIFF(DAY, C.createdAt, NOW()), '일')
+                   ELSE CONCAT(TIMESTAMPDIFF(WEEK, C.createdAt, NOW()), '주')
+                   END AS createdAt
+        FROM TravelComment AS C
+                 INNER JOIN User
+                            ON User.idx = C.userIdx
+                 INNER JOIN Travel
+                            ON Travel.idx = C.travelIdx
+        WHERE C.travelIdx = ? AND C.status != 'N' AND C.isParent = ?
+        ORDER BY C.createdAt
+            LIMIT ?, ?;
     `;
-    const [selectTravelChildCommentListQueryRow] = await connection.query(selectTravelChildCommentListQuery, []);
+    const [selectTravelChildCommentListQueryRow] = await connection.query(selectTravelChildCommentListQuery, [travelIdx, commentIdx, start, pageSize]);
     return selectTravelChildCommentListQueryRow;
 }
 
@@ -729,5 +755,6 @@ module.exports = {
     selectIsAreaExist,
     selectTotalHeadCommentCount,
     deleteFeedComment,
-    selectTravelChildCommentList
+    selectTravelChildCommentList,
+    selectTotalChildCommentCount
 };

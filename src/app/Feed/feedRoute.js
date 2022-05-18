@@ -89,5 +89,5 @@ module.exports = function(app) {
     app.get('/app/feeds/:feedIdx/search/review', jwtMiddleware, feed.getFeedAreaInfo);
 
     // FD18. 여행 게시물 대댓글 조회하기 API
-    app.get('/app/feeds/:feedIdx/:commentIdx/child-comments', jwtMiddleware, feed.getFeedChildComment);
+    app.get('/app/feeds/:feedIdx/comments/:commentIdx/child-comments', jwtMiddleware, feed.getFeedChildComment);
 };

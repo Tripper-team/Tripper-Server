@@ -610,7 +610,7 @@ exports.getFeedAreaInfo = async function (req, res) {
 /**
  * API No. FD18
  * API Name : 여행 게시물 대댓글 조회 API
- * [GET] /app/feeds/:feedIdx/:commentIdx/child-comments?page=
+ * [GET] /app/feeds/:feedIdx/comments/:commentIdx/child-comments?page=
  * 부모 댓글을 입력하면 그거에 해당하는 자식 댓글들 조회
  */
 exports.getFeedChildComment = async (req, res) => {
@@ -642,5 +642,8 @@ exports.getFeedChildComment = async (req, res) => {
     if (travelWriterIdx === myIdx) check = 'M';   // 게시물 작성자와 본인 인덱스가 같을 경우
     else check = 'O';   // 상대방의 게시물일 경우
 
-    const getTravelChildCommentResponse = await feedService.retrieveTravelChildComment(travelIdx, commentIdx, check, page, pageSize);
+    const getTravelChildCommentResponse = await feedProvider.retrieveTravelChildComment(travelIdx, commentIdx, check, page, pageSize);
+    if (getTravelChildCommentResponse[0] === -1)
+        return res.send(getTravelChildCommentResponse[1]);
+    else return res.send(response(baseResponse.TRAVEL_CHILD_COMMENT_SUCCESS, getTravelChildCommentResponse));
 };
