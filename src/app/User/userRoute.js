@@ -1,16 +1,16 @@
 module.exports = function(app){
     const user = require('./userController');
     const jwtMiddleware = require('../../../config/jwtMiddleware');
-    // const passport = require('passport');
+    const passport = require('passport');
     const s3Multer = require('../../../config/multer');
 
     // U1. 카카오 로그인 API
     app.post('/app/users/kakao-login', user.kakaoLogin);
-    // app.get('/kakao', passport.authenticate('kakao-login'));
-    // // 위에서 카카오 서버로 로그인이 되면 카카오 Redirect URL을 통해 이쪽 라우터로 오게 된다.
-    // app.get('/auth/kakao/callback', passport.authenticate('kakao-login', {
-    //     failureRedirect : '/',   // kakaoStrategy에서 실패한다면 실행
-    // }), (req, res) => { res.redirect('/'); });   // 성공한다면 콜백 실행
+    app.get('/kakao', passport.authenticate('kakao-login'));
+    // 위에서 카카오 서버로 로그인이 되면 카카오 Redirect URL을 통해 이쪽 라우터로 오게 된다.
+    app.get('/auth/kakao/callback', passport.authenticate('kakao-login', {
+        failureRedirect : '/',   // kakaoStrategy에서 실패한다면 실행
+    }), (req, res) => { res.redirect('/'); });   // 성공한다면 콜백 실행
 
     // U2. 회원가입 API
     app.post('/app/users/sign-up', user.signUp);

@@ -3,8 +3,8 @@ const userService = require("../User/userService");
 const baseResponse = require("../../../config/baseResponseStatus");
 const {response, errResponse} = require("../../../config/response");
 const {logger} = require('../../../config/winston');
-// const passport = require("passport");
-// const KakaoStrategy = require("passport-kakao").Strategy
+const passport = require("passport");
+const KakaoStrategy = require("passport-kakao").Strategy
 const axios = require("axios");
 const secret_config = require("../../../config/secret");
 const jwt = require("jsonwebtoken");
@@ -19,13 +19,13 @@ require('dotenv').config();
  * API Name : 카카오 로그인 API
  * [POST] /app/users/kakao-login
  */
-// passport.use('kakao-login', new KakaoStrategy({
-//     clientID: process.env.KAKAO_CLIENT_ID,
-//     callbackURL: 'http://localhost:3000/auth/kakao/callback',
-// }, async (accessToken, refreshToken, profile, done) => {
-//     console.log("Access token: " + accessToken);
-//     console.log(profile);
-// }));
+passport.use('kakao-login', new KakaoStrategy({
+    clientID: process.env.KAKAO_CLIENT_ID,
+    callbackURL: 'http://localhost:3000/auth/kakao/callback',
+}, async (accessToken, refreshToken, profile, done) => {
+    console.log("Access token: " + accessToken);
+    console.log(profile);
+}));
 
 exports.kakaoLogin = async function (req, res) {
     /**
