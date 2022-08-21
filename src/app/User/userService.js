@@ -90,7 +90,7 @@ exports.createUser = async function (email, profileImgUrl, kakaoId, ageGroup, ge
             },
             secret_config.jwtsecret,   // 비밀키
             {
-                expiresIn: "365d",
+                expiresIn: "30d",
                 subject: "userInfo",
             }   // 유효기간 365일
         );
